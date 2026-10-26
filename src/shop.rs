@@ -1,10 +1,14 @@
 //! The domain knows prices and ledger entries, not bytecode opcodes.
 //! Context owns every allocation. ObjRef handles stay valid for this run.
+use dslvm::stdlib::collections::{CollectionList, StrMap};
 use dslvm::{ByteString, Context, Error, ObjRef, Registry, Value};
 
 struct Money {
     cents: i64,
 }
+/// Typed null handles use a marker object so the VM can preserve schema type
+/// while host callbacks still report the reference runtime's null diagnostic.
+struct NullMoney;
 struct Items {
     values: Vec<ObjRef>,
 }
@@ -34,6 +38,16 @@ fn units(ctx: &mut Context, amount: f64) -> Result<Value, Error> {
         return Err(Error::host("money: amount out of range"));
     }
     Ok(money(ctx, cents as i64))
+}
+
+fn money_ref(ctx: &Context, obj: ObjRef) -> Result<&Money, Error> {
+    ctx.get::<Money>(obj).map_err(|_| {
+        if ctx.get::<NullMoney>(obj).is_ok() {
+            Error::host("money: null handle")
+        } else {
+            Error::host("money: invalid handle")
+        }
+    })
 }
 
 impl Host {
@@ -95,37 +109,150 @@ fn register(r: &mut Registry) -> Result<(), Error> {
         },
     )?;
 
-    r.method("Money", "amount", &[], "int", |ctx, this, _| {
-        Ok(Value::Int(ctx.get::<Money>(this)?.cents))
+    // Explicit scalar boundaries preserve bytes, IEEE values, and boolean tags.
+    r.function("host_int", &["int"], "int", |_, a| {
+        Ok(Value::Int(a[0].as_int()?))
     })?;
-    r.method("Money", "currency", &[], "Currency", |_, _, _| {
+    r.function("host_float", &["float"], "float", |_, a| {
+        Ok(Value::Float(a[0].as_float()?))
+    })?;
+    r.function("host_bool", &["bool"], "bool", |_, a| {
+        Ok(Value::Bool(a[0].as_bool()?))
+    })?;
+    r.function("host_bytes", &["string"], "string", |_, a| {
+        Ok(Value::string(a[0].as_bytes()?))
+    })?;
+    r.function("host_hex", &["string"], "string", |_, a| {
+        Ok(Value::string(
+            a[0].as_bytes()?
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>(),
+        ))
+    })?;
+    r.function("host_float_case", &["string"], "float", |_, a| {
+        match a[0].as_str()? {
+            "-0" => Ok(Value::Float(-0.0)),
+            "nan" => Ok(Value::Float(f64::NAN)),
+            "inf" => Ok(Value::Float(f64::INFINITY)),
+            "-inf" => Ok(Value::Float(f64::NEG_INFINITY)),
+            "large" => Ok(Value::Float(1e21)),
+            "subnormal" => Ok(Value::Float(f64::from_bits(1))),
+            _ => Err(Error::host("host_float_case: unknown case")),
+        }
+    })?;
+    r.function("host_echo_money", &["Money"], "Money", |_, a| {
+        Ok(a[0].clone())
+    })?;
+    r.function("host_same", &["Money", "Money"], "bool", |_, a| {
+        Ok(Value::Bool(a[0].as_obj()? == a[1].as_obj()?))
+    })?;
+    r.function("host_null", &[], "Money", |ctx, _| {
+        Ok(Value::object("Money", ctx.insert("Money", NullMoney)))
+    })?;
+    r.function("host_is_null", &["Money"], "bool", |ctx, a| {
+        Ok(Value::Bool(ctx.get::<NullMoney>(a[0].as_obj()?).is_ok()))
+    })?;
+    r.function("host_wrong", &[], "Money", |ctx, _| {
+        Ok(Value::object(
+            "Items",
+            ctx.insert("Items", Items { values: Vec::new() }),
+        ))
+    })?;
+    r.function("host_void", &[], "void", |_, _| Ok(Value::None))?;
+    r.function("host_str_list", &["StrList"], "StrList", |ctx, a| {
+        let mut values = ctx
+            .get::<CollectionList<ByteString>>(a[0].as_obj()?)?
+            .items
+            .clone();
+        values.push(ByteString::from("host"));
+        Ok(Value::object(
+            "StrList",
+            ctx.insert_collection("StrList", CollectionList { items: values })?,
+        ))
+    })?;
+    r.function("host_int_list", &["IntList"], "IntList", |ctx, a| {
+        let mut values = ctx
+            .get::<CollectionList<i64>>(a[0].as_obj()?)?
+            .items
+            .clone();
+        values.push(9);
+        Ok(Value::object(
+            "IntList",
+            ctx.insert_collection("IntList", CollectionList { items: values })?,
+        ))
+    })?;
+    r.function("host_float_list", &["FloatList"], "FloatList", |ctx, a| {
+        let mut values = ctx
+            .get::<CollectionList<f64>>(a[0].as_obj()?)?
+            .items
+            .clone();
+        values.push(0.5);
+        Ok(Value::object(
+            "FloatList",
+            ctx.insert_collection("FloatList", CollectionList { items: values })?,
+        ))
+    })?;
+    r.function("host_str_map", &["StrMap"], "StrMap", |ctx, a| {
+        let entries = ctx.get::<StrMap>(a[0].as_obj()?)?.entries();
+        let obj = ctx.insert_collection("StrMap", StrMap::default())?;
+        {
+            let map = ctx.get_mut::<StrMap>(obj)?;
+            for (key, value) in entries {
+                map.set(key, value);
+            }
+            map.set(ByteString::from("host"), ByteString::from("yes"));
+        }
+        Ok(Value::object("StrMap", obj))
+    })?;
+    r.function("host_sum", &vec!["int"; 255], "int", |_, a| {
+        let sum = a.iter().try_fold(0u64, |acc, value| {
+            Ok::<_, Error>(acc.wrapping_add(value.as_int()? as u64))
+        })?;
+        Ok(Value::Int(sum as i64))
+    })?;
+    r.function(
+        &format!("host_long_{}", "x".repeat(128)),
+        &["int"],
+        "int",
+        |_, a| Ok(Value::Int(a[0].as_int()?)),
+    )?;
+
+    r.method("Money", "amount", &[], "int", |ctx, this, _| {
+        Ok(Value::Int(money_ref(ctx, this)?.cents))
+    })?;
+    r.method("Money", "currency", &[], "Currency", |ctx, this, _| {
+        money_ref(ctx, this)?;
         Ok(Value::string("USD"))
     })?;
     r.method("Money", "plus", &["Money"], "Money", |ctx, this, a| {
-        let cents = ctx
-            .get::<Money>(this)?
+        let cents = money_ref(ctx, this)?
             .cents
-            .wrapping_add(ctx.get::<Money>(a[0].as_obj()?)?.cents);
+            .wrapping_add(money_ref(ctx, a[0].as_obj()?)?.cents);
         Ok(money(ctx, cents))
     })?;
     r.method("Money", "minus", &["Money"], "Money", |ctx, this, a| {
-        let cents = ctx
-            .get::<Money>(this)?
+        let cents = money_ref(ctx, this)?
             .cents
-            .wrapping_sub(ctx.get::<Money>(a[0].as_obj()?)?.cents);
+            .wrapping_sub(money_ref(ctx, a[0].as_obj()?)?.cents);
         Ok(money(ctx, cents))
     })?;
     r.method("Money", "times", &["int"], "Money", |ctx, this, a| {
-        let cents = ctx.get::<Money>(this)?.cents.wrapping_mul(a[0].as_int()?);
+        let cents = money_ref(ctx, this)?.cents.wrapping_mul(a[0].as_int()?);
         Ok(money(ctx, cents))
     })?;
     r.method("Money", "neg", &[], "Money", |ctx, this, _| {
-        let cents = ctx.get::<Money>(this)?.cents.wrapping_neg();
+        let cents = money_ref(ctx, this)?.cents.wrapping_neg();
         Ok(money(ctx, cents))
     })?;
     // returns:self is registered as the concrete owner type, not a Rust reference.
     r.method("Money", "set", &["int"], "Money", |ctx, this, a| {
-        ctx.get_mut::<Money>(this)?.cents = a[0].as_int()?;
+        if ctx.get::<NullMoney>(this).is_ok() {
+            return Err(Error::host("money: null handle"));
+        }
+        ctx.get_mut::<Money>(this)
+            .map_err(|_| Error::host("money: invalid handle"))?
+            .cents = a[0].as_int()?;
         Ok(Value::object("Money", this))
     })?;
 
@@ -170,7 +297,7 @@ fn register(r: &mut Registry) -> Result<(), Error> {
     })?;
 
     r.method("Ledger", "record", &["Money"], "Ledger", |ctx, this, a| {
-        let cents = ctx.get::<Money>(a[0].as_obj()?)?.cents;
+        let cents = money_ref(ctx, a[0].as_obj()?)?.cents;
         let ledger = ctx.get_mut::<Ledger>(this)?;
         ledger.balance = ledger.balance.wrapping_add(cents);
         ledger.entries = ledger.entries.wrapping_add(1);

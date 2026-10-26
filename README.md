@@ -25,8 +25,9 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
    record commit IDs and SHA-256s; [sync.py](scripts/sync.py) checks drift or archives
    reviewed Git commits. Build and verification use the checked-in copies.
 4. **Make a registry.** [Host::new and register](src/shop.rs) start with
-   `Registry::new()` (all 72 std signatures), declare `shop`/`ledger`, then opt into
-   [testing helpers](vendor/lmcode-rust/dslvm/src/stdlib/testing.rs).
+   `Registry::new()` (all 171 standard signatures), declare `shop`/`ledger`, then opt into
+   [testing helpers](vendor/lmcode-rust/dslvm/src/stdlib/testing.rs). The host contributes
+   45 signatures; the catalog audit imports all 171 standard signatures.
 5. **Own live objects in Context.** [Host::new](src/shop.rs) inserts the domain
    objects and binds context names. `ObjRef` is an arena index, not a native pointer;
    `Context::get/get_mut` borrow typed Rust objects. No `unsafe` or leaked allocation.
@@ -64,7 +65,9 @@ Ledger notes stay byte strings. The final JSON writer in [main.rs](src/main.rs)
 escapes controls and preserves other bytes exactly like the C++ reference; the
 optional SDK `print` helper likewise writes bytes and LF, without lossy decoding.
 File functions use the real host filesystem. `SAMPLE_TMP` is the suite's scratch
-convention, not a sandbox.
+convention, not a sandbox. Native collection adapters copy values through
+`Context::insert_collection`, keeping std quota and cleanup rules. The host models
+a typed null Money with a private sentinel object and checks it before access.
 
 ## Feature coverage
 
@@ -73,15 +76,18 @@ convention, not a sandbox.
 | Literals, arithmetic, booleans, branches, inline functions, loops/switch | 001–008, 036, 043, 045 |
 | Pure host function `fee(int)` | 002 |
 | Overloads, handles, operators, conversion, chaining, enums, contexts | 009–014, 034–035, 039–040 |
-| All std collection methods and host foreach | 015–018, 037–038, 044 |
+| All std collection methods, typed maps/stacks/queues/priority queues and host foreach | 015–018, 037–038, 044, 101–104 |
 | All std math functions and all 18 intrinsic math operations | 019–020, 025, 048 |
 | All std string and file functions | 021–024 |
 | Located VM/host/testing/application errors | 026–033 |
 | int64 wrap, short-circuit execution | 041–042 |
 | Raw/dedented heredocs and all outer splice types | 046–047 |
-| Bad bytecode and schema binding rejection | 090–091 |
+| Native conversions, byte/float boundaries, null/wrong handles, large inputs and 255 arguments | 049–066 |
+| JSON navigation and JSON type errors | 105, 108 |
+| Container empty/nonfinite-priority errors | 106–107 |
+| Bad bytecode and schema binding rejection | 090–092 |
 
-The suite has 48 source programs plus two bytecode mutations: **50 cases**.
+The current suite has 74 source programs plus three bytecode mutations: **77 cases**.
 Every stdout byte, JSON field order/spacing, newline and process exit must match.
 Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
 If an oracle appears wrong, record both implementations and reasoning in that
