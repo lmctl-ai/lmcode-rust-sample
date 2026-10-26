@@ -1,0 +1,79 @@
+//! lmscript compiles source. This executable only loads verified bytecode and runs it.
+mod shop;
+use dslvm::{error_json, report_app_failure, report_error, Error, Program};
+use std::io::{self, Write};
+
+// Include exact bytes, including whitespace: the schema hash binds every program.
+const SCHEMA: &[u8] = include_bytes!("../sample-suite/sample.dsl.json");
+const USAGE: &str = "usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE";
+
+fn main() {
+    std::process::exit(match run() {
+        Ok(code) => code,
+        Err(_) => report_app_failure("cannot read sample input"),
+    });
+}
+
+fn run() -> Result<i32, Box<dyn std::error::Error>> {
+    let args: Vec<_> = std::env::args_os().skip(1).collect();
+    let mut host = shop::Host::new()?;
+    if args.len() == 1 && args[0] == "--version" {
+        println!("lmcode-rust-sample {}", env!("CARGO_PKG_VERSION"));
+        return Ok(0);
+    }
+    if (args.len() == 1 || (args.len() == 2 && args[1] == "--json")) && args[0] == "--dsl-schema" {
+        io::stdout().lock().write_all(SCHEMA)?;
+        return Ok(0);
+    }
+    if args.len() == 1 && args[0] == "--dsl-signatures" {
+        for signature in host.registry.signatures() {
+            println!("{signature}");
+        }
+        return Ok(0);
+    }
+    if args.len() != 2 || args[0] != "--dsl" {
+        println!("{}", error_json("cli", &Error::new("CLI_USAGE", USAGE)));
+        return Ok(2);
+    }
+    let bytes = std::fs::read(&args[1])?;
+    let program = match Program::load(&bytes, SCHEMA, &host.registry) {
+        Ok(program) => program,
+        Err(error) => {
+            // Normalize only load messages, exactly as the reference contract does.
+            let message = match error.code.as_str() {
+                "LOAD_SCHEMA_MISMATCH" => "sample schema mismatch",
+                "LOAD_UNBOUND" => "sample import mismatch",
+                _ => "invalid sample bytecode",
+            };
+            return Ok(report_error("load", &Error::new(&error.code, message)));
+        }
+    };
+    if let Err(error) = program.run(&mut host.context, &host.registry) {
+        return Ok(report_error("run", &error));
+    }
+    let ledger = host.context.get::<shop::Ledger>(host.ledger)?;
+    if ledger.balance < 0 {
+        return Ok(report_app_failure("ledger: negative balance"));
+    }
+    // This application's result carries VM bytes. Escape controls without lossy text conversion.
+    let mut out = io::stdout().lock();
+    write!(
+        out,
+        "{{\"ok\": true, \"result\": {{\"balance\": {}, \"entries\": {}, \"note\": ",
+        ledger.balance, ledger.entries
+    )?;
+    out.write_all(b"\"")?;
+    for byte in ledger.note.as_bytes() {
+        match byte {
+            b'"' => out.write_all(b"\\\"")?,
+            b'\\' => out.write_all(b"\\\\")?,
+            b'\n' => out.write_all(b"\\n")?,
+            b'\r' => out.write_all(b"\\r")?,
+            b'\t' => out.write_all(b"\\t")?,
+            0..=0x1f => write!(out, "\\u{byte:04x}")?,
+            _ => out.write_all(&[*byte])?,
+        }
+    }
+    out.write_all(b"\"}}\n")?;
+    Ok(0)
+}
