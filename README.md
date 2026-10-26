@@ -25,9 +25,9 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
    record commit IDs and SHA-256s; [sync.py](scripts/sync.py) checks drift or archives
    reviewed Git commits. Build and verification use the checked-in copies.
 4. **Make a registry.** [Host::new and register](src/shop.rs) start with
-   `Registry::new()` (all 171 standard signatures), declare `shop`/`ledger`, then opt into
+   `Registry::new()` (all 181 standard signatures), declare `shop`/`ledger`, then opt into
    [testing helpers](vendor/lmcode-rust/dslvm/src/stdlib/testing.rs). The host contributes
-   45 signatures; the catalog audit imports all 171 standard signatures.
+   45 signatures; the catalog audit imports all 181 standard signatures.
 5. **Own live objects in Context.** [Host::new](src/shop.rs) inserts the domain
    objects and binds context names. `ObjRef` is an arena index, not a native pointer;
    `Context::get/get_mut` borrow typed Rust objects. No `unsafe` or leaked allocation.
@@ -84,10 +84,12 @@ a typed null Money with a private sentinel object and checks it before access.
 | Raw/dedented heredocs and all outer splice types | 046–047 |
 | Native conversions, byte/float boundaries, null/wrong handles, large inputs and 255 arguments | 049–066 |
 | JSON navigation and JSON type errors | 105, 108 |
+| Contextual typed lists/maps, JSONC documents and legacy bindings | 201–205 |
+| Byte codecs, strict rejection and independent map snapshots | 301–305, 311–313 |
 | Container empty/nonfinite-priority errors | 106–107 |
 | Bad bytecode and schema binding rejection | 090–092 |
 
-The current suite has 74 source programs plus three bytecode mutations: **77 cases**.
+The current suite has 87 source programs plus three bytecode mutations: **90 cases**.
 Every stdout byte, JSON field order/spacing, newline and process exit must match.
 Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
 If an oracle appears wrong, record both implementations and reasoning in that
@@ -109,3 +111,10 @@ cargo build --release --locked --offline
 Windows produces `target/release/lmcode-rust-sample.exe`; the test script handles
 that suffix. The application is MIT licensed; the vendored SDK's MIT text is
 [retained alongside it](vendor/lmcode-rust/LICENSE).
+
+All 90 pinned runtime cases run on every CI target. The published compiler
+0.2.426 still injects v1 defaults and lacks literal syntax: the canonical
+reproduction helper explicitly reports five literal source cases as SKIP while
+checking the other 85. To reproduce all 90, set `LMSCRIPT_BIN` to a current
+lmctl-mono main build and `LMCODE_REQUIRE_LITERAL_COMPILER=1`; this full check
+was also run locally. No runtime case is skipped.
