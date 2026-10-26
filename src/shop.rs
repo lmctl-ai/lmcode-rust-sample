@@ -52,7 +52,7 @@ fn money_ref(ctx: &Context, obj: ObjRef) -> Result<&Money, Error> {
 
 impl Host {
     pub fn new() -> Result<Self, Error> {
-        // Default std registers strings, math, collections and files. Testing is opt-in.
+        // Default std registers strings, math, containers, JSON and files. Testing is opt-in.
         let mut registry = Registry::new();
         dslvm::stdlib::register_testing(&mut registry, None)?;
         registry
@@ -148,7 +148,11 @@ fn register(r: &mut Registry) -> Result<(), Error> {
         Ok(Value::Bool(a[0].as_obj()? == a[1].as_obj()?))
     })?;
     r.function("host_null", &[], "Money", |ctx, _| {
-        Ok(Value::object("Money", ctx.insert("Money", NullMoney)))
+        // One typed-null sentinel per context preserves null handle identity too.
+        let obj = ctx
+            .lookup("__sample_null_money")
+            .unwrap_or_else(|| ctx.set_object("__sample_null_money", "Money", NullMoney));
+        Ok(Value::object("Money", obj))
     })?;
     r.function("host_is_null", &["Money"], "bool", |ctx, a| {
         Ok(Value::Bool(ctx.get::<NullMoney>(a[0].as_obj()?).is_ok()))
