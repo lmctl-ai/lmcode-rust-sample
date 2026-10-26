@@ -146,7 +146,10 @@ by `check-compile-errors.py` (exit 2), not treated as a supported recursive VM f
 ```
 
 Defaults are `~/repos/dsl/lmcode-{c,cpp,rust,go,csharp,java,kotlin,scala}-sample`.
-Each repo supplies `build.sh` or `make all`, producing `build/lmcode-LANG-sample`.
+Native defaults use Cargo for Rust, `dotnet build` for C#, Maven for Kotlin,
+and sbt for Scala (including its generated runtime classpath). C/C++ use
+`make all`, Go uses `go build`, and Java uses its `build.sh`. Build commands have
+a 600-second timeout (`SAMPLE_TIMEOUT` overrides it).
 Managed-language launchers should `exec` their runtime. JSON/env files may set
 `SAMPLE_CPP_DIR` (and other language names), `SAMPLE_LANG_BUILD` and
 `SAMPLE_LANG_COMMAND` (JSON argv arrays), `SAMPLE_CORPUS`, or `SAMPLE_STATE`.
@@ -161,4 +164,31 @@ repos on Linux; during rollout it intentionally fails until every port is implem
 
 ## Catalog v2 data examples
 
-Programs 101-105 exercise all 99 new container/Json imports; 106-108 pin their runtime traps. Expectations are recorded only from the rebuilt C++ reference. The all-samples matrix reports known released-v1 SDK pins (or exact legacy-only registry surfaces for unpinned Go builds) as SKIP, not PASS; partial/declared-v2 implementations still execute and fail normally. A skipped port does not establish v2 interoperability. Single-host protocol/run-suite checks never skip.
+Programs 101-105 exercise all 99 new container/Json imports; 106-108 pin their runtime traps. Expectations are recorded only from the rebuilt C++ reference. The all-samples matrix reports known released-v1 SDK pins (or exact legacy-only registry surfaces for unpinned Go builds) as pending FAIL; every available port still builds and runs, and pending ports
+never count as passes. Single-host protocol/run-suite checks never skip.
+
+## Compiler literal cases
+
+Cases 201–205 cover contextual word/numeric lists, int64 boundaries, all typed map
+literals, single evaluation order, raw JSONC documents and legacy bindings. They
+require the compiler literal implementation from lmctl-mono `0ce49614` (set
+`LMSCRIPT_BIN` to its built lmscript until a containing release is published).
+Their manifest entries declare `compiler_features: ["lmcode-literals-v1"]`;
+source reproduction must report an unsupported compiler explicitly. Pinned v5
+bytecode still runs directly on a std-v2 host. `compile.py --output DIR
+--exclude-feature lmcode-literals-v1` is a partial reproduction check and never
+rewrites the canonical manifest; it is not a complete compiler validation.
+
+`run-all-samples.sh --ports cpp,c,rust,go,csharp` selects an explicit subset when
+other owners' repositories must not be accessed. Excluded ports are listed in
+the report and are never counted as passes; `--all` retains the full matrix.
+
+`check-recompile.py` checks source/bytecode hashes before reproducing the corpus.
+A verified 72-signature v1 compiler reports literal-feature cases as SKIP while
+reproducing all compatible cases. A v2 or otherwise unknown compiler failure is
+an error; `LMCODE_REQUIRE_LITERAL_COMPILER=1` also makes v1 gaps fatal. Runtime
+execution always covers the entire corpus, regardless of compiler capabilities.
+
+Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 87 cases (84 programs and three loader mutations); v3 support in the other seven ports remains pending.
+
+Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidirectional snapshot mutation and the exact noncanonical Base64 trap.

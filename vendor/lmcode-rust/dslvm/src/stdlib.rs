@@ -4,6 +4,8 @@
 //! cap results at 64 MiB, and glob matching caps work at 2^27 units. These are host policies,
 //! independent of the VM, which imposes no string or execution limits.
 pub mod collections;
+pub mod encoding;
+pub use encoding::*;
 pub mod containers;
 pub mod json;
 pub use containers::register_containers;
@@ -25,6 +27,7 @@ pub fn register_std(registry: &mut Registry) -> Result<&mut Registry, Error> {
     if registry.std_enabled() { return Ok(registry); }
     let before: HashSet<String> = registry.signatures().into_iter().collect();
     register_string(registry)?;
+    register_encoding(registry)?;
     register_math(registry)?;
     register_collections(registry)?;
     register_file(registry)?;

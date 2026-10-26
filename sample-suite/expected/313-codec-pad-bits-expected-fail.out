@@ -1,0 +1,2 @@
+reject noncanonical Base64
+{"ok": false, "phase": "run", "code": "RUN_HOST", "message": "dsl line 3:7: str_base64_decode: invalid encoding", "line": 3, "column": 7}

@@ -293,6 +293,18 @@
             "params": [],
             "returns": "FloatMap"
           }
+        ],
+        "keys": [
+          {
+            "params": [],
+            "returns": "StrList"
+          }
+        ],
+        "values": [
+          {
+            "params": [],
+            "returns": "FloatList"
+          }
         ]
       }
     },
@@ -558,6 +570,18 @@
           {
             "params": [],
             "returns": "IntMap"
+          }
+        ],
+        "keys": [
+          {
+            "params": [],
+            "returns": "StrList"
+          }
+        ],
+        "values": [
+          {
+            "params": [],
+            "returns": "IntList"
           }
         ]
       }
@@ -908,6 +932,18 @@
               "string"
             ],
             "returns": "StrMap"
+          }
+        ],
+        "keys": [
+          {
+            "params": [],
+            "returns": "StrList"
+          }
+        ],
+        "values": [
+          {
+            "params": [],
+            "returns": "StrList"
           }
         ]
       }
@@ -1894,6 +1930,38 @@
       }
     ],
     "str_upper": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "str_base64_encode": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "str_base64_decode": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "str_hex_encode": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "str_hex_decode": [
       {
         "params": [
           "string"

@@ -1,5 +1,5 @@
 //! Typed maps and pop-ordered containers. Values and byte keys cross unchanged.
-use super::collections::{index, Element};
+use super::collections::{index, CollectionList, Element};
 use crate::{ByteString, Error, Registry, Value};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
@@ -138,6 +138,35 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
         let m = ctx.get::<TypedMap<T>>(this)?;
         let i = index(a[0].as_int()?, m.items.len(), &format!("{t}.key_at"))?;
         Ok(Value::string(m.items[i].0.clone()))
+    })?;
+    r.method(t, "keys", &[], "StrList", move |ctx, this, _| {
+        let items = ctx
+            .get::<TypedMap<T>>(this)?
+            .items
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect();
+        Ok(Value::object(
+            "StrList",
+            ctx.insert_collection("StrList", CollectionList { items })?,
+        ))
+    })?;
+    let list_type = if T::TYPE == "int" {
+        "IntList"
+    } else {
+        "FloatList"
+    };
+    r.method(t, "values", &[], list_type, move |ctx, this, _| {
+        let items: Vec<T> = ctx
+            .get::<TypedMap<T>>(this)?
+            .items
+            .iter()
+            .map(|(_, value)| value.clone())
+            .collect();
+        Ok(Value::object(
+            list_type,
+            ctx.insert_collection(list_type, CollectionList { items })?,
+        ))
     })?;
     r.method(t, "remove", &["string"], "bool", move |ctx, this, a| {
         let m = ctx.get_mut::<TypedMap<T>>(this)?;
@@ -346,5 +375,65 @@ mod tests {
             pop(&mut ctx, h, &[]).unwrap().as_float().unwrap().to_bits(),
             (-0.0f64).to_bits()
         );
+    }
+}
+
+#[cfg(test)]
+mod snapshot_tests {
+    use super::*;
+    use crate::{stdlib::collections::StrMap, Context};
+
+    #[test]
+    fn float_snapshot_preserves_bits_and_neither_side_aliases() {
+        let r = Registry::new();
+        let mut ctx = Context::new();
+        let mut map = FloatMap::default();
+        let bits = 0x7ff8_0000_0000_0042;
+        map.set(ByteString::from(b"\xff\0"), f64::from_bits(bits));
+        map.set("zero".into(), -0.0);
+        let h = ctx.insert_collection("FloatMap", map).unwrap();
+        let snapshot = &r.methods["method FloatMap.values() -> FloatList"].3;
+        let list = snapshot(&mut ctx, h, &[]).unwrap().as_obj().unwrap();
+        ctx.get_mut::<FloatMap>(h).unwrap().set("zero".into(), 3.0);
+        assert_eq!(
+            ctx.get::<CollectionList<f64>>(list).unwrap().items[0].to_bits(),
+            bits
+        );
+        assert_eq!(
+            ctx.get::<CollectionList<f64>>(list).unwrap().items[1].to_bits(),
+            (-0.0f64).to_bits()
+        );
+        ctx.get_mut::<CollectionList<f64>>(list).unwrap().items[0] = 4.0;
+        assert_eq!(ctx.get::<FloatMap>(h).unwrap().items[0].1.to_bits(), bits);
+    }
+
+    #[test]
+    fn snapshots_share_the_arena_limit_and_report_the_returned_list_type() {
+        let r = Registry::new();
+        let mut ctx = Context::new();
+        let s = ctx.insert_collection("StrMap", StrMap::default()).unwrap();
+        let i = ctx.insert_collection("IntMap", IntMap::default()).unwrap();
+        let f = ctx
+            .insert_collection("FloatMap", FloatMap::default())
+            .unwrap();
+        for _ in 3..65_536 {
+            ctx.insert_collection("IntList", CollectionList::<i64> { items: Vec::new() })
+                .unwrap();
+        }
+        for (t, h, list) in [
+            ("StrMap", s, "StrList"),
+            ("IntMap", i, "IntList"),
+            ("FloatMap", f, "FloatList"),
+        ] {
+            for (method, result) in [("keys", "StrList"), ("values", list)] {
+                let sig = format!("method {t}.{method}() -> {result}");
+                let error = r.methods[&sig].3(&mut ctx, h, &[]).unwrap_err();
+                assert_eq!(error.code, "RUN_HOST");
+                assert_eq!(
+                    error.message,
+                    format!("{result} object limit exceeded (65536)")
+                );
+            }
+        }
     }
 }

@@ -14,9 +14,15 @@ ROOT = Path(__file__).resolve().parent
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT / 'bytecode')
+    parser.add_argument('--exclude-feature', action='append', default=[], help='explicit partial reproducibility check; requires --output')
     args = parser.parse_args()
+    if args.exclude_feature and args.output.resolve() == (ROOT / 'bytecode').resolve():
+        parser.error('partial compilation requires a separate --output; pinned manifest cannot be reduced')
     args.output.mkdir(parents=True, exist_ok=True)
     coverage = json.loads((ROOT / 'coverage.json').read_text())
+    known_features = {feature for features in coverage.get('compiler_features', {}).values() for feature in features}
+    if set(args.exclude_feature) - known_features:
+        parser.error('unknown compiler feature')
     compiler_name = os.environ.get('LMSCRIPT_BIN', 'lmscript')
     compiler = shutil.which(compiler_name)
     if not compiler:
@@ -25,6 +31,10 @@ def main():
     for source in sorted((ROOT / 'programs').glob('*.lms')):
         if len(source.read_text().splitlines()) > 40:
             sys.exit(f'{source.name}: exceeds 40 lines')
+        required = coverage.get('compiler_features', {}).get(source.name, [])
+        if set(required) & set(args.exclude_feature):
+            print('SKIP compiler reproduction: ' + source.name + ' requires ' + ','.join(required))
+            continue
         output = args.output / (source.stem + '.dslb')
         subprocess.run([compiler, '--no-preflight', str(source), str(output.resolve())], check=True)
         cases.append(dict(name=source.stem, source='programs/' + source.name,
@@ -35,6 +45,8 @@ def main():
                                          3 if source.name in coverage['expected_failures'] else 0),
                           timeout_seconds=coverage.get('timeouts', {}).get(source.name, 30),
                           features=coverage['programs'][source.name]))
+        if source.name in coverage.get('compiler_features', {}):
+            cases[-1]['compiler_features'] = coverage['compiler_features'][source.name]
     original = (args.output / (cases[0]['name'] + '.dslb')).read_bytes()
     for name, offset in [('090-bad-bytecode', 0), ('091-schema-mismatch', 6)]:
         data = bytearray(original)

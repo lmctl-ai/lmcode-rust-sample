@@ -162,6 +162,15 @@ pub fn register_collections(registry: &mut Registry) -> Result<&mut Registry, Er
         if let Some(pos) = map.find(key) { map.index.remove(key); map.add_rank(pos, -1); map.active -= 1; Ok(Value::Bool(true)) } else { Ok(Value::Bool(false)) }
     })?;
     registry.method("StrMap", "clear", &[], "StrMap", |ctx, this, _| { let map = ctx.get_mut::<StrMap>(this)?; map.items.clear(); map.index.clear(); map.active = 0; map.fenwick.clear(); Ok(Value::object("StrMap", this)) })?;
+    for (method, keys) in [("keys", true), ("values", false)] {
+        registry.method("StrMap", method, &[], "StrList", move |ctx, this, _| {
+            let map = ctx.get::<StrMap>(this)?;
+            let items = map.items.iter().enumerate()
+                .filter(|(pos, (key, _))| map.index.get(key) == Some(pos))
+                .map(|(_, (key, value))| if keys { key.clone() } else { value.clone() }).collect();
+            make_collection(ctx, "StrList", CollectionList { items })
+        })?;
+    }
     registry.end_compatibility_registration();
     Ok(registry)
 }
@@ -175,7 +184,7 @@ mod tests {
     fn registration_has_the_complete_catalog() {
         let mut registry = Registry::without_std();
         register_collections(&mut registry).unwrap();
-        assert_eq!(registry.signatures().len(), 35);
+        assert_eq!(registry.signatures().len(), 37);
     }
 
     #[test]

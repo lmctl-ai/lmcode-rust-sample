@@ -1,25 +1,26 @@
 {
   "repo": "lmctl-ai/lmcode-rust",
-  "commit": "52674ab7571d4b88f88c347d64add40eeb5eabd4",
+  "commit": "7bff726adb6daf305914f9bade4d0bee8c387391",
   "sha256": {
     "LICENSE": "949eb9b711d9b64ae472b87b94916e8427575a75d0d218f6c4cbccf8c48d46f3",
     "dslvm/Cargo.toml": "5158321450ef1c5bbf44147d9d650b1b5bf669d5f760183a476023e642a0c91f",
     "dslvm/src/lib.rs": "c6030a0adc5d0c7a5ec1de66176e2b9452a0d887e428b3e7c1a926dae507c481",
     "dslvm/src/sha256.rs": "fbc0576b4d283b1b83650ee7a030e6b03a117e1b34d52d3b826e7fe088ceb429",
-    "dslvm/src/stdlib/collections.rs": "c62c24376987e5bf89fa2a6cb809a618dee6ae6a5e6f45b1a3dd197577327842",
-    "dslvm/src/stdlib/containers.rs": "94f6725a4a2dc6eebd7a891e0360b5f5dce68eabf5f8e4d5e1d01da59d9e5058",
+    "dslvm/src/stdlib/collections.rs": "3788d3495c8e887876f8b9906ece1b9c40d977c14be034b2c09c32bda6346a2b",
+    "dslvm/src/stdlib/containers.rs": "3ccd4ee0d7bcb40686338732cd698f1f6fa4b13e7eda355a202b72d1ca6715dd",
+    "dslvm/src/stdlib/encoding.rs": "25af6e937bddf667be96685ffec91fc051d5f30e3fdfaf35faeb09a6ab5e36bf",
     "dslvm/src/stdlib/file.rs": "67cc949b090dbe097785fae97af0e0c056ba5cf7705c64f7cd9f9a00a32c8eb1",
     "dslvm/src/stdlib/json.rs": "b51871f9d9a0f994ee4182e0687eaa9ab4a8413041fac37b237d1b59c46894b7",
     "dslvm/src/stdlib/math.rs": "0f39a342142cd07ee975dd81ed72e4d68618bf72da710aca120946a928122131",
     "dslvm/src/stdlib/testing.rs": "562d0749cc0c248e4bc4902389ba8f99758bdcc4ad84c69edb690c7df9902f3a",
     "dslvm/src/stdlib/testing_tests.rs": "b5c91ea786c9cddabc310ee0f1e5540c987ce66891148ef6d58484aeb8a388e2",
-    "dslvm/src/stdlib.rs": "5a8553bbfcede9fcd3c3003b5504c4b668470775b94ba8d853974683aebbf8ea",
+    "dslvm/src/stdlib.rs": "6812377091396d276c6898768937a8bab2f18db17a747574f8977bd5cff13614",
     "dslvm/tests/fixtures/math.schema.json": "75c738d6542ceb08628399616eac06a6ee4b3b17fff4ed7cad8c0f6cc3b51390",
     "dslvm/tests/fixtures/string.schema.json": "afd17de717b9cafbc2143c6df93b3553f3295c37dcd1cc10bbb057361050a986",
-    "dslvm/tests/stdlib_catalogs.rs": "1cfcd221b50fd3d897fba15c953186e171874e047842fdc06e79055b33c9d121",
+    "dslvm/tests/stdlib_catalogs.rs": "9d244100dc947c33c74dbcd4466bbe83bc78850b533fad6d6673f8c90eb51e4d",
     "dslvm/tests/stdlib_math.rs": "6bba003798b742140c146c71e337114fd625bbb13cbe80b20fb1891336592217",
     "dslvm/tests/stdlib_string.rs": "486e7431018bed644732fc12fb6a862b556419d03fd76094989188ae28d58e4f",
     "dslvm/tests/vm_tests.rs": "fd89319e9435f7f18a9395f414dd42a253573c87bd46b26c85e9c266a967f06d",
-    "std/lmcode-std.schema.json": "296d7f66ff462fef3c3fa1f83c3e8889874d8714ceb303237ffac940a16aaaf8"
+    "std/lmcode-std.schema.json": "430588371274f09304d7c05c68819297c71d3ce4884f0e523d8ff19a33aff8af"
   }
 }

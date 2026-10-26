@@ -43,6 +43,17 @@ def command_for(env, lang, repo):
         if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
             raise ValueError(f"{key} must be a JSON argv array")
         return value
+    if lang == "rust" and (repo / "Cargo.toml").is_file():
+        return [str(repo / "target/release/lmcode-rust-sample")]
+    if lang == "csharp" and (repo / "src/LmCode.Sample.csproj").is_file():
+        return ["dotnet", str(repo / "src/bin/Release/net8.0/lmcode-csharp-sample.dll")]
+    if lang == "kotlin" and (repo / "pom.xml").is_file():
+        return ["java", "-jar", str(repo / "target/lmcode-kotlin-sample.jar")]
+    if lang == "scala" and (repo / "build.sbt").is_file():
+        classpath = (repo / "target/runtime-classpath.txt").read_text().strip()
+        if not classpath:
+            raise ValueError("scala: empty runtime classpath")
+        return ["java", "-cp", classpath, "shop.Main"]
     return [str(repo / "build" / f"lmcode-{lang}-sample")]
 
 
@@ -53,6 +64,14 @@ def build_for(lang, repo, env):
         if not isinstance(value, list) or not all(isinstance(x, str) for x in value):
             raise ValueError(f"{key} must be a JSON argv array")
         return value
+    if lang == "rust" and (repo / "Cargo.toml").is_file():
+        return ["cargo", "build", "--release", "--locked"]
+    if lang == "csharp" and (repo / "src/LmCode.Sample.csproj").is_file():
+        return ["dotnet", "build", "src/LmCode.Sample.csproj", "--configuration", "Release", "--nologo"]
+    if lang == "kotlin" and (repo / "pom.xml").is_file():
+        return ["mvn", "--batch-mode", "package", "-DskipTests"]
+    if lang == "scala" and (repo / "build.sbt").is_file():
+        return [env.get("SBT", "sbt"), "-batch", "compile", "writeRuntimeClasspath"]
     if lang == "go" and (repo / "go.mod").is_file():
         return ["go", "build", "-o", str(repo / "build/lmcode-go-sample"), "."]
     if (repo / "build.sh").is_file():
@@ -67,7 +86,7 @@ def execute(argv, cwd, log, env):
     with log.open("w") as output:
         try:
             result = subprocess.run(argv, cwd=cwd, env=env, stdout=output,
-                                    stderr=subprocess.STDOUT, timeout=int(env.get("SAMPLE_TIMEOUT", 120)))
+                                    stderr=subprocess.STDOUT, timeout=int(env.get("SAMPLE_TIMEOUT", 600)))
             code = result.returncode
         except (OSError, subprocess.TimeoutExpired) as error:
             output.write(str(error) + "\n")
@@ -107,22 +126,30 @@ def pinned_std_digest(repo):
 
 def legacy_signature_set():
     audit = runpy.run_path(str(ROOT / "audit.py"))
-    result = set()
-    for area in ("string", "math", "collections", "file"):
-        path = ROOT.parent / "stdlib" / (area + ".schema-fragment.json")
-        if not path.exists():
-            return set()
-        result.update(audit["signatures"](json.loads(path.read_text())))
-    return result
+    data = (ROOT / "legacy-std-v1.schema.json").read_bytes()
+    if hashlib.sha256(data).hexdigest() != LEGACY_STD_SHA256:
+        raise ValueError("legacy std fixture digest mismatch")
+    return audit["signatures"](json.loads(data))
+
+
+def selected_ports(value):
+    selected = tuple(value.split(","))
+    if "cpp" not in selected or len(set(selected)) != len(selected) or set(selected) - set(LANGS):
+        raise ValueError("ports must be unique known names and include cpp")
+    return selected
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--all", action="store_true", help="run all eight configured ports")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--all", action="store_true", help="run all eight configured ports")
+    selection.add_argument("--ports", help="explicit comma-separated subset; must include cpp reference")
     parser.add_argument("--env-file", type=Path, default=None)
     args = parser.parse_args()
-    if not args.all:
-        parser.error("--all is required")
+    try:
+        selected = LANGS if args.all else selected_ports(args.ports)
+    except ValueError as error:
+        parser.error(str(error))
 
     try:
         file_env = load_env_file(args.env_file or (Path(os.environ["SAMPLE_ENV_FILE"]) if os.environ.get("SAMPLE_ENV_FILE") else None))
@@ -146,7 +173,7 @@ def main():
         print(f"FAIL setup: {error}", file=sys.stderr)
         return 2
 
-    report = {"ports": {}, "cases": len(cases), "ok": True, "pending": []}
+    report = {"ports": {}, "cases": len(cases), "ok": True, "pending": [], "excluded": [lang for lang in LANGS if lang not in selected]}
     std_path = Path(env.get("SAMPLE_STD_SCHEMA", ROOT.parent / "std/lmcode-std.schema.json"))
     target_digest = hashlib.sha256(std_path.read_bytes()).hexdigest() if std_path.exists() else None
     audit = runpy.run_path(str(corpus / "audit.py"))
@@ -159,7 +186,7 @@ def main():
         report["ok"] = False
         print(f"FAIL {lang}: {entry['reason']}")
     actual_by_case = {}
-    for lang in LANGS:
+    for lang in selected:
         repo = Path(env.get(f"SAMPLE_{lang.upper()}_DIR", root / f"lmcode-{lang}-sample")).expanduser().resolve()
         entry = report["ports"][lang] = {"repo": str(repo), "build": None, "cases": [], "ok": False}
         if not repo.is_dir():
@@ -229,7 +256,7 @@ def main():
                 if not good:
                     print(f"FAIL {lang}/{name}: output or exit mismatch")
                     report["ok"] = False
-            entry["ok"] = all(item["ok"] for item in entry["cases"]) and not protocol.returncode
+            entry["ok"] = all(item["ok"] for item in entry["cases"]) and not protocol.returncode and not entry.get("pending", False)
         except Exception as error:
             entry["error"] = str(error)
             print(f"FAIL {lang}: {error}")
@@ -245,11 +272,11 @@ def main():
             report.setdefault("cross_mismatches", []).append(name)
     (state / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print("\nPROGRAM x SAMPLE MATRIX")
-    print(f'{"program":<38} ' + ' '.join(f'{lang:>7}' for lang in LANGS))
+    print(f'{"program":<38} ' + ' '.join(f'{lang:>7}' for lang in selected))
     for name, _, _, _, _ in cases:
         row = actual_by_case.get(name, {})
         values = []
-        for lang in LANGS:
+        for lang in selected:
             good = row.get(lang, {}).get('ok', False) and not report['ports'][lang].get('protocol_suite_exit', 1)
             values.append('FAIL' if report['ports'][lang].get('pending') else 'PASS' if good else 'FAIL')
         print(f'{name:<38} ' + ' '.join(f'{value:>7}' for value in values))

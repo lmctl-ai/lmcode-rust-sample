@@ -1,0 +1,10 @@
+key=1
+value=2
+key=3
+value=4
+2:4
+name:mode:new
+1.25:2.5
+empty=0
+modulo=1
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}

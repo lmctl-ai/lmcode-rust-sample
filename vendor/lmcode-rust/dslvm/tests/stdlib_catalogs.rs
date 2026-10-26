@@ -32,7 +32,7 @@ fn assert_catalog(path: &str, name: &str, registry: Registry) {
 #[test]
 fn collections_fragment_matches_registry_and_compiler() {
     // The fragment's declarations must match the explicit collection binder;
-    // merged v2/default parity is checked against the canonical schema below.
+    // merged v3/default parity is checked against the canonical schema below.
     let mut registry = Registry::without_std();
     stdlib::register_collections(&mut registry).unwrap();
     let std_sigs = Registry::new().signatures();
@@ -57,8 +57,8 @@ fn testing_fragment_matches_registry_and_compiler() {
 #[test]
 fn registry_defaults_to_std_and_supports_opt_out() {
     let mut default = Registry::new();
-    assert_eq!(default.signatures().len(), 171);
-    assert_eq!(default.std_signatures().len(), 171);
+    assert_eq!(default.signatures().len(), 181);
+    assert_eq!(default.std_signatures().len(), 181);
     assert!(default.host_signatures().is_empty());
     assert!(default.function("str_len", &["string"], "int", |_, _| Ok(Value::Int(0))).is_err());
     let empty = Registry::without_std();
@@ -100,7 +100,7 @@ fn canonical_std_schema_is_pinned_and_matches_default_registry() {
     };
     assert!(output.status.success(), "lmscript canonical std signatures failed: {}", String::from_utf8_lossy(&output.stderr));
     let compiler: Vec<String> = String::from_utf8(output.stdout).unwrap().lines().map(str::to_owned).collect();
-    assert_eq!(compiler.len(), 171);
+    assert_eq!(compiler.len(), 181);
     assert_eq!(compiler, Registry::new().signatures());
 }
 
@@ -108,21 +108,21 @@ fn canonical_std_schema_is_pinned_and_matches_default_registry() {
 fn testing_catalog_is_explicit_host_surface() {
     let mut registry = Registry::new();
     stdlib::register_testing(&mut registry, None).unwrap();
-    assert_eq!(registry.std_signatures().len(), 171);
+    assert_eq!(registry.std_signatures().len(), 181);
     assert!(registry.host_signatures().iter().any(|s| s == "fn print(string) -> void"));
     assert!(registry.host_signatures().iter().any(|s| s == "fn assert_close(float, float, float) -> void"));
     assert!(stdlib::register_testing(&mut registry, None).is_err());
 }
 
 #[test]
-fn v2_compiler_injects_the_catalog_without_host_declarations() {
-    let Ok(bin) = std::env::var("LMSCRIPT_V2_BIN") else {
-        eprintln!("LMSCRIPT_V2_BIN not set: unreleased compiler default-injection check skipped; explicit 171-signature parity is still checked");
+fn current_compiler_injects_the_catalog_without_host_declarations() {
+    let Ok(bin) = std::env::var("LMSCRIPT_STD_BIN") else {
+        eprintln!("LMSCRIPT_STD_BIN not set: unreleased compiler default-injection check skipped; explicit 181-signature parity is still checked");
         return;
     };
-    let path = std::env::temp_dir().join(format!("rust-v2-injection-{}.json", std::process::id()));
-    fs::write(&path, br#"{"dsl.schema":2,"name":"rust_v2_injection","context":{}}"#).unwrap();
-    let output = Command::new(bin).arg("--dsl-signatures").arg(&path).output().expect("configured v2 compiler must launch");
+    let path = std::env::temp_dir().join(format!("rust-std-injection-{}.json", std::process::id()));
+    fs::write(&path, br#"{"dsl.schema":2,"name":"rust_std_injection","context":{}}"#).unwrap();
+    let output = Command::new(bin).arg("--dsl-signatures").arg(&path).output().expect("configured std compiler must launch");
     let _ = fs::remove_file(path);
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let compiler: Vec<String> = String::from_utf8(output.stdout).unwrap().lines().map(str::to_owned).collect();

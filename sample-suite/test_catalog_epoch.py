@@ -20,6 +20,10 @@ class CatalogEpochTests(unittest.TestCase):
             root=Path(tmp);(root/'go.mod').write_text('module fixture\n')
             self.assertEqual(API['build_for']('go',root,{})[:2],['go','build'])
             self.assertEqual(API['build_for']('go',root,{'SAMPLE_GO_BUILD':'["custom"]'}),['custom'])
+    def test_subset_requires_a_unique_cpp_reference(self):
+        self.assertEqual(API['selected_ports']('cpp,go'), ('cpp','go'))
+        for value in ['go', 'cpp,cpp', 'cpp,unknown']:
+            with self.assertRaises(ValueError): API['selected_ports'](value)
     def test_legacy_surface_is_complete(self):
         self.assertEqual(len(API['legacy_signature_set']()),72)
 if __name__=='__main__':unittest.main()
