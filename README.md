@@ -1,0 +1,105 @@
+# lmcode Rust shop sample
+
+**Agent entry point:** start with [domain types and bindings](src/shop.rs),
+[CLI and result protocol](src/main.rs), and the [portable contract](sample-suite/CONTRACT.md).
+This is a native Rust host for compiled lmscript bytecode, not an interpreter.
+It uses the vendored MIT [dslvm crate](vendor/lmcode-rust/dslvm) and Rust's standard
+library, with no crates.io dependencies or sibling checkout needed to build.
+
+```sh
+npm install --global @lmctl-ai/lmctl@0.2.420
+./test.sh
+```
+
+Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with lmscript >=0.2.420.
+CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
+
+## Write a host in ten steps
+
+1. **Choose domain objects.** [shop.rs](src/shop.rs) defines `Money` (signed cents),
+   `Items`, `Shop` and `Ledger`; a fresh shop contains 125, 250 and 375 cents.
+2. **Declare the API.** [host.schema.json](sample-suite/host.schema.json) declares
+   contexts, overloads, operators, conversions, enum values, void and fluent methods.
+   [sample.dsl.json](sample-suite/sample.dsl.json) merges those declarations with std.
+3. **Pin every dependency byte.** [sdk.lock](sdk.lock) and [suite.lock](suite.lock)
+   record commit IDs and SHA-256s; [sync.py](scripts/sync.py) checks drift or archives
+   reviewed Git commits. Build and verification use the checked-in copies.
+4. **Make a registry.** [Host::new and register](src/shop.rs) start with
+   `Registry::new()` (all 72 std signatures), declare `shop`/`ledger`, then opt into
+   [testing helpers](vendor/lmcode-rust/dslvm/src/stdlib/testing.rs).
+5. **Own live objects in Context.** [Host::new](src/shop.rs) inserts the domain
+   objects and binds context names. `ObjRef` is an arena index, not a native pointer;
+   `Context::get/get_mut` borrow typed Rust objects. No `unsafe` or leaked allocation.
+6. **Bind callbacks.** [register](src/shop.rs) uses `function` and `method` with
+   complete parameter/return signatures. Closures receive `&mut Context` plus values;
+   methods also receive the receiver handle. Distinct tuples implement overloads.
+7. **Translate DSL concepts.** [Money/Items/Ledger methods](src/shop.rs) show
+   operators, `money(int)` conversion, string-backed `Currency`, `len/at` foreach,
+   `returns:self` registered as its owner type, and `Value::None` for void.
+8. **Compile outside the host.** [program wrappers](sample-suite/programs) use
+   `_lmcode_`/`savedsl`. [main.rs](src/main.rs) embeds the exact schema bytes,
+   `Program::load` verifies/binds `.dslb`, and `run` executes against this context.
+9. **Keep error boundaries separate.** [main.rs](src/main.rs) uses SDK result/error
+   helpers: CLI 2, load/run 3, application 4, success 0. Only loader wording is
+   normalized; the VM adds DSL line/column. A negative final balance is an app rule.
+10. **Check the shared oracle.** [test.sh](test.sh) checks locks and all imports,
+    reproduces bytecode with the compiler, runs every case, and runs negative harness
+    controls. Read the [coverage matrix](sample-suite/README.md) before adding APIs.
+
+## Conversions at the Rust boundary
+
+| lmcode type | Rust type | One-line rule |
+|---|---|---|
+| `int` | `i64` / `Value::Int` | Use explicit `wrapping_*`; never platform-sized `isize`. |
+| `float` | `f64` / `Value::Float` | IEEE binary64; VM `str(float)` uses SDK `format_g15` (C `%.15g`), including signed zero/non-finite values. |
+| `bool` | `bool` / `Value::Bool` | Preserve the boolean tag; do not coerce integers. |
+| `string` | `ByteString` / byte slices | Preserve NUL and invalid UTF-8; offsets are bytes, and `as_str()` explicitly validates UTF-8. |
+| enum `Currency` | string-backed `Value` | Register return type `Currency`; return `Value::string("USD")`. |
+| object | `ObjRef` plus schema type name | `Context` owns `Box<dyn Any>`; clone handles, borrow objects, and drop the arena after the run. |
+| list/map | SDK collection handles | Default std manages [collection storage](vendor/lmcode-rust/dslvm/src/stdlib/collections.rs) per run; schema methods expose it to bytecode. |
+| `void` | `Value::None` | No value is pushed; fluent methods return the same typed object handle instead. |
+| error | `Result<Value, dslvm::Error>` | `Error::host` carries UTF-8 error text; `Ledger.reject` validates that text, and the VM adds location. |
+
+Ledger notes stay byte strings. The final JSON writer in [main.rs](src/main.rs)
+escapes controls and preserves other bytes exactly like the C++ reference; the
+optional SDK `print` helper likewise writes bytes and LF, without lossy decoding.
+File functions use the real host filesystem. `SAMPLE_TMP` is the suite's scratch
+convention, not a sandbox.
+
+## Feature coverage
+
+| Feature | Cases |
+|---|---|
+| Literals, arithmetic, booleans, branches, inline functions, loops/switch | 001–008, 036, 043, 045 |
+| Pure host function `fee(int)` | 002 |
+| Overloads, handles, operators, conversion, chaining, enums, contexts | 009–014, 034–035, 039–040 |
+| All std collection methods and host foreach | 015–018, 037–038, 044 |
+| All std math functions and all 18 intrinsic math operations | 019–020, 025, 048 |
+| All std string and file functions | 021–024 |
+| Located VM/host/testing/application errors | 026–033 |
+| int64 wrap, short-circuit execution | 041–042 |
+| Raw/dedented heredocs and all outer splice types | 046–047 |
+| Bad bytecode and schema binding rejection | 090–091 |
+
+The suite has 48 source programs plus two bytecode mutations: **50 cases**.
+Every stdout byte, JSON field order/spacing, newline and process exit must match.
+Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
+If an oracle appears wrong, record both implementations and reasoning in that
+canonical repository's `sample-suite/ISSUES.md`; do not edit local expectations.
+
+## Run or update
+
+```sh
+cargo build --release --locked --offline
+./target/release/lmcode-rust-sample --version
+./target/release/lmcode-rust-sample --dsl-schema --json
+./target/release/lmcode-rust-sample --dsl-signatures
+./target/release/lmcode-rust-sample --dsl sample-suite/bytecode/040-full-trace.dslb
+./scripts/sync-sdk.sh ../lmcode-rust REVIEWED_COMMIT
+./scripts/sync-suite.sh ../lmcode-cpp REVIEWED_COMMIT
+./test.sh
+```
+
+Windows produces `target/release/lmcode-rust-sample.exe`; the test script handles
+that suffix. The application is MIT licensed; the vendored SDK's MIT text is
+[retained alongside it](vendor/lmcode-rust/LICENSE).
