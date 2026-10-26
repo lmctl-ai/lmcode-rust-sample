@@ -1,0 +1,10 @@
+1:2
+610062c3a9:host
+2:3
+7:-3:9
+2:3
+-0:2.5:0.5
+1:2
+610062c3a9:yes
+ledger-key:host
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}

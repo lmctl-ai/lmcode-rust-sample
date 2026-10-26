@@ -31,7 +31,7 @@ traces. Call arguments are an argv array, not a shell string. Each case has a
    The manifest independently declares expected exits: recording cannot bless an
    unexpected crash/error as success. Normal tests never regenerate expectations.
 5. Run the corpus on at least one other SDK before accepting the oracle.
-   Initial validation: C++ and Go matched all 50 cases exactly.
+   Initial validation: C++ and Go matched all 77 cases exactly.
 6. Commit sources, bytecode, manifest and expectations together. Sync the pinned
    suite into every sample and run every port's CI. `audit.py` parses actual
    bytecode import tables and fails if any canonical std signature is uncovered.
@@ -95,8 +95,24 @@ first compiler-emitted program, never hand-authored executable bytecode.
 | [046-inner-heredoc](programs/046-inner-heredoc.lms) | inner raw heredoc <<TAG; inner dedent heredoc <<~TAG; raw ${} opacity |
 | [047-outer-splice](programs/047-outer-splice.lms) | outer int/float/string/bool splices |
 | [048-math-derived](programs/048-math-derived.lms) | all 18 MATH opcodes; int/float widening |
+| [049-int-boundary](programs/049-int-boundary.lms) | int64 native roundtrip |
+| [050-float-boundary](programs/050-float-boundary.lms) | binary64 special values and formatting |
+| [051-bool-boundary](programs/051-bool-boundary.lms) | native bool roundtrip |
+| [052-byte-boundary](programs/052-byte-boundary.lms) | empty NUL multibyte byte-string roundtrip |
+| [053-file-invalid-utf8](programs/053-file-invalid-utf8.lms) | invalid UTF8 file bytes cross callback |
+| [054-megabyte-string](programs/054-megabyte-string.lms) | one MiB byte-string boundary |
+| [055-object-handles](programs/055-object-handles.lms) | object lifetime identity null void |
+| [056-collection-boundary](programs/056-collection-boundary.lms) | all standard collection types cross native boundary both ways |
+| [057-nested-inline-error](programs/057-nested-inline-error.lms) | located error inside nested inline functions |
+| [058-million-loop](programs/058-million-loop.lms) | million iterations performance sanity |
+| [059-deep-inline](programs/059-deep-inline.lms) | deep acyclic inlining no runtime call stack |
+| [060-many-arguments](programs/060-many-arguments.lms) | 255 native arguments; 509 slot VM operand stack |
+| [061-long-identifier](programs/061-long-identifier.lms) | long native import identifier |
+| [062-null-receiver](programs/062-null-receiver.lms) | null handle method error is located |
+| [063-wrong-runtime-handle](programs/063-wrong-runtime-handle.lms) | dynamic wrong handle type runtime failure |
 | [090-bad-bytecode](bytecode/090-bad-bytecode.dslb) | loader bad-bytecode |
 | [091-schema-mismatch](bytecode/091-schema-mismatch.dslb) | loader schema-mismatch |
+| [092-wrong-handle-import](bytecode/092-wrong-handle-import.dslb) | declared wrong handle type load error |
 
 ## CI entry points
 
@@ -115,3 +131,34 @@ gh workflow run sample-suite.yml -R lmctl-ai/lmcode-cpp -f compiler=latest
 The job recompiles sources and rejects bytecode drift for explicit review; it
 never silently regenerates oracle files. Each additional sample should run the
 same `run-suite.sh` in its own CI and sync the reviewed suite lock on updates.
+
+## Conversion and all-port matrix
+
+Programs 049–063 add exact native conversion probes; `CONTRACT.md` defines their
+host behavior. The one-MiB/NUL/invalid-UTF8 fixtures are bytes, never lossy strings.
+The million-iteration case has a five-second limit; the 255-argument nested call
+has a 509-slot operand stack. Recursive inline functions are deliberately rejected
+by `check-compile-errors.py` (exit 2), not treated as a supported recursive VM feature.
+
+```sh
+./sample-suite/run-all-samples.sh --all
+./sample-suite/run-all-samples.sh --all --env-file /path/to/sample-paths.json
+```
+
+Defaults are `~/repos/dsl/lmcode-{c,cpp,rust,go,csharp,java,kotlin,scala}-sample`.
+Each repo supplies `build.sh` or `make all`, producing `build/lmcode-LANG-sample`.
+Managed-language launchers should `exec` their runtime. JSON/env files may set
+`SAMPLE_CPP_DIR` (and other language names), `SAMPLE_LANG_BUILD` and
+`SAMPLE_LANG_COMMAND` (JSON argv arrays), `SAMPLE_CORPUS`, or `SAMPLE_STATE`.
+Commands run from their sample checkout. Missing builds/ports are FAIL, not SKIP.
+The runner validates the canonical corpus and compiler rejection, builds every
+port, checks its CLI, and runs every case against expected bytes AND against the
+other actual byte outputs. It prints a program x sample matrix and preserves
+hex-encoded observations and timings in `~/.local/state/lmctl/sample-matrix/`.
+Weekly/manual/path-triggered `.github/workflows/samples.yml` checks all eight public
+repos on Linux; during rollout it intentionally fails until every port is implemented.
+
+
+## Catalog v2 data examples
+
+Programs 101-105 exercise all 99 new container/Json imports; 106-108 pin their runtime traps. Expectations are recorded only from the rebuilt C++ reference. The all-samples matrix reports known released-v1 SDK pins (or exact legacy-only registry surfaces for unpinned Go builds) as SKIP, not PASS; partial/declared-v2 implementations still execute and fail normally. A skipped port does not establish v2 interoperability. Single-host protocol/run-suite checks never skip.

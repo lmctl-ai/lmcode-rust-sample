@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+fn recur(x: int) -> int { return recur(x); }
+print(str(recur(1)));
+end _lmcode_
+savedsl(program, ARGV[0]);

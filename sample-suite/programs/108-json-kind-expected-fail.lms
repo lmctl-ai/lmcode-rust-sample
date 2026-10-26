@@ -1,0 +1,4 @@
+program = _lmcode_ schema="../sample.dsl.json";
+let doc = json_parse("[]"); doc.get("missing");
+end _lmcode_
+savedsl(program, ARGV[0]);

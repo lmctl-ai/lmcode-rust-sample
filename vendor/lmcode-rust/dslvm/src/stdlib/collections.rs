@@ -28,7 +28,7 @@ impl StrMap {
     pub fn set(&mut self, key: crate::ByteString, value: crate::ByteString) { if let Some(pos) = self.find(&key) { self.items[pos].1 = value; } else { self.append(key, value); } }
 }
 
-trait Element: Clone + PartialEq + 'static {
+pub(super) trait Element: Clone + PartialEq + 'static {
     const TYPE: &'static str;
     fn get(value: &Value) -> Result<Self, Error>;
     fn put(value: Self) -> Value;
@@ -49,7 +49,7 @@ impl Element for f64 {
     fn put(value: Self) -> Value { Value::Float(value) }
 }
 
-fn index(i: i64, size: usize, method: &str) -> Result<usize, Error> {
+pub(super) fn index(i: i64, size: usize, method: &str) -> Result<usize, Error> {
     if i < 0 || i as u64 >= size as u64 {
         Err(Error::host(format!("{}: index out of range: {}", method, i)))
     } else {

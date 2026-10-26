@@ -13,7 +13,7 @@ if not command or not subprocess.check_output([*command, '--version']).startswit
 manifest = json.loads((ROOT / 'manifest.json').read_text())
 runner['check_files'](manifest)
 for case in manifest['cases']:
-    result = runner['run'](command, ROOT / case['bytecode'])
+    result = runner['run'](command, ROOT / case['bytecode'], case.get('timeout_seconds', 30))
     if result.stderr or result.returncode != case['expected_exit']:
         sys.exit(f'{case["name"]}: reference crashed or wrote stderr: {result.stderr!r}')
     lines = result.stdout.splitlines()

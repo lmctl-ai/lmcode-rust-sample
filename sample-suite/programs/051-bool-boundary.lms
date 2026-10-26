@@ -1,0 +1,4 @@
+program = _lmcode_ schema="../sample.dsl.json";
+print(str(host_bool(true)) + ":" + str(host_bool(false)));
+end _lmcode_
+savedsl(program, ARGV[0]);

@@ -152,7 +152,7 @@ impl Context {
         ObjRef(self.objects.len() - 1)
     }
     /// Inserts a standard-library collection and enforces the per-context collection quota.
-    pub(crate) fn insert_collection<T: Any>(&mut self, type_name: &str, object: T) -> Result<ObjRef, Error> {
+    pub fn insert_collection<T: Any>(&mut self, type_name: &str, object: T) -> Result<ObjRef, Error> {
         if self.collection_objects >= 65_536 {
             return Err(Error::host(format!("{} object limit exceeded (65536)", type_name)));
         }
@@ -164,6 +164,16 @@ impl Context {
         } else { self.insert(type_name, object) };
         self.collection_indices.push(handle.0);
         Ok(handle)
+    }
+    /// A borrowed immutable std node shares its root's quota slot and run lifetime.
+    pub(crate) fn insert_borrowed_collection<T: Any>(&mut self, type_name: &str, object: T) -> ObjRef {
+        let handle = if let Some(index) = self.free_collection_slots.pop() {
+            self.objects[index] = Some(Box::new(object));
+            self.types[index] = type_name.to_string();
+            ObjRef(index)
+        } else { self.insert(type_name, object) };
+        self.collection_indices.push(handle.0);
+        handle
     }
     pub(crate) fn clear_collections(&mut self) {
         for index in self.collection_indices.drain(..) { self.objects[index] = None; self.free_collection_slots.push(index); }

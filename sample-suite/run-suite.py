@@ -28,10 +28,22 @@ def check_files(manifest):
             raise ValueError(case['name'] + ': source changed without recompilation')
 
 
-def run(command, bytecode):
+def prepare_tmp(directory):
+    for name, value in json.loads((ROOT / 'manifest.json').read_text()).get('fixtures', {}).items():
+        if Path(name).name != name:
+            raise ValueError('unsafe fixture name')
+        (Path(directory) / name).write_bytes(bytes.fromhex(value))
+
+
+def check_compiler():
+    runpy.run_path(str(ROOT / 'check-compile-errors.py'))['check']()
+
+
+def run(command, bytecode, timeout=30):
     with tempfile.TemporaryDirectory(prefix='lmcode-sample-') as scratch:
+        prepare_tmp(scratch)
         env = dict(os.environ, SAMPLE_TMP=str(Path(scratch).resolve()))
-        return subprocess.run([*command, '--dsl', str(bytecode.resolve())], env=env, capture_output=True, timeout=30)
+        return subprocess.run([*command, '--dsl', str(bytecode.resolve())], env=env, capture_output=True, timeout=timeout)
 
 
 def main():
@@ -40,6 +52,7 @@ def main():
         sys.exit('usage: run-suite.sh EXECUTABLE [COMMAND_ARGUMENT ...]')
     manifest = json.loads((ROOT / 'manifest.json').read_text())
     check_files(manifest)
+    check_compiler()
     runpy.run_path(str(ROOT / 'protocol.py'))['check'](command)
     failed = 0
     for case in manifest['cases']:
@@ -48,7 +61,7 @@ def main():
         code = int((ROOT / 'expected' / (name + '.exit')).read_text())
         if code != case['expected_exit']:
             raise ValueError(name + ': exit fixture contradicts manifest intent')
-        result = run(command, ROOT / case['bytecode'])
+        result = run(command, ROOT / case['bytecode'], case.get('timeout_seconds', 30))
         good = result.returncode == code and result.stdout == expected and not result.stderr
         print(('PASS ' if good else 'FAIL ') + name)
         if not good:

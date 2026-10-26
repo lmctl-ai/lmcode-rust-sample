@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "source": "recursive-inline.lms",
+      "exit": 2,
+      "diagnostic": "recursive user functions are not allowed"
+    }
+  ]
+}

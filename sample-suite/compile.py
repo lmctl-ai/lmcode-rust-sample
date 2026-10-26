@@ -33,6 +33,7 @@ def main():
                           bytecode_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
                           expected_exit=coverage.get('exit_codes', {}).get(source.name,
                                          3 if source.name in coverage['expected_failures'] else 0),
+                          timeout_seconds=coverage.get('timeouts', {}).get(source.name, 30),
                           features=coverage['programs'][source.name]))
     original = (args.output / (cases[0]['name'] + '.dslb')).read_bytes()
     for name, offset in [('090-bad-bytecode', 0), ('091-schema-mismatch', 6)]:
@@ -45,11 +46,24 @@ def main():
                           expected_exit=3,
                           mutation=dict(source=cases[0]['name'], byte_offset=offset),
                           features=['loader ' + name[4:]]))
+    source_name = '055-object-handles'
+    raw = (args.output / (source_name + '.dslb')).read_bytes()
+    before = b'fn host_echo_money(Money) -> Money'
+    after = b'fn host_echo_money(Items) -> Money'
+    assert before in raw and len(before) == len(after)
+    changed = raw.replace(before, after)
+    name = '092-wrong-handle-import'
+    (args.output / (name + '.dslb')).write_bytes(changed)
+    cases.append(dict(name=name, bytecode='bytecode/' + name + '.dslb',
+                      bytecode_sha256=hashlib.sha256(changed).hexdigest(), expected_exit=3,
+                      mutation=dict(source=source_name, import_from=before.decode(), import_to=after.decode()),
+                      features=['declared wrong handle type load error']))
     # Alternate output is for reproducibility checks and never changes the manifest.
     if args.output.resolve() == (ROOT / 'bytecode').resolve():
         manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=5,
                         schema_sha256=hashlib.sha256((ROOT / 'sample.dsl.json').read_bytes()).hexdigest(),
                         compiler_minimum='0.2.420', cases=cases)
+        manifest['fixtures'] = {'invalid.bin': 'ff00c328800a', 'zero-bytes.bin': '610062', 'chunk.bin': '7800c3a9'}
         (ROOT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', newline='\n')
     print(f'Compiled {len(cases)} sample cases')
 

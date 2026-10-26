@@ -4,6 +4,10 @@
 //! cap results at 64 MiB, and glob matching caps work at 2^27 units. These are host policies,
 //! independent of the VM, which imposes no string or execution limits.
 pub mod collections;
+pub mod containers;
+pub mod json;
+pub use containers::register_containers;
+pub use json::register_json;
 pub mod testing;
 pub mod file;
 pub use collections::register_collections;
@@ -24,6 +28,8 @@ pub fn register_std(registry: &mut Registry) -> Result<&mut Registry, Error> {
     register_math(registry)?;
     register_collections(registry)?;
     register_file(registry)?;
+    register_containers(registry)?;
+    register_json(registry)?;
     registry.mark_std_since(&before);
     Ok(registry)
 }

@@ -241,6 +241,98 @@
     "048-math-derived.lms": [
       "all 18 MATH opcodes",
       "int/float widening"
+    ],
+    "049-int-boundary.lms": [
+      "int64 native roundtrip"
+    ],
+    "050-float-boundary.lms": [
+      "binary64 special values and formatting"
+    ],
+    "051-bool-boundary.lms": [
+      "native bool roundtrip"
+    ],
+    "052-byte-boundary.lms": [
+      "empty NUL multibyte byte-string roundtrip"
+    ],
+    "053-file-invalid-utf8.lms": [
+      "invalid UTF8 file bytes cross callback"
+    ],
+    "054-megabyte-string.lms": [
+      "one MiB byte-string boundary"
+    ],
+    "055-object-handles.lms": [
+      "object lifetime identity null void"
+    ],
+    "056-collection-boundary.lms": [
+      "all standard collection types cross native boundary both ways"
+    ],
+    "057-nested-inline-error.lms": [
+      "located error inside nested inline functions"
+    ],
+    "058-million-loop.lms": [
+      "million iterations performance sanity"
+    ],
+    "059-deep-inline.lms": [
+      "deep acyclic inlining no runtime call stack"
+    ],
+    "060-many-arguments.lms": [
+      "255 native arguments",
+      "509 slot VM operand stack"
+    ],
+    "061-long-identifier.lms": [
+      "long native import identifier"
+    ],
+    "062-null-receiver.lms": [
+      "null handle method error is located"
+    ],
+    "063-wrong-runtime-handle.lms": [
+      "dynamic wrong handle type runtime failure"
+    ],
+    "102-int-containers.lms": [
+      "int stack/queue/PQ",
+      "stable priority ties",
+      "pop order",
+      "clear/empty/len"
+    ],
+    "103-float-containers.lms": [
+      "float stack/queue/PQ",
+      "stable priority ties",
+      "pop order",
+      "clear/empty/len"
+    ],
+    "104-str-containers.lms": [
+      "str stack/queue/PQ",
+      "stable priority ties",
+      "pop order",
+      "clear/empty/len"
+    ],
+    "101-typed-maps.lms": [
+      "typed maps",
+      "overwrite/reinsert order",
+      "all typed-map methods"
+    ],
+    "105-json-navigation.lms": [
+      "immutable Json",
+      "all Json accessors",
+      "lossless token spelling"
+    ],
+    "106-stack-empty-expected-fail.lms": [
+      "stack empty trap"
+    ],
+    "107-pq-priority-expected-fail.lms": [
+      "PQ nonfinite priority trap"
+    ],
+    "108-json-kind-expected-fail.lms": [
+      "Json kind trap"
+    ],
+    "064-money-invalid-float.lms": [
+      "nonfinite Money factory error"
+    ],
+    "065-price-invalid-float.lms": [
+      "nonfinite overloaded price error"
+    ],
+    "066-record-null-money.lms": [
+      "null argument callback error"
     ]
   },
   "canonical_signatures": [
@@ -352,9 +444,21 @@
     "030-negative-balance-expected-fail.lms",
     "031-items-oob-expected-fail.lms",
     "032-intlist-oob-expected-fail.lms",
-    "033-map-missing-expected-fail.lms"
+    "033-map-missing-expected-fail.lms",
+    "057-nested-inline-error.lms",
+    "062-null-receiver.lms",
+    "063-wrong-runtime-handle.lms",
+    "106-stack-empty-expected-fail.lms",
+    "107-pq-priority-expected-fail.lms",
+    "108-json-kind-expected-fail.lms",
+    "064-money-invalid-float.lms",
+    "065-price-invalid-float.lms",
+    "066-record-null-money.lms"
   ],
   "exit_codes": {
     "030-negative-balance-expected-fail.lms": 4
+  },
+  "timeouts": {
+    "058-million-loop.lms": 5
   }
 }

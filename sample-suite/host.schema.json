@@ -220,6 +220,399 @@
         ],
         "returns": "void"
       }
+    ],
+    "host_int": [
+      {
+        "params": [
+          "int"
+        ],
+        "returns": "int"
+      }
+    ],
+    "host_float": [
+      {
+        "params": [
+          "float"
+        ],
+        "returns": "float"
+      }
+    ],
+    "host_float_case": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "float"
+      }
+    ],
+    "host_bool": [
+      {
+        "params": [
+          "bool"
+        ],
+        "returns": "bool"
+      }
+    ],
+    "host_bytes": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "host_hex": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "string"
+      }
+    ],
+    "host_echo_money": [
+      {
+        "params": [
+          "Money"
+        ],
+        "returns": "Money"
+      }
+    ],
+    "host_is_null": [
+      {
+        "params": [
+          "Money"
+        ],
+        "returns": "bool"
+      }
+    ],
+    "host_str_list": [
+      {
+        "params": [
+          "StrList"
+        ],
+        "returns": "StrList"
+      }
+    ],
+    "host_int_list": [
+      {
+        "params": [
+          "IntList"
+        ],
+        "returns": "IntList"
+      }
+    ],
+    "host_float_list": [
+      {
+        "params": [
+          "FloatList"
+        ],
+        "returns": "FloatList"
+      }
+    ],
+    "host_str_map": [
+      {
+        "params": [
+          "StrMap"
+        ],
+        "returns": "StrMap"
+      }
+    ],
+    "host_same": [
+      {
+        "params": [
+          "Money",
+          "Money"
+        ],
+        "returns": "bool"
+      }
+    ],
+    "host_null": [
+      {
+        "params": [],
+        "returns": "Money"
+      }
+    ],
+    "host_void": [
+      {
+        "params": [],
+        "returns": "void"
+      }
+    ],
+    "host_wrong": [
+      {
+        "params": [],
+        "returns": "Money"
+      }
+    ],
+    "host_sum": [
+      {
+        "params": [
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int",
+          "int"
+        ],
+        "returns": "int"
+      }
+    ],
+    "host_long_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx": [
+      {
+        "params": [
+          "int"
+        ],
+        "returns": "int"
+      }
     ]
   },
   "conversions": [
