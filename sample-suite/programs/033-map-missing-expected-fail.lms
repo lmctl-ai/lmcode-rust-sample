@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+let value = str_map().get("missing");
+print("unreachable map missing");
+end _lmcode_
+savedsl(program, ARGV[0]);

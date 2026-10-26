@@ -1,0 +1,23 @@
+{
+  "repo": "lmctl-ai/lmcode-rust",
+  "commit": "7f8df672bf9cfe27460b22458e2e80044b6f0c8a",
+  "sha256": {
+    "LICENSE": "949eb9b711d9b64ae472b87b94916e8427575a75d0d218f6c4cbccf8c48d46f3",
+    "dslvm/Cargo.toml": "5158321450ef1c5bbf44147d9d650b1b5bf669d5f760183a476023e642a0c91f",
+    "dslvm/src/lib.rs": "4155fd588e7f58d831bfae590985434994d607311b5f22d2921ac3d21be882f5",
+    "dslvm/src/sha256.rs": "fbc0576b4d283b1b83650ee7a030e6b03a117e1b34d52d3b826e7fe088ceb429",
+    "dslvm/src/stdlib/collections.rs": "a6631535d46b6554fa401f2572141584ae81a9807c438ddf570686a97485810f",
+    "dslvm/src/stdlib/file.rs": "67cc949b090dbe097785fae97af0e0c056ba5cf7705c64f7cd9f9a00a32c8eb1",
+    "dslvm/src/stdlib/math.rs": "0f39a342142cd07ee975dd81ed72e4d68618bf72da710aca120946a928122131",
+    "dslvm/src/stdlib/testing.rs": "562d0749cc0c248e4bc4902389ba8f99758bdcc4ad84c69edb690c7df9902f3a",
+    "dslvm/src/stdlib/testing_tests.rs": "b5c91ea786c9cddabc310ee0f1e5540c987ce66891148ef6d58484aeb8a388e2",
+    "dslvm/src/stdlib.rs": "09f7e325a24e1d84360841700386d6ac2f4ef0ac1cb825bacaacaa6e6d77e72e",
+    "dslvm/tests/fixtures/math.schema.json": "75c738d6542ceb08628399616eac06a6ee4b3b17fff4ed7cad8c0f6cc3b51390",
+    "dslvm/tests/fixtures/string.schema.json": "afd17de717b9cafbc2143c6df93b3553f3295c37dcd1cc10bbb057361050a986",
+    "dslvm/tests/stdlib_catalogs.rs": "001eba2fb387004376a75a69968a45b4bf60c0656ce9e011ca0afc2aa23a10c7",
+    "dslvm/tests/stdlib_math.rs": "cea24c47d594d6d8dc9753faf3b48fff32dca3730732f159bc5ccde21b66cf77",
+    "dslvm/tests/stdlib_string.rs": "198b09ec67bbf054d1e9a6997a08edbb526ba49c3d67d02fe9583407a048a61b",
+    "dslvm/tests/vm_tests.rs": "fd89319e9435f7f18a9395f414dd42a253573c87bd46b26c85e9c266a967f06d",
+    "std/lmcode-std.schema.json": "cfe31e8b34fdcc33a13e456e80fa9d05a5e6c8fed5b98988abd24ac8570e65e0"
+  }
+}

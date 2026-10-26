@@ -1,0 +1,7 @@
+program = _lmcode_ schema="../sample.dsl.json";
+switch (shop.currency()) {
+  case Currency.USD: { print("USD"); }
+  case Currency.EUR: { print("EUR"); }
+}
+end _lmcode_
+savedsl(program, ARGV[0]);

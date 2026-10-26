@@ -1,0 +1,8 @@
+program = _lmcode_ schema="../sample.dsl.json";
+let all = shop.total();
+let label = shop.label();
+let currency = shop.currency();
+let items = shop.items();
+print(str(all.amount()) + ":" + label + ":" + str(currency));
+end _lmcode_
+savedsl(program, ARGV[0]);

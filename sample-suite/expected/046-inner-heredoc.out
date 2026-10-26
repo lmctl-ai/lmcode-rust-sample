@@ -1,0 +1,3 @@
+  shop ${not_a_splice} "USD"|
+hello|  ledger|
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}

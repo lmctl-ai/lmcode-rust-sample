@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+ledger.record(money(-1));
+print(str(ledger.balance().amount()));
+end _lmcode_
+savedsl(program, ARGV[0]);

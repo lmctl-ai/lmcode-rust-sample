@@ -1,0 +1,1 @@
+{"ok": false, "phase": "load", "code": "LOAD_BAD_BYTECODE", "message": "invalid sample bytecode"}

@@ -1,0 +1,360 @@
+{
+  "schema": "sample.dsl.json",
+  "programs": {
+    "001-literals.lms": [
+      "literals",
+      "print(string)"
+    ],
+    "002-arithmetic.lms": [
+      "arithmetic",
+      "int operators",
+      "fee(int)"
+    ],
+    "003-boolean.lms": [
+      "boolean",
+      "comparisons"
+    ],
+    "004-if-else.lms": [
+      "if",
+      "else"
+    ],
+    "005-while.lms": [
+      "while"
+    ],
+    "006-range-for.lms": [
+      "range",
+      "for"
+    ],
+    "007-switch.lms": [
+      "switch",
+      "break",
+      "default"
+    ],
+    "008-function.lms": [
+      "function",
+      "return"
+    ],
+    "009-money-overloads.lms": [
+      "money(int)",
+      "money(float)",
+      "Shop.price(int)",
+      "Shop.price(float)"
+    ],
+    "010-money-methods.lms": [
+      "Money.amount()",
+      "Money.currency()",
+      "Money.set(int)"
+    ],
+    "011-money-operators.lms": [
+      "Money.plus(Money)",
+      "Money.minus(Money)",
+      "Money.times(int)",
+      "Money.neg()",
+      "Money r*"
+    ],
+    "012-shop-methods.lms": [
+      "Shop.items()",
+      "Shop.total()",
+      "Shop.currency()",
+      "Shop.label()"
+    ],
+    "013-items-methods.lms": [
+      "Items.len()",
+      "Items.at(int)"
+    ],
+    "014-ledger-methods.lms": [
+      "Ledger.record(Money)",
+      "Ledger.balance()",
+      "Ledger.note(string)",
+      "Ledger.note()",
+      "Ledger.count()"
+    ],
+    "015-float-list.lms": [
+      "float_list()",
+      "FloatList.add(float)",
+      "FloatList.at(int)",
+      "FloatList.clear()",
+      "FloatList.contains(float)",
+      "FloatList.index_of(float)",
+      "FloatList.len()",
+      "FloatList.set(int,float)"
+    ],
+    "016-int-list.lms": [
+      "int_list()",
+      "IntList.add(int)",
+      "IntList.at(int)",
+      "IntList.clear()",
+      "IntList.contains(int)",
+      "IntList.index_of(int)",
+      "IntList.len()",
+      "IntList.set(int,int)"
+    ],
+    "017-str-list.lms": [
+      "str_list()",
+      "StrList.add(string)",
+      "StrList.at(int)",
+      "StrList.clear()",
+      "StrList.contains(string)",
+      "StrList.index_of(string)",
+      "StrList.join(string)",
+      "StrList.len()",
+      "StrList.set(int,string)"
+    ],
+    "018-str-map.lms": [
+      "str_map()",
+      "StrMap.clear()",
+      "StrMap.get(string)",
+      "StrMap.get_or(string,string)",
+      "StrMap.has(string)",
+      "StrMap.key_at(int)",
+      "StrMap.len()",
+      "StrMap.remove(string)",
+      "StrMap.set(string,string)"
+    ],
+    "019-math-int.lms": [
+      "math_abs(int)",
+      "math_ceil(int)",
+      "math_floor(int)",
+      "math_max(int,int)",
+      "math_min(int,int)",
+      "math_pow(int,int)",
+      "math_round(int)",
+      "math_sqrt(int)"
+    ],
+    "020-math-float.lms": [
+      "math_abs(float)",
+      "math_ceil(float)",
+      "math_floor(float)",
+      "math_max(float,float)",
+      "math_min(float,float)",
+      "math_pow(float,float)",
+      "math_round(float)",
+      "math_sqrt(float)"
+    ],
+    "021-string-predicates.lms": [
+      "str_contains(string,string)",
+      "str_ends_with(string,string)",
+      "str_find(string,string)",
+      "str_is_float(string)",
+      "str_is_int(string)",
+      "str_match(string,string)",
+      "str_starts_with(string,string)"
+    ],
+    "022-string-transform.lms": [
+      "str_len(string)",
+      "str_lower(string)",
+      "str_repeat(string,int)",
+      "str_replace(string,string,string)",
+      "str_substr(string,int,int)",
+      "str_trim(string)",
+      "str_upper(string)"
+    ],
+    "023-string-convert.lms": [
+      "str_to_float(string)",
+      "str_to_int(string)",
+      "str_split(string,string)"
+    ],
+    "024-file-functions.lms": [
+      "sample_tmp()",
+      "file_write(string,string)",
+      "file_append(string,string)",
+      "file_exists(string)",
+      "file_read(string)",
+      "file_lines(string)"
+    ],
+    "025-assert-close.lms": [
+      "assert_close(float,float,float)"
+    ],
+    "026-divzero-expected-fail.lms": [
+      "runtime divzero"
+    ],
+    "027-modzero-expected-fail.lms": [
+      "runtime modzero"
+    ],
+    "028-assert-fail-expected-fail.lms": [
+      "assert_close failure"
+    ],
+    "029-reject-expected-fail.lms": [
+      "Ledger.reject(string)"
+    ],
+    "030-negative-balance-expected-fail.lms": [
+      "application negative balance"
+    ],
+    "031-items-oob-expected-fail.lms": [
+      "Items.at out of bounds"
+    ],
+    "032-intlist-oob-expected-fail.lms": [
+      "IntList.at out of bounds"
+    ],
+    "033-map-missing-expected-fail.lms": [
+      "StrMap missing key"
+    ],
+    "034-money-conversion.lms": [
+      "int to Money conversion"
+    ],
+    "035-context-trace.lms": [
+      "context shop",
+      "context ledger"
+    ],
+    "036-nested-control.lms": [
+      "nested control flow"
+    ],
+    "037-map-iteration.lms": [
+      "collection iteration"
+    ],
+    "038-floatlist-chain.lms": [
+      "method chaining",
+      "bool expression"
+    ],
+    "039-enum-currency.lms": [
+      "Currency enum"
+    ],
+    "040-full-trace.lms": [
+      "full integration trace"
+    ],
+    "041-int64-wrap.lms": [
+      "int64 wraparound"
+    ],
+    "042-short-circuit.lms": [
+      "short circuit",
+      "runtime safety"
+    ],
+    "043-break-continue.lms": [
+      "break",
+      "continue"
+    ],
+    "044-items-foreach.lms": [
+      "Items foreach"
+    ],
+    "045-switch-string-enum.lms": [
+      "string switch",
+      "enum switch"
+    ],
+    "046-inner-heredoc.lms": [
+      "inner raw heredoc <<TAG",
+      "inner dedent heredoc <<~TAG",
+      "raw ${} opacity"
+    ],
+    "047-outer-splice.lms": [
+      "outer int/float/string/bool splices"
+    ],
+    "048-math-derived.lms": [
+      "all 18 MATH opcodes",
+      "int/float widening"
+    ]
+  },
+  "canonical_signatures": [
+    "fn money(int) -> Money",
+    "fn money(float) -> Money",
+    "fn fee(int) -> int",
+    "fn sample_tmp() -> string",
+    "fn print(string) -> void",
+    "fn assert_close(float, float, float) -> void",
+    "fn float_list() -> FloatList",
+    "fn int_list() -> IntList",
+    "fn math_abs(int) -> int",
+    "fn math_abs(float) -> float",
+    "fn math_ceil(int) -> int",
+    "fn math_ceil(float) -> float",
+    "fn math_floor(int) -> int",
+    "fn math_floor(float) -> float",
+    "fn math_max(int, int) -> int",
+    "fn math_max(float, float) -> float",
+    "fn math_min(int, int) -> int",
+    "fn math_min(float, float) -> float",
+    "fn math_pow(int, int) -> int",
+    "fn math_pow(float, float) -> float",
+    "fn math_round(int) -> int",
+    "fn math_round(float) -> float",
+    "fn math_sqrt(int) -> int",
+    "fn math_sqrt(float) -> float",
+    "fn str_contains(string, string) -> bool",
+    "fn str_ends_with(string, string) -> bool",
+    "fn str_find(string, string) -> int",
+    "fn str_is_float(string) -> bool",
+    "fn str_is_int(string) -> bool",
+    "fn str_len(string) -> int",
+    "fn str_list() -> StrList",
+    "fn str_lower(string) -> string",
+    "fn str_map() -> StrMap",
+    "fn str_match(string, string) -> bool",
+    "fn str_repeat(string, int) -> string",
+    "fn str_replace(string, string, string) -> string",
+    "fn str_split(string, string) -> StrList",
+    "fn str_starts_with(string, string) -> bool",
+    "fn str_substr(string, int, int) -> string",
+    "fn str_to_float(string) -> float",
+    "fn str_to_int(string) -> int",
+    "fn str_trim(string) -> string",
+    "fn str_upper(string) -> string",
+    "fn file_read(string) -> string",
+    "fn file_write(string, string) -> void",
+    "fn file_append(string, string) -> void",
+    "fn file_exists(string) -> bool",
+    "fn file_lines(string) -> StrList",
+    "method Money.amount() -> int",
+    "method Money.currency() -> Currency",
+    "method Money.plus(Money) -> Money",
+    "method Money.minus(Money) -> Money",
+    "method Money.times(int) -> Money",
+    "method Money.neg() -> Money",
+    "method Money.set(int) -> self",
+    "method Items.len() -> int",
+    "method Items.at(int) -> Money",
+    "method Shop.items() -> Items",
+    "method Shop.total() -> Money",
+    "method Shop.price(int) -> Money",
+    "method Shop.price(float) -> Money",
+    "method Shop.currency() -> Currency",
+    "method Shop.label() -> string",
+    "method Ledger.record(Money) -> self",
+    "method Ledger.balance() -> Money",
+    "method Ledger.note(string) -> void",
+    "method Ledger.note() -> string",
+    "method Ledger.count() -> int",
+    "method Ledger.reject(string) -> void",
+    "method FloatList.add(float) -> FloatList",
+    "method FloatList.at(int) -> float",
+    "method FloatList.clear() -> FloatList",
+    "method FloatList.contains(float) -> bool",
+    "method FloatList.index_of(float) -> int",
+    "method FloatList.len() -> int",
+    "method FloatList.set(int, float) -> FloatList",
+    "method IntList.add(int) -> IntList",
+    "method IntList.at(int) -> int",
+    "method IntList.clear() -> IntList",
+    "method IntList.contains(int) -> bool",
+    "method IntList.index_of(int) -> int",
+    "method IntList.len() -> int",
+    "method IntList.set(int, int) -> IntList",
+    "method StrList.add(string) -> StrList",
+    "method StrList.at(int) -> string",
+    "method StrList.clear() -> StrList",
+    "method StrList.contains(string) -> bool",
+    "method StrList.index_of(string) -> int",
+    "method StrList.join(string) -> string",
+    "method StrList.len() -> int",
+    "method StrList.set(int, string) -> StrList",
+    "method StrMap.clear() -> StrMap",
+    "method StrMap.get(string) -> string",
+    "method StrMap.get_or(string, string) -> string",
+    "method StrMap.has(string) -> bool",
+    "method StrMap.key_at(int) -> string",
+    "method StrMap.len() -> int",
+    "method StrMap.remove(string) -> bool",
+    "method StrMap.set(string, string) -> StrMap"
+  ],
+  "expected_failures": [
+    "026-divzero-expected-fail.lms",
+    "027-modzero-expected-fail.lms",
+    "028-assert-fail-expected-fail.lms",
+    "029-reject-expected-fail.lms",
+    "030-negative-balance-expected-fail.lms",
+    "031-items-oob-expected-fail.lms",
+    "032-intlist-oob-expected-fail.lms",
+    "033-map-missing-expected-fail.lms"
+  ],
+  "exit_codes": {
+    "030-negative-balance-expected-fail.lms": 4
+  }
+}

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Compile source wrappers; expectations are never rewritten here."""
+import argparse
+import hashlib
+import json
+import os
+import shutil
+from pathlib import Path
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parent
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT / 'bytecode')
+    args = parser.parse_args()
+    args.output.mkdir(parents=True, exist_ok=True)
+    coverage = json.loads((ROOT / 'coverage.json').read_text())
+    compiler_name = os.environ.get('LMSCRIPT_BIN', 'lmscript')
+    compiler = shutil.which(compiler_name)
+    if not compiler:
+        sys.exit('compiler not found: ' + compiler_name)
+    cases = []
+    for source in sorted((ROOT / 'programs').glob('*.lms')):
+        if len(source.read_text().splitlines()) > 40:
+            sys.exit(f'{source.name}: exceeds 40 lines')
+        output = args.output / (source.stem + '.dslb')
+        subprocess.run([compiler, '--no-preflight', str(source), str(output.resolve())], check=True)
+        cases.append(dict(name=source.stem, source='programs/' + source.name,
+                          source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                          bytecode='bytecode/' + output.name,
+                          bytecode_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
+                          expected_exit=coverage.get('exit_codes', {}).get(source.name,
+                                         3 if source.name in coverage['expected_failures'] else 0),
+                          features=coverage['programs'][source.name]))
+    original = (args.output / (cases[0]['name'] + '.dslb')).read_bytes()
+    for name, offset in [('090-bad-bytecode', 0), ('091-schema-mismatch', 6)]:
+        data = bytearray(original)
+        data[offset] ^= 0xFF
+        output = args.output / (name + '.dslb')
+        output.write_bytes(data)
+        cases.append(dict(name=name, bytecode='bytecode/' + output.name,
+                          bytecode_sha256=hashlib.sha256(data).hexdigest(),
+                          expected_exit=3,
+                          mutation=dict(source=cases[0]['name'], byte_offset=offset),
+                          features=['loader ' + name[4:]]))
+    # Alternate output is for reproducibility checks and never changes the manifest.
+    if args.output.resolve() == (ROOT / 'bytecode').resolve():
+        manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=5,
+                        schema_sha256=hashlib.sha256((ROOT / 'sample.dsl.json').read_bytes()).hexdigest(),
+                        compiler_minimum='0.2.420', cases=cases)
+        (ROOT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', newline='\n')
+    print(f'Compiled {len(cases)} sample cases')
+
+if __name__ == '__main__':
+    main()

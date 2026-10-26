@@ -1,0 +1,236 @@
+{
+  "dsl.schema": 2,
+  "name": "sample_shop_v1",
+  "enums": {
+    "Currency": [
+      "USD",
+      "EUR"
+    ]
+  },
+  "types": {
+    "Money": {
+      "operators": {
+        "+": "plus",
+        "-": "minus",
+        "*": "times",
+        "neg": "neg",
+        "r*": "times"
+      },
+      "methods": {
+        "amount": [
+          {
+            "params": [],
+            "returns": "int"
+          }
+        ],
+        "currency": [
+          {
+            "params": [],
+            "returns": "Currency"
+          }
+        ],
+        "plus": [
+          {
+            "params": [
+              "Money"
+            ],
+            "returns": "Money"
+          }
+        ],
+        "minus": [
+          {
+            "params": [
+              "Money"
+            ],
+            "returns": "Money"
+          }
+        ],
+        "times": [
+          {
+            "params": [
+              "int"
+            ],
+            "returns": "Money"
+          }
+        ],
+        "neg": [
+          {
+            "params": [],
+            "returns": "Money"
+          }
+        ],
+        "set": [
+          {
+            "params": [
+              "int"
+            ],
+            "returns": "self"
+          }
+        ]
+      }
+    },
+    "Items": {
+      "methods": {
+        "len": [
+          {
+            "params": [],
+            "returns": "int"
+          }
+        ],
+        "at": [
+          {
+            "params": [
+              "int"
+            ],
+            "returns": "Money"
+          }
+        ]
+      }
+    },
+    "Shop": {
+      "methods": {
+        "items": [
+          {
+            "params": [],
+            "returns": "Items"
+          }
+        ],
+        "total": [
+          {
+            "params": [],
+            "returns": "Money"
+          }
+        ],
+        "price": [
+          {
+            "params": [
+              "int"
+            ],
+            "returns": "Money"
+          },
+          {
+            "params": [
+              "float"
+            ],
+            "returns": "Money"
+          }
+        ],
+        "currency": [
+          {
+            "params": [],
+            "returns": "Currency"
+          }
+        ],
+        "label": [
+          {
+            "params": [],
+            "returns": "string"
+          }
+        ]
+      }
+    },
+    "Ledger": {
+      "methods": {
+        "record": [
+          {
+            "params": [
+              "Money"
+            ],
+            "returns": "self"
+          }
+        ],
+        "balance": [
+          {
+            "params": [],
+            "returns": "Money"
+          }
+        ],
+        "note": [
+          {
+            "params": [
+              "string"
+            ],
+            "returns": "void"
+          },
+          {
+            "params": [],
+            "returns": "string"
+          }
+        ],
+        "count": [
+          {
+            "params": [],
+            "returns": "int"
+          }
+        ],
+        "reject": [
+          {
+            "params": [
+              "string"
+            ],
+            "returns": "void"
+          }
+        ]
+      }
+    }
+  },
+  "functions": {
+    "money": [
+      {
+        "params": [
+          "int"
+        ],
+        "returns": "Money"
+      },
+      {
+        "params": [
+          "float"
+        ],
+        "returns": "Money"
+      }
+    ],
+    "fee": [
+      {
+        "params": [
+          "int"
+        ],
+        "returns": "int"
+      }
+    ],
+    "sample_tmp": [
+      {
+        "params": [],
+        "returns": "string"
+      }
+    ],
+    "print": [
+      {
+        "params": [
+          "string"
+        ],
+        "returns": "void"
+      }
+    ],
+    "assert_close": [
+      {
+        "params": [
+          "float",
+          "float",
+          "float"
+        ],
+        "returns": "void"
+      }
+    ]
+  },
+  "conversions": [
+    {
+      "from": "int",
+      "to": "Money",
+      "via": "money"
+    }
+  ],
+  "context": {
+    "shop": "Shop",
+    "ledger": "Ledger"
+  }
+}

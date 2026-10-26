@@ -1,0 +1,2 @@
+-1
+{"ok": false, "phase": "app", "code": "APP_FAIL", "message": "ledger: negative balance"}

@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+assert_close(1.0, 2.0, 0.01);
+print("unreachable assert");
+end _lmcode_
+savedsl(program, ARGV[0]);

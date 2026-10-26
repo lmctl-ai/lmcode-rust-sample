@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+let item = shop.items().at(99);
+print("unreachable items oob");
+end _lmcode_
+savedsl(program, ARGV[0]);
