@@ -70,7 +70,8 @@ def main():
             print(''.join(difflib.unified_diff(expected.decode(errors='replace').splitlines(True),
                                             result.stdout.decode(errors='replace').splitlines(True),
                                             fromfile='expected', tofile='actual')), end='')
-    print(f'{"FAIL" if failed else "PASS"} {len(manifest["cases"])-failed}/{len(manifest["cases"])} sample cases')
+    print(f'PASS {len(manifest["cases"])}/{len(manifest["cases"])} sample cases' if not failed
+          else f'FAIL {failed}/{len(manifest["cases"])} sample cases')
     return 1 if failed else 0
 
 if __name__ == '__main__':

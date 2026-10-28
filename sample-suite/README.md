@@ -175,32 +175,32 @@ never count as passes. Single-host protocol/run-suite checks never skip.
 
 Cases 201–205 cover contextual word/numeric lists, int64 boundaries, all typed map
 literals, single evaluation order, raw JSONC documents and legacy bindings. They
-require the compiler literal implementation from lmctl-mono `0ce49614` (set
-`LMSCRIPT_BIN` to its built lmscript until a containing release is published).
+are supported by the published compiler (`@lmctl-ai/lmctl` 0.2.442 and later);
+set `LMSCRIPT_BIN` to a development lmscript build only when testing unreleased
+compiler work.
 Their manifest entries declare `compiler_features: ["lmcode-literals-v1"]`;
-source reproduction must report an unsupported compiler explicitly. Pinned v5
-bytecode still runs directly on a std-v2 host. `compile.py --output DIR
+source reproduction must report an unsupported compiler explicitly. `compile.py --output DIR
 --exclude-feature lmcode-literals-v1` is a partial reproduction check and never rewrites the canonical manifest; it is not a complete compiler validation.
 
 ## Compiler rule-method cases
 
 Case 067 and compile-errors/rule-method-mismatch cover R47/R48 rule methods: an
 `@NAME` annotation directly before a top-level `fn`, plus an `implements Adjuster`
-clause bound to the schema's SAM interface (`(Money) -> void`). They require the
-rule-methods compiler from lmctl-mono (set `LMSCRIPT_BIN` to its built lmscript
-until a containing release is published). The manifest entry declares
-`compiler_features: ["lmcode-rule-methods-v1"]`; source reproduction with a
-released compiler is an explicit error, as for any unsupported compiler.
+clause bound to the schema's SAM interface (`(Money) -> void`). The manifest entry declares
+`compiler_features: ["lmcode-rule-methods-v1"]`; rule methods compile with the
+published `@lmctl-ai/lmctl` 0.2.442 or later. Source reproduction with an older
+compiler is an explicit error, as for any unsupported compiler.
 
 Cases 068/069, compile-errors/rule-annotation-without-implements and mutation
 093-v5-refused cover R49 rule entries (DSLB v6): every annotated rule compiles to
 a self-contained entry; after the body runs the host calls each `@item` entry once
 per shop item in order and each `@total` entry once with `shop.total()`, never
 calls other annotations, prints non-void results as `entry NAME = VALUE`, and
-reports the count as `"entries_called"` in the result object. These require the
-v6-entries compiler from lmctl-mono (`compiler_features: ["lmcode-rule-entries-v1"]`),
-and the whole corpus is v6: version 6 is the only bytecode any current runtime
-accepts. `compile.py --output DIR --exclude-feature lmcode-rule-methods-v1` or
+reports the count as `"entries_called"` in the result object. The whole corpus is
+DSLB v6 (version 6 is the only bytecode any current runtime accepts), first
+published as `@lmctl-ai/lmctl` 0.2.444, which reproduces every pinned `.dslb`
+byte-for-byte; 0.2.442/0.2.443 accept the rule syntax but still write v5. The
+manifest entries declare `compiler_features: ["lmcode-rule-entries-v1"]`. `compile.py --output DIR --exclude-feature lmcode-rule-methods-v1` or
 `--exclude-feature lmcode-rule-entries-v1` is a partial reproduction check and
 never rewrites the canonical manifest.
 

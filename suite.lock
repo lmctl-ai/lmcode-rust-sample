@@ -1,9 +1,9 @@
 {
   "repo": "lmctl-ai/lmcode-cpp",
-  "commit": "d608ba2f7eaf11e71fdd9a2104fcf90f277772aa",
+  "commit": "9db61d0d86fc63da6a2c6d270fb6383a0acda098",
   "sha256": {
     "CONTRACT.md": "f73b008c2b3c8d7857080d4e6ca4282ec37f14aa7e8feb3e355459f73f176056",
-    "README.md": "6f716fb438d85893663352ddbd29c25c5c4217899d050dad5034a739496f50ec",
+    "README.md": "ecf32759af9b52f0d3ca86651aba1e00c432f21bf5ac68e1d12cb6a1a05d38b5",
     "audit.py": "d7dae6407086f3eb2b4d5e54cc22d0ff9c4048585cd01b79a78a4a0d64055d00",
     "bytecode/001-literals.dslb": "21ff0fc356ffa537ef1d93e627cf1a79b7f2fc4ff32bedb3c601c5055c14c079",
     "bytecode/002-arithmetic.dslb": "cc81fef7e37f026d70c00bde3b86020abf32b8df26bc996f3e2cf39fc7f22e52",
@@ -392,7 +392,7 @@
     "record.py": "55528a021b92fc987b25257bb74ce9ed76e09dcdc0c2f817cc83113357e36c74",
     "run-all-samples.py": "dfe6d69ea72f4c90dfc8b0057b360f65153b953a335b2876edc1d250e98a2d48",
     "run-all-samples.sh": "70eba15e00ba9d21a3e01b14ad0ed0497f7e25ba924be23b63ee3de94b89cd30",
-    "run-suite.py": "7dad1e5d838ea630fb4c9261d48a959d70aef1d8aa65cfd347830d01e77c7ed2",
+    "run-suite.py": "c2cd9c907a19f92588e6dc516b4e3bfdaa8ca12fd3c3e0d5cab105819df14d8e",
     "run-suite.sh": "8daa2cd664737e7c5d01d3aacb22bcf2ed28b8f3a5cbf1abac7455ac0eaa708f",
     "sample.dsl.json": "3943e2c4cfbb1978fb9d91881d573144d3daa179b5dd7cb7137ad41cb52b213f",
     "test_catalog_epoch.py": "d6f031fe0f9c0b6f3a38b1f879d063c2ced70240ff9e1a6566cb7838cdf27435",
