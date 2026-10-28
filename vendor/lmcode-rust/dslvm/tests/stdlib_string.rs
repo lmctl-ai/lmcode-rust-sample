@@ -263,6 +263,7 @@ fn upper_chunk(schema: &[u8], input: &[u8]) -> Vec<u8> {
     u32(&mut out, code.len() as u32);
     out.extend_from_slice(&code);
     u32(&mut out, 0);
+    u16(&mut out, 0); // v6: no rule entries
     out
 }
 

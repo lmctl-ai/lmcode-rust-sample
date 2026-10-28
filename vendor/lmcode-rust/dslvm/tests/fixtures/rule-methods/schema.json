@@ -1,0 +1,1 @@
+{"dsl.schema":2,"name":"rule_methods","functions":{"capture":[{"params":["int"],"returns":"void"}]},"interfaces":{"Adjuster":{"params":[{"name":"value","type":"int"}],"returns":"int"}}}

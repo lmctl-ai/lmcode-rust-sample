@@ -1,0 +1,7 @@
+program = _lmcode_ schema="../sample.dsl.json";
+@LONE
+fn orphan(m: Money) -> void {
+  print("never");
+}
+end _lmcode_
+savedsl(program, ARGV[0]);

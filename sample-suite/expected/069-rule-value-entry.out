@@ -1,0 +1,6 @@
+scoring
+entry score_item = 1
+entry score_item = 2
+entry score_item = 3
+entry score_total = 1500
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 4}}

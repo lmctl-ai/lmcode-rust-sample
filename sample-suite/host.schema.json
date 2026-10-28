@@ -635,6 +635,15 @@
         }
       ],
       "returns": "void"
+    },
+    "Score": {
+      "params": [
+        {
+          "name": "m",
+          "type": "Money"
+        }
+      ],
+      "returns": "int"
     }
   }
 }

@@ -1,0 +1,8 @@
+program = _lmcode_ schema="schema.json";
+@NUMBER_RULE
+fn adjust(value: int) -> int implements Adjuster {
+  return value + 2;
+}
+capture(adjust(40));
+end _lmcode_
+savedsl(program, ARGV[0]);

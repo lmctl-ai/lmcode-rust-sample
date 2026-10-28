@@ -1,4 +1,4 @@
 5:5:8
 ordinary local
 scoped=3
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}

@@ -1,6 +1,6 @@
 //! lmscript compiles source. This executable only loads verified bytecode and runs it.
 mod shop;
-use dslvm::{error_json, report_app_failure, report_error, Error, Program};
+use dslvm::{error_json, report_app_failure, report_error, Error, Program, Value};
 use std::io::{self, Write};
 
 // Include exact bytes, including whitespace: the schema hash binds every program.
@@ -51,6 +51,39 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
     if let Err(error) = program.run(&mut host.context, &host.registry) {
         return Ok(report_error("run", &error));
     }
+    let mut entries_called = 0usize;
+    for (index, entry) in program.entries().iter().enumerate() {
+        let arguments = match entry.annotation.as_str() {
+            "item" => host
+                .item_handles()?
+                .into_iter()
+                .map(|obj| Value::object("Money", obj))
+                .collect(),
+            "total" => vec![host.total_handle()?],
+            _ => continue,
+        };
+        for argument in arguments {
+            let value = match program.call(index, &mut host.context, &host.registry, vec![argument])
+            {
+                Ok(value) => value,
+                Err(error) => return Ok(report_error("run", &error)),
+            };
+            entries_called += 1;
+            if value != Value::None {
+                let text = match value {
+                    Value::Int(n) => n.to_string().into_bytes(),
+                    Value::Float(n) => dslvm::format_g15(n).into_bytes(),
+                    Value::Bool(b) => b.to_string().into_bytes(),
+                    Value::Str(s) => s.as_bytes().to_vec(),
+                    _ => Vec::new(),
+                };
+                let mut out = io::stdout().lock();
+                write!(out, "entry {} = ", entry.name)?;
+                out.write_all(&text)?;
+                out.write_all(b"\n")?;
+            }
+        }
+    }
     let ledger = host.context.get::<shop::Ledger>(host.ledger)?;
     if ledger.balance < 0 {
         return Ok(report_app_failure("ledger: negative balance"));
@@ -74,6 +107,6 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
             _ => out.write_all(&[*byte])?,
         }
     }
-    out.write_all(b"\"}}\n")?;
+    writeln!(out, "\", \"entries_called\": {entries_called}}}}}")?;
     Ok(0)
 }

@@ -37,8 +37,8 @@ traces. Call arguments are an argv array, not a shell string. Each case has a
    bytecode import tables and fails if any canonical std signature is uncovered.
 
 `compile.py --output TEMP_DIR` recompiles without changing the committed manifest,
-for reproducibility checks. `LMSCRIPT_BIN` selects the compiler (>=0.2.420);
-bytecode format is v5. `protocol.py` independently derives signatures from the
+for reproducibility checks. `LMSCRIPT_BIN` selects the compiler;
+bytecode format is v6 (rule entries section). `protocol.py` independently derives signatures from the
 schema, so a host missing/adding registrations fails even if no program calls it.
 The malformed-bytecode and schema-hash cases are deterministic mutations of the
 first compiler-emitted program, never hand-authored executable bytecode.
@@ -111,6 +111,9 @@ first compiler-emitted program, never hand-authored executable bytecode.
 | [062-null-receiver](programs/062-null-receiver.lms) | null handle method error is located |
 | [063-wrong-runtime-handle](programs/063-wrong-runtime-handle.lms) | dynamic wrong handle type runtime failure |
 | [067-rule-methods](programs/067-rule-methods.lms) | @NAME rule annotation; implements Adjuster SAM interface |
+| [068-rule-entries](programs/068-rule-entries.lms) | rule entry table; @item/@total dispatch; @never never called; entries_called |
+| [069-rule-value-entry](programs/069-rule-value-entry.lms) | value rule entry; implements Score SAM interface; entry result printed |
+| [093-v5-refused](bytecode/093-v5-refused.dslb) | loader refuses a v5 file |
 | [090-bad-bytecode](bytecode/090-bad-bytecode.dslb) | loader bad-bytecode |
 | [091-schema-mismatch](bytecode/091-schema-mismatch.dslb) | loader schema-mismatch |
 | [092-wrong-handle-import](bytecode/092-wrong-handle-import.dslb) | declared wrong handle type load error |
@@ -187,10 +190,18 @@ clause bound to the schema's SAM interface (`(Money) -> void`). They require the
 rule-methods compiler from lmctl-mono (set `LMSCRIPT_BIN` to its built lmscript
 until a containing release is published). The manifest entry declares
 `compiler_features: ["lmcode-rule-methods-v1"]`; source reproduction with a
-released compiler is an explicit error, as for any unsupported compiler. The
-annotation and interface binding leave no trace in bytecode: DSLB v5 is unchanged
-and pinned bytes run on every existing host. `compile.py --output DIR
---exclude-feature lmcode-rule-methods-v1` is a partial reproduction check and
+released compiler is an explicit error, as for any unsupported compiler.
+
+Cases 068/069, compile-errors/rule-annotation-without-implements and mutation
+093-v5-refused cover R49 rule entries (DSLB v6): every annotated rule compiles to
+a self-contained entry; after the body runs the host calls each `@item` entry once
+per shop item in order and each `@total` entry once with `shop.total()`, never
+calls other annotations, prints non-void results as `entry NAME = VALUE`, and
+reports the count as `"entries_called"` in the result object. These require the
+v6-entries compiler from lmctl-mono (`compiler_features: ["lmcode-rule-entries-v1"]`),
+and the whole corpus is v6: version 6 is the only bytecode any current runtime
+accepts. `compile.py --output DIR --exclude-feature lmcode-rule-methods-v1` or
+`--exclude-feature lmcode-rule-entries-v1` is a partial reproduction check and
 never rewrites the canonical manifest.
 
 `run-all-samples.sh --ports cpp,c,rust,go,csharp` selects an explicit subset when
@@ -203,6 +214,6 @@ reproducing all compatible cases. A v2 or otherwise unknown compiler failure is
 an error; `LMCODE_REQUIRE_LITERAL_COMPILER=1` also makes v1 gaps fatal. Runtime
 execution always covers the entire corpus, regardless of compiler capabilities.
 
-Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 91 cases (88 programs and three loader mutations); v3 support in the other seven ports remains pending.
+Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 94 cases (90 programs and four loader mutations); v3 support in the other seven ports remains pending.
 
 Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidirectional snapshot mutation and the exact noncanonical Base64 trap.

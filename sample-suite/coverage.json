@@ -398,6 +398,18 @@
     "313-codec-pad-bits-expected-fail.lms": [
       "v3 exact decoder error",
       "nonzero pad bits"
+    ],
+    "068-rule-entries.lms": [
+      "rule entry table",
+      "@item per-item dispatch",
+      "@total dispatch",
+      "@never never called",
+      "entries_called result field"
+    ],
+    "069-rule-value-entry.lms": [
+      "rule value entry",
+      "implements Score SAM interface",
+      "entry result printed by host"
     ]
   },
   "canonical_signatures": [
@@ -674,6 +686,12 @@
     ],
     "205-literal-bindings.lms": [
       "lmcode-literals-v1"
+    ],
+    "068-rule-entries.lms": [
+      "lmcode-rule-entries-v1"
+    ],
+    "069-rule-value-entry.lms": [
+      "lmcode-rule-entries-v1"
     ]
   }
 }

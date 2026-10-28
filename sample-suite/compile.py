@@ -58,6 +58,17 @@ def main():
                           expected_exit=3,
                           mutation=dict(source=cases[0]['name'], byte_offset=offset),
                           features=['loader ' + name[4:]]))
+    # DSLB v6 is the only accepted version: a v5 file must be refused at load.
+    data = bytearray(original)
+    assert data[:4] == b'DSLB' and data[4:6] == b'\x00\x06'
+    data[5] = 5
+    output = args.output / '093-v5-refused.dslb'
+    output.write_bytes(data)
+    cases.append(dict(name='093-v5-refused', bytecode='bytecode/093-v5-refused.dslb',
+                      bytecode_sha256=hashlib.sha256(data).hexdigest(),
+                      expected_exit=3,
+                      mutation=dict(source=cases[0]['name'], bytecode_version=5),
+                      features=['loader v5 refused']))
     source_name = '055-object-handles'
     raw = (args.output / (source_name + '.dslb')).read_bytes()
     before = b'fn host_echo_money(Money) -> Money'
@@ -72,7 +83,7 @@ def main():
                       features=['declared wrong handle type load error']))
     # Alternate output is for reproducibility checks and never changes the manifest.
     if args.output.resolve() == (ROOT / 'bytecode').resolve():
-        manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=5,
+        manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=6,
                         schema_sha256=hashlib.sha256((ROOT / 'sample.dsl.json').read_bytes()).hexdigest(),
                         compiler_minimum='0.2.420', cases=cases)
         manifest['fixtures'] = {'invalid.bin': 'ff00c328800a', 'zero-bytes.bin': '610062', 'chunk.bin': '7800c3a9'}

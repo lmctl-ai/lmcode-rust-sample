@@ -1,6 +1,6 @@
 [package]
 name = "dslvm"
-version = "5.0.0"            # the major number is the bytecode version this runtime reads (5); no backward compatibility
+version = "6.0.0"            # the major number is the bytecode version this runtime reads (6); no backward compatibility
 edition = "2021"
 repository = "https://github.com/lmctl-ai/lmcode-rust"
 description = "Rust runtime for lmscript _dsl_ bytecode: loader, verifier, VM, host registry"

@@ -9,6 +9,11 @@
       "source": "rule-method-mismatch.lms",
       "exit": 2,
       "diagnostic": "function 'wrong_return' does not implement interface Adjuster (Money) -> void; found (Money) -> Money"
+    },
+    {
+      "source": "rule-annotation-without-implements.lms",
+      "exit": 2,
+      "diagnostic": "annotated rule 'orphan' requires an implements interface"
     }
   ]
 }

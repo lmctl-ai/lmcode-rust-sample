@@ -7,4 +7,4 @@
 1:2
 610062c3a9:yes
 ledger-key:host
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}

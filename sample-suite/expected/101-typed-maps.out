@@ -5,4 +5,4 @@ b:a
 floats=2:true:1.25:3.75
 a:true
 0
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}

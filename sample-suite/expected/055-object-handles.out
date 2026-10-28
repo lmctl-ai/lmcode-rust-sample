@@ -2,4 +2,4 @@ true
 false
 9
 true
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}

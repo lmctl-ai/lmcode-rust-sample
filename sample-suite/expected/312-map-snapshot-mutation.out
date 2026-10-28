@@ -2,4 +2,4 @@ copy,a:two,one,three:0
 first,next:11:-2:9
 x,y:0
 empty=0:0
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}

@@ -10,7 +10,7 @@ library, with no crates.io dependencies or sibling checkout needed to build.
 LMSCRIPT_BIN=/path/to/rule-method-capable/lmscript ./test.sh
 ```
 
-Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with an R47/R48-capable lmscript.
+Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with an v6/R49-capable lmscript.
 CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
 
 ## Write a host in ten steps
@@ -74,6 +74,8 @@ a typed null Money with a private sentinel object and checks it before access.
 |---|---|
 | Literals, arithmetic, booleans, branches, inline functions, loops/switch | 001–008, 036, 043, 045 |
 | Annotated SAM rule called from the chunk | 067 |
+| Host-dispatched item/total rules and returned scores | 068–069 |
+| v5 bytecode refused by the v6 runtime | 093 |
 | Pure host function `fee(int)` | 002 |
 | Overloads, handles, operators, conversion, chaining, enums, contexts | 009–014, 034–035, 039–040 |
 | All std collection methods, typed maps/stacks/queues/priority queues and host foreach | 015–018, 037–038, 044, 101–104 |
@@ -89,7 +91,7 @@ a typed null Money with a private sentinel object and checks it before access.
 | Container empty/nonfinite-priority errors | 106–107 |
 | Bad bytecode and schema binding rejection | 090–092 |
 
-The current suite has 88 source programs plus three bytecode mutations: **91 cases**.
+The current suite has 90 source programs plus four bytecode mutations: **94 cases**.
 Every stdout byte, JSON field order/spacing, newline and process exit must match.
 Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
 If an oracle appears wrong, record both implementations and reasoning in that
@@ -112,15 +114,28 @@ Windows produces `target/release/lmcode-rust-sample.exe`; the test script handle
 that suffix. The application is MIT licensed; the vendored SDK's MIT text is
 [retained alongside it](vendor/lmcode-rust/LICENSE).
 
-All 91 pinned runtime cases run on every CI target. Source reproduction now requires an R47/R48-capable compiler; use
+All 94 pinned runtime cases run on every CI target. Source reproduction now requires an v6/R49-capable compiler; use
 `LMSCRIPT_BIN=/path/to/current/lmscript LMCODE_REQUIRE_LITERAL_COMPILER=1 ./test.sh`.
 The manual CI workflow requires a matching published compiler version input. No runtime
 case is skipped.
 
-## Rule methods (R47/R48)
+## Rule entries (R47/R48/R49, DSLB v6)
 
-Suite commit `aec9b09` adds program 067: a called `@PRICE_RULE` function
-implements schema SAM interface `Adjuster` and updates prices. The shared negative
-case rejects a mismatched method signature. This is compiler-only metadata,
-not runtime callback discovery: bytecode remains DSLB v5 and the existing SDK
-executes it unchanged. Schema hashes changed, so the pinned corpus was recompiled.
+The suite is pinned to `lmcode-cpp` d608ba2 and the vendored SDK to
+`lmcode-rust` ada1d40. After running the body, the host enumerates entries in
+source order. An `@item` entry runs once per original item handle, in item
+order; `@total` runs once with the current Shop.total() handle. Other annotations
+are ignored. Returned values print `entry NAME = VALUE`; entry failures are
+run-phase errors. The final result appends `entries_called`, separate from the
+existing ledger `entries` count. Case 068 calls seven entries; 069 calls four.
+
+Use the v6 compiler from mono main 56f19153. The local read-only build used for
+verification is:
+
+```sh
+LMSCRIPT_BIN=/home/mma/repos/lmctl-mono-v6entries/lmscript/bin/lmscript LMSCRIPT_MIN=0 ./test.sh
+```
+
+The numeric source package version is not a language capability check. A v5-only
+compiler cannot reproduce this corpus. CI requires an explicit matching published
+compiler version; no CI dispatch or release is part of this migration.

@@ -26,6 +26,7 @@ pub struct Host {
     pub registry: Registry,
     pub context: Context,
     pub ledger: ObjRef,
+    items: ObjRef,
 }
 
 fn money(ctx: &mut Context, cents: i64) -> Value {
@@ -50,7 +51,21 @@ fn money_ref(ctx: &Context, obj: ObjRef) -> Result<&Money, Error> {
     })
 }
 
+fn total_money(ctx: &mut Context, items: ObjRef) -> Result<Value, Error> {
+    let mut total = 0i64;
+    for obj in &ctx.get::<Items>(items)?.values {
+        total = total.wrapping_add(ctx.get::<Money>(*obj)?.cents);
+    }
+    Ok(money(ctx, total))
+}
+
 impl Host {
+    pub fn item_handles(&self) -> Result<Vec<ObjRef>, Error> {
+        Ok(self.context.get::<Items>(self.items)?.values.clone())
+    }
+    pub fn total_handle(&mut self) -> Result<Value, Error> {
+        total_money(&mut self.context, self.items)
+    }
     pub fn new() -> Result<Self, Error> {
         // Default std registers strings, math, containers, JSON and files. Testing is opt-in.
         let mut registry = Registry::new();
@@ -72,6 +87,7 @@ impl Host {
             registry,
             context,
             ledger,
+            items,
         })
     }
 }
@@ -280,11 +296,7 @@ fn register(r: &mut Registry) -> Result<(), Error> {
     })?;
     r.method("Shop", "total", &[], "Money", |ctx, this, _| {
         let items = ctx.get::<Shop>(this)?.items;
-        let mut total = 0i64;
-        for obj in &ctx.get::<Items>(items)?.values {
-            total = total.wrapping_add(ctx.get::<Money>(*obj)?.cents);
-        }
-        Ok(money(ctx, total))
+        total_money(ctx, items)
     })?;
     r.method("Shop", "price", &["int"], "Money", |ctx, _, a| {
         Ok(money(ctx, a[0].as_int()?))

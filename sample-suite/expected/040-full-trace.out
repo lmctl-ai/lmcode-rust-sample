@@ -1,2 +1,2 @@
 125:complete
-{"ok": true, "result": {"balance": 125, "entries": 1, "note": "complete"}}
+{"ok": true, "result": {"balance": 125, "entries": 1, "note": "complete", "entries_called": 0}}

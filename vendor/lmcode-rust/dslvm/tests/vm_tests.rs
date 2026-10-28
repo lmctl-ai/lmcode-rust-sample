@@ -49,6 +49,7 @@ impl Asm {
         out.extend_from_slice(&self.max_stack.to_be_bytes());
         out.extend_from_slice(&(self.code.len() as u32).to_be_bytes()); out.extend_from_slice(&self.code);
         out.extend_from_slice(&(self.lines.len() as u32).to_be_bytes()); for (pc, l, c) in &self.lines { out.extend_from_slice(&pc.to_be_bytes()); out.extend_from_slice(&l.to_be_bytes()); out.extend_from_slice(&c.to_be_bytes()); }
+        out.extend_from_slice(&0u16.to_be_bytes()); // v6: no rule entries
         out
     }
     fn file(&self) -> Vec<u8> { self.file_v(SCHEMA, VERSION, b"DSLB") }
@@ -159,7 +160,7 @@ fn range_file(start: i64, end: i64, locals: usize, body: &[u8]) -> Vec<u8> {
     assert_eq!(Program::load(&Asm::default().halt().file(), SCHEMA, &registry()).unwrap().line_of(0), None);
 }
 #[test] fn bad_magic() { assert!(load_err(&Asm::default().halt().file_v(SCHEMA, VERSION, b"XXXX")).contains("bad magic")); }
-#[test] fn version_4_refused() { assert!(load_err(&Asm::default().halt().file_v(SCHEMA, 4, b"DSLB")).contains("unsupported bytecode version 4 (this runtime reads version 5)")); }
+#[test] fn version_4_refused() { assert!(load_err(&Asm::default().halt().file_v(SCHEMA, 4, b"DSLB")).contains("unsupported bytecode version 4 (this runtime reads version 6)")); }
 #[test] fn while_false_exits_and_break_is_structural() {
     // begin 0, test ends at 8, break jump ends at 13, loop-back ends at 18, HALT at 18.
     let a = Asm::default().while_begin().push_bool(true).while_test(10).jump(5).loop_back(-18).halt();
@@ -184,7 +185,7 @@ fn range_file(start: i64, end: i64, locals: usize, body: &[u8]) -> Vec<u8> {
 }
 #[test] fn schema_mismatch() { assert!(load_err(&Asm::default().halt().file_v(b"other", VERSION, b"DSLB")).contains("schema mismatch")); }
 #[test] fn truncated() { let f = t().halt().file(); assert!(load_err(&f[..f.len() - 3]).contains("bytecode is truncated")); }
-#[test] fn trailing_bytes() { let mut f = Asm::default().halt().file(); f.push(0); assert!(load_err(&f).contains("trailing byte(s) after the line table")); }
+#[test] fn trailing_bytes() { let mut f = Asm::default().halt().file(); f.push(0); assert!(load_err(&f).contains("trailing byte(s) after the entries")); }
 #[test] fn unknown_constant_tag() { let mut f = Asm::default().push_str("x").halt().file(); f[4 + 2 + 32 + 4] = 7; assert!(load_err(&f).contains("constant 0 has unknown tag 7 (1 = string)")); }
 #[test] fn constant_out_of_range() { assert!(load_err(&Asm::default().u8(0x02).u32(9).halt().file()).contains("constant index 9 out of range")); }
 #[test] fn local_out_of_range() { assert!(load_err(&Asm::default().u8(0x04).u16(0).halt().file()).contains("local slot index 0 out of range")); }

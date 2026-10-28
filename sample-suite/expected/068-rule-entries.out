@@ -1,0 +1,9 @@
+body done
+item rule 125
+item rule 250
+item rule 375
+audit 125
+audit 250
+audit 375
+total rule 750
+{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 7}}
