@@ -4,6 +4,11 @@
       "source": "recursive-inline.lms",
       "exit": 2,
       "diagnostic": "recursive user functions are not allowed"
+    },
+    {
+      "source": "rule-method-mismatch.lms",
+      "exit": 2,
+      "diagnostic": "function 'wrong_return' does not implement interface Adjuster (Money) -> void; found (Money) -> Money"
     }
   ]
 }

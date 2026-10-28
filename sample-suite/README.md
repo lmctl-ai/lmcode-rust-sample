@@ -110,6 +110,7 @@ first compiler-emitted program, never hand-authored executable bytecode.
 | [061-long-identifier](programs/061-long-identifier.lms) | long native import identifier |
 | [062-null-receiver](programs/062-null-receiver.lms) | null handle method error is located |
 | [063-wrong-runtime-handle](programs/063-wrong-runtime-handle.lms) | dynamic wrong handle type runtime failure |
+| [067-rule-methods](programs/067-rule-methods.lms) | @NAME rule annotation; implements Adjuster SAM interface |
 | [090-bad-bytecode](bytecode/090-bad-bytecode.dslb) | loader bad-bytecode |
 | [091-schema-mismatch](bytecode/091-schema-mismatch.dslb) | loader schema-mismatch |
 | [092-wrong-handle-import](bytecode/092-wrong-handle-import.dslb) | declared wrong handle type load error |
@@ -176,8 +177,21 @@ require the compiler literal implementation from lmctl-mono `0ce49614` (set
 Their manifest entries declare `compiler_features: ["lmcode-literals-v1"]`;
 source reproduction must report an unsupported compiler explicitly. Pinned v5
 bytecode still runs directly on a std-v2 host. `compile.py --output DIR
---exclude-feature lmcode-literals-v1` is a partial reproduction check and never
-rewrites the canonical manifest; it is not a complete compiler validation.
+--exclude-feature lmcode-literals-v1` is a partial reproduction check and never rewrites the canonical manifest; it is not a complete compiler validation.
+
+## Compiler rule-method cases
+
+Case 067 and compile-errors/rule-method-mismatch cover R47/R48 rule methods: an
+`@NAME` annotation directly before a top-level `fn`, plus an `implements Adjuster`
+clause bound to the schema's SAM interface (`(Money) -> void`). They require the
+rule-methods compiler from lmctl-mono (set `LMSCRIPT_BIN` to its built lmscript
+until a containing release is published). The manifest entry declares
+`compiler_features: ["lmcode-rule-methods-v1"]`; source reproduction with a
+released compiler is an explicit error, as for any unsupported compiler. The
+annotation and interface binding leave no trace in bytecode: DSLB v5 is unchanged
+and pinned bytes run on every existing host. `compile.py --output DIR
+--exclude-feature lmcode-rule-methods-v1` is a partial reproduction check and
+never rewrites the canonical manifest.
 
 `run-all-samples.sh --ports cpp,c,rust,go,csharp` selects an explicit subset when
 other owners' repositories must not be accessed. Excluded ports are listed in
@@ -189,6 +203,6 @@ reproducing all compatible cases. A v2 or otherwise unknown compiler failure is
 an error; `LMCODE_REQUIRE_LITERAL_COMPILER=1` also makes v1 gaps fatal. Runtime
 execution always covers the entire corpus, regardless of compiler capabilities.
 
-Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 87 cases (84 programs and three loader mutations); v3 support in the other seven ports remains pending.
+Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 91 cases (88 programs and three loader mutations); v3 support in the other seven ports remains pending.
 
 Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidirectional snapshot mutation and the exact noncanonical Base64 trap.

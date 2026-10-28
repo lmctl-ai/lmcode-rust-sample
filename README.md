@@ -74,6 +74,7 @@ a typed null Money with a private sentinel object and checks it before access.
 | Feature | Cases |
 |---|---|
 | Literals, arithmetic, booleans, branches, inline functions, loops/switch | 001–008, 036, 043, 045 |
+| Annotated SAM rule called from the chunk | 067 |
 | Pure host function `fee(int)` | 002 |
 | Overloads, handles, operators, conversion, chaining, enums, contexts | 009–014, 034–035, 039–040 |
 | All std collection methods, typed maps/stacks/queues/priority queues and host foreach | 015–018, 037–038, 044, 101–104 |
@@ -89,7 +90,7 @@ a typed null Money with a private sentinel object and checks it before access.
 | Container empty/nonfinite-priority errors | 106–107 |
 | Bad bytecode and schema binding rejection | 090–092 |
 
-The current suite has 87 source programs plus three bytecode mutations: **90 cases**.
+The current suite has 88 source programs plus three bytecode mutations: **91 cases**.
 Every stdout byte, JSON field order/spacing, newline and process exit must match.
 Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
 If an oracle appears wrong, record both implementations and reasoning in that
@@ -112,9 +113,15 @@ Windows produces `target/release/lmcode-rust-sample.exe`; the test script handle
 that suffix. The application is MIT licensed; the vendored SDK's MIT text is
 [retained alongside it](vendor/lmcode-rust/LICENSE).
 
-All 90 pinned runtime cases run on every CI target. The published compiler
-0.2.426 still injects v1 defaults and lacks literal syntax: the canonical
-reproduction helper explicitly reports five literal source cases as SKIP while
-checking the other 85. To reproduce all 90, set `LMSCRIPT_BIN` to a current
-lmctl-mono main build and `LMCODE_REQUIRE_LITERAL_COMPILER=1`; this full check
-was also run locally. No runtime case is skipped.
+All 91 pinned runtime cases run on every CI target. Source reproduction now requires an R47/R48-capable compiler; use
+`LMSCRIPT_BIN=/path/to/current/lmscript LMCODE_REQUIRE_LITERAL_COMPILER=1 ./test.sh`.
+The manual CI workflow requires a matching published compiler version input. No runtime
+case is skipped.
+
+## Rule methods (R47/R48)
+
+Suite commit `aec9b09` adds program 067: a called `@PRICE_RULE` function
+implements schema SAM interface `Adjuster` and updates prices. The shared negative
+case rejects a mismatched method signature. This is compiler-only metadata,
+not runtime callback discovery: bytecode remains DSLB v5 and the existing SDK
+executes it unchanged. Schema hashes changed, so the pinned corpus was recompiled.

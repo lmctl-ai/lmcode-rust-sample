@@ -334,6 +334,11 @@
     "066-record-null-money.lms": [
       "null argument callback error"
     ],
+    "067-rule-methods.lms": [
+      "@NAME rule annotation",
+      "implements Adjuster SAM interface",
+      "rule called from chunk body"
+    ],
     "201-word-literals.lms": [
       "qw literal",
       "Unicode words",
@@ -652,6 +657,9 @@
     "058-million-loop.lms": 5
   },
   "compiler_features": {
+    "067-rule-methods.lms": [
+      "lmcode-rule-methods-v1"
+    ],
     "201-word-literals.lms": [
       "lmcode-literals-v1"
     ],

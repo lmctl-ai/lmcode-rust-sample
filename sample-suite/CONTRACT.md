@@ -13,6 +13,10 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
   `reject(string)` throws that exact message. `fee(int)` adds 5 with int64 wrapping.
 - `sample_tmp()` returns SAMPLE_TMP unchanged, or throws `SAMPLE_TMP is required`.
 - Register default std and optional `print(string)` / `assert_close(float,float,float)` testing catalog.
+- The schema's `interfaces` map declares one SAM interface `Adjuster`: `(Money) -> void`. A rule method is a
+  top-level `fn` with a leading `@NAME` annotation and a trailing `implements Adjuster` clause; its signature must
+  match the interface exactly. Annotations and interface bindings are compile-time metadata only: bytecode stays
+  DSLB v5 and a plain call from the chunk body invokes the rule.
 - Every execution prints trace lines via print, then one JSON result line and LF.
   Success result fields/order/spacing: `{"ok": true, "result": {"balance": 0, "entries": 0, "note": ""}}`.
   Negative final ledger balance is application failure (after VM success), exit 4:

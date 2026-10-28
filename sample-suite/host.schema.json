@@ -625,5 +625,16 @@
   "context": {
     "shop": "Shop",
     "ledger": "Ledger"
+  },
+  "interfaces": {
+    "Adjuster": {
+      "params": [
+        {
+          "name": "m",
+          "type": "Money"
+        }
+      ],
+      "returns": "void"
+    }
   }
 }

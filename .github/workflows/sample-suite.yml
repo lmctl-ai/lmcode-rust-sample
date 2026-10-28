@@ -1,10 +1,17 @@
 name: Rust sample suite
 on:
   workflow_dispatch:
+    inputs:
+      compiler:
+        description: Published R47/R48-capable compiler version
+        required: true
+        type: string
 permissions:
   contents: read
 jobs:
   test:
+    env:
+      LMSCRIPT_VERSION: ${{ inputs.compiler }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +33,7 @@ jobs:
         with: {node-version: '24'}
       - name: Install compiler
         run: |
-          npm install --global @lmctl-ai/lmctl@0.2.420
+          npm install --global "@lmctl-ai/lmctl@$LMSCRIPT_VERSION"
           if [[ "$RUNNER_OS" == Windows ]]; then
             mkdir -p .ci-bin
             printf '#!/usr/bin/env bash\nexec python "$@"\n' > .ci-bin/python3
