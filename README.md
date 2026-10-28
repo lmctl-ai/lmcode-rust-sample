@@ -7,11 +7,10 @@ It uses the vendored MIT [dslvm crate](vendor/lmcode-rust/dslvm) and Rust's stan
 library, with no crates.io dependencies or sibling checkout needed to build.
 
 ```sh
-npm install --global @lmctl-ai/lmctl@0.2.420
-./test.sh
+LMSCRIPT_BIN=/path/to/rule-method-capable/lmscript ./test.sh
 ```
 
-Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with lmscript >=0.2.420.
+Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with an R47/R48-capable lmscript.
 CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
 
 ## Write a host in ten steps
