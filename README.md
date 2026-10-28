@@ -129,8 +129,9 @@ are ignored. Returned values print `entry NAME = VALUE`; entry failures are
 run-phase errors. The final result appends `entries_called`, separate from the
 existing ledger `entries` count. Case 068 calls seven entries; 069 calls four.
 
-Use the v6 compiler from mono main 56f19153. The local read-only build used for
-verification is:
+Use a v6 compiler (mono main 56f19153 or the supplied build below). The supplied
+read-only checkout was observed at 0e621804; 56f19153 changes only the conformance
+generator, and this build reproduces all 94 sample files. Verification used:
 
 ```sh
 LMSCRIPT_BIN=/home/mma/repos/lmctl-mono-v6entries/lmscript/bin/lmscript LMSCRIPT_MIN=0 ./test.sh
