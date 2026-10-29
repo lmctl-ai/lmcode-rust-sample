@@ -6,11 +6,13 @@ The full schema is [sample.dsl.json](sample.dsl.json); [host.schema.json](host.s
 contains only the small shop/ledger domain. Every process starts with fresh state.
 
 ```sh
+npm install -g @lmctl-ai/lmctl
+lmctl sample-suite/run-suite.lms /path/to/lmcode-cpp-sample
 ./sample-suite/run-suite.sh /path/to/lmcode-cpp-sample
 ./sample-suite/run-suite.sh dotnet /path/to/sample.dll
 python3 sample-suite/compile.py
-python3 sample-suite/audit.py
-python3 sample-suite/test_runner.py
+lmctl sample-suite/audit.lms
+lmctl sample-suite/test-runner.lms
 ```
 
 `run-suite.sh` checks the discovery/usage protocol, then executes each pinned
@@ -217,3 +219,20 @@ execution always covers the entire corpus, regardless of compiler capabilities.
 Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The current C++ reference passes 94 cases (90 programs and four loader mutations); v3 support in the other seven ports remains pending.
 
 Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidirectional snapshot mutation and the exact noncanonical Base64 trap.
+
+## lmscript test drivers
+
+`run-suite.lms`, `audit.lms`, `check-recompile.lms`, and `test-runner.lms`
+own test orchestration and assertions. Run them with either `lmctl FILE.lms`
+or `lmscript FILE.lms` from the repository root. Set `LMCODE_SUITE` to an
+absolute corpus directory when using another working directory. CI passes
+`--no-preflight` to execute once. Both commands are installed by
+`npm install -g @lmctl-ai/lmctl`; `lmctl` also runs URLs ending in `.lms`,
+but these tests need their checkout and local native executables.
+
+`bytes.mjs` supplies binary hashing, import decoding, binary mutation and
+exact subprocess capture through Node (already required by lmscript). The
+`.lms` drivers select tests and check outcomes. Each host invocation gets
+fresh fixtures and a timeout; the adapter removes its temporary files even
+on failure. Python corpus authoring tools and the separate cross-port matrix
+remain available; sample release CI no longer uses Python test drivers.

@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
-suite_dir="$(cd "$(dirname "$0")" && pwd)"
-exec python3 "$suite_dir/run-suite.py" "$@"
+export LMCODE_SUITE="$(cd "$(dirname "$0")" && pwd)"
+exec "${LMSCRIPT_BIN:-lmscript}" --no-preflight "$LMCODE_SUITE/run-suite.lms" "$@"

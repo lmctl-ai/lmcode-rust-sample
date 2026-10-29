@@ -211,3 +211,22 @@ fn void_entry_returns_none() {
         Value::None
     );
 }
+
+// WP11 fixes (reports/wp11-differential-review-T1Fable.md): counts never allocate before the bytes exist; entry names are unique.
+fn valid_entry_file() -> Vec<u8> { fixture(1, 3, 0, "interface Step(int) -> int", &[4, 0, 0, 17]) }
+#[test]
+fn huge_entry_line_count_is_an_error_not_an_allocation() {
+    let mut b = valid_entry_file(); let n = b.len(); b[n - 14..n - 10].copy_from_slice(&[0xff, 0xff, 0xff, 0xff]);
+    refusal(b, "truncated");
+}
+#[test]
+fn huge_constant_count_is_an_error_not_an_allocation() {
+    let mut b = valid_entry_file(); b[38..42].copy_from_slice(&[0xff, 0xff, 0xff, 0xff]);
+    refusal(b, "");
+}
+#[test]
+fn duplicate_entry_name_refused() {
+    let b = valid_entry_file(); let record = 12 + 2 + 2 + 5 + 2 + 4 + 4 + 4 + 10; let count = b.len() - record - 2;
+    let mut d = b[..count].to_vec(); d.extend_from_slice(&[0, 2]); d.extend_from_slice(&b[count + 2..]); d.extend_from_slice(&b[count + 2..]);
+    refusal(d, "duplicate entry name 'rule'");
+}

@@ -1,10 +1,10 @@
 {
   "repo": "lmctl-ai/lmcode-rust",
-  "commit": "ada1d40b60381938d283b0fafcd0cbf02bfaad3e",
+  "commit": "9317d21637b5def6e6a8b3a98a0bd81e5727cdff",
   "sha256": {
     "LICENSE": "949eb9b711d9b64ae472b87b94916e8427575a75d0d218f6c4cbccf8c48d46f3",
-    "dslvm/Cargo.toml": "a04fa738bae25045e4df7ac1781707b3dfdded6b46f5ff70680afeb48afc5dd2",
-    "dslvm/src/lib.rs": "bed0681884ca6fa7f85523d85aef1c0f1ae6d55c11f20623875ce2007bcc51af",
+    "dslvm/Cargo.toml": "a088c22d6734b64833fe57d0c00398d82401224523398913ecc3bda64d2af0eb",
+    "dslvm/src/lib.rs": "dc6c04e90d17d12fa0fcfaad82c40a0bc618693f4f39905c4a589258a5a8ce79",
     "dslvm/src/sha256.rs": "fbc0576b4d283b1b83650ee7a030e6b03a117e1b34d52d3b826e7fe088ceb429",
     "dslvm/src/stdlib/collections.rs": "3788d3495c8e887876f8b9906ece1b9c40d977c14be034b2c09c32bda6346a2b",
     "dslvm/src/stdlib/containers.rs": "3ccd4ee0d7bcb40686338732cd698f1f6fa4b13e7eda355a202b72d1ca6715dd",
@@ -24,7 +24,7 @@
     "dslvm/tests/stdlib_catalogs.rs": "9d244100dc947c33c74dbcd4466bbe83bc78850b533fad6d6673f8c90eb51e4d",
     "dslvm/tests/stdlib_math.rs": "6bba003798b742140c146c71e337114fd625bbb13cbe80b20fb1891336592217",
     "dslvm/tests/stdlib_string.rs": "e683c2c1217080f52033fc19a1034d7c0877fc9a5e241dc0e870a3081dada658",
-    "dslvm/tests/v6_entries.rs": "2cc12905855b52d4655ce54074138f079438398fb2fe2c95c4b5674ddfe403bf",
+    "dslvm/tests/v6_entries.rs": "09f9b3c525b9e23ad9ff9fe86a9d978e7a4748b78fee44bb55bfb910c88dad30",
     "dslvm/tests/vm_tests.rs": "d73be3025b6981308c0a2b8dfe7ad6752dcd5555375a5255524c9447581e2227",
     "std/lmcode-std.schema.json": "430588371274f09304d7c05c68819297c71d3ce4884f0e523d8ff19a33aff8af"
   }

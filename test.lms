@@ -1,0 +1,24 @@
+# Run from this repository: lmctl test.lms or lmscript test.lms.
+import "./sample-suite/runner-lib.lms";
+root = suite_root();
+fn step(command) {
+  result = invoke(suite_root(), command, [], {}, 600000);
+  if (result.stdout != "") { print(result.stdout); }
+  if (result.stderr != "") { print(result.stderr); }
+  assert(result.code == 0 && result.error == "", "test step failed: " + json_stringify(command) + " " + result.error);
+}
+python = "python3";
+if (env("RUNNER_OS") == "Windows") { python = "python"; }
+step([python, "-B", "scripts/sync.py", "check"]);
+step(["cargo", "build", "--release", "--locked"]);
+host = path_join(Directory, "target/release/lmcode-rust-sample");
+if (env("RUNNER_OS") == "Windows") { host = host + ".exe"; }
+step(concat(compiler_command(), ["--no-preflight", "sample-suite/audit.lms", "--std", "vendor/lmcode-rust/std/lmcode-std.schema.json"]));
+step(concat(compiler_command(), ["--no-preflight", "sample-suite/run-suite.lms", host]));
+step(concat(compiler_command(), ["--no-preflight", "sample-suite/check-recompile.lms"]));
+step(concat(compiler_command(), ["--no-preflight", "sample-suite/test-runner.lms"]));
+step(concat(compiler_command(), ["--no-preflight", "examples/rule-entries.lms", path_join(Directory, "target/rule-entries.dslb")]));
+result = invoke(root, [host], ["--dsl", path_join(Directory, "target/rule-entries.dslb")], {}, 30000);
+expected = binary(root, {op:"hex", path:path_join(root, "expected/068-rule-entries.out")});
+assert(result.code == 0 && result.hex == expected && result.stderr_hex == "", "annotated interface example differs");
+println("PASS annotated interface example");

@@ -18,7 +18,7 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     let mut host = shop::Host::new()?;
     if args.len() == 1 && args[0] == "--version" {
-        println!("lmcode-rust-sample {}", env!("CARGO_PKG_VERSION"));
+        println!("lmcode-rust-sample {}", env!("SAMPLE_BUILD_VERSION"));
         return Ok(0);
     }
     if (args.len() == 1 || (args.len() == 2 && args[1] == "--json")) && args[0] == "--dsl-schema" {

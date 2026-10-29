@@ -1,0 +1,23 @@
+# Reproduce every pinned source and mutation; never rewrite expectations.
+import "./runner-lib.lms";
+root = suite_root();
+manifest = read_json(path_join(root, "manifest.json"));
+check_files(root, manifest);
+scratch = binary(root, {op:"temp"});
+failed = [];
+for (case in manifest.cases) {
+  output = path_join(scratch, case.name + ".dslb");
+  if (case.has("source")) {
+    r = invoke(root, compiler_command(), ["--no-preflight", path_join(root, case.source), output], {}, 30000);
+    if (r.code != 0 || r.error != "") { push(failed, case.name + ": " + r.stderr + r.error); }
+  } else {
+    binary(root, {op:"mutate", source:path_join(scratch, case.mutation.source + ".dslb"), output:output, mutation:case.mutation});
+  }
+  if (file_exists(output)) {
+    hashes = binary(root, {op:"hashes", paths:[output]});
+    if (hashes[0] != case.bytecode_sha256) { push(failed, "compiler bytecode drift: " + case.name); }
+  } else { push(failed, "missing output: " + case.name); }
+}
+rmdir(scratch, true);
+assert(len(failed) == 0, join(failed, "\n"));
+println("PASS compiler reproduces " + str(len(manifest.cases)) + "/" + str(len(manifest.cases)) + " pinned bytecode cases");

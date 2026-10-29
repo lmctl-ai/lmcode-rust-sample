@@ -7,10 +7,11 @@ It uses the vendored MIT [dslvm crate](vendor/lmcode-rust/dslvm) and Rust's stan
 library, with no crates.io dependencies or sibling checkout needed to build.
 
 ```sh
-LMSCRIPT_BIN=/path/to/rule-method-capable/lmscript ./test.sh
+npm install -g @lmctl-ai/lmctl
+lmscript test.lms
 ```
 
-Use a Rust toolchain, Python 3, Bash, and Node >=24.15 with an v6/R49-capable lmscript.
+Use Rust stable, Python 3 (vendor locks), Bash, and Node 24 with current lmscript.
 CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
 
 ## Write a host in ten steps
@@ -114,29 +115,12 @@ Windows produces `target/release/lmcode-rust-sample.exe`; the test script handle
 that suffix. The application is MIT licensed; the vendored SDK's MIT text is
 [retained alongside it](vendor/lmcode-rust/LICENSE).
 
-All 94 pinned runtime cases run on every CI target. Source reproduction now requires an v6/R49-capable compiler; use
-`LMSCRIPT_BIN=/path/to/current/lmscript LMCODE_REQUIRE_LITERAL_COMPILER=1 ./test.sh`.
-The manual CI workflow requires a matching published compiler version input. No runtime
-case is skipped.
+## Automated tests and releases
 
-## Rule entries (R47/R48/R49, DSLB v6)
+Install Rust stable and `npm install -g @lmctl-ai/lmctl` (provides both `lmctl` and `lmscript`). From the repository root run `lmscript test.lms` or `lmctl test.lms`; `test.sh` is a thin wrapper.
 
-The suite is pinned to `lmcode-cpp` d608ba2 and the vendored SDK to
-`lmcode-rust` ada1d40. After running the body, the host enumerates entries in
-source order. An `@item` entry runs once per original item handle, in item
-order; `@total` runs once with the current Shop.total() handle. Other annotations
-are ignored. Returned values print `entry NAME = VALUE`; entry failures are
-run-phase errors. The final result appends `entries_called`, separate from the
-existing ledger `entries` count. Case 068 calls seven entries; 069 calls four.
+Every push to main builds and tests Linux x64/arm64, macOS x64/arm64, and Windows x64 executables. Only after all five jobs pass does Actions publish a GitHub release with platform binaries, licenses and SHA256SUMS. Pull requests run the same tests without publishing.
 
-Use a v6 compiler (mono main 56f19153 or the supplied build below). The supplied
-read-only checkout was observed at 0e621804; 56f19153 changes only the conformance
-generator, and this build reproduces all 94 sample files. Verification used:
+`examples/rule-entries.lms` demonstrates annotated functions implementing `Adjuster`. After running the body, this host dispatches `@item` once per item and `@total` once for the total; other annotations are ignored. Case 069 demonstrates returned values.
 
-```sh
-LMSCRIPT_BIN=/home/mma/repos/lmctl-mono-v6entries/lmscript/bin/lmscript LMSCRIPT_MIN=0 ./test.sh
-```
-
-The numeric source package version is not a language capability check. A v5-only
-compiler cannot reproduce this corpus. CI requires an explicit matching published
-compiler version; no CI dispatch or release is part of this migration.
+The lmscript driver verifies locks, audits 181 standard and 45 host signatures, runs all 94 cases with exact bytes/exits, reproduces bytecode, exercises negative runner controls and checks the annotated example. Node provides binary/process adapters; Python is used only to verify/synchronize vendored file locks. Canonical suite changes belong in lmcode-cpp first.
