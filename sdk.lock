@@ -1,6 +1,6 @@
 {
   "repo": "lmctl-ai/lmcode-rust",
-  "commit": "9317d21637b5def6e6a8b3a98a0bd81e5727cdff",
+  "commit": "663353d6731020f7dd77f2f7920cae71f2a1e2e6",
   "sha256": {
     "LICENSE": "949eb9b711d9b64ae472b87b94916e8427575a75d0d218f6c4cbccf8c48d46f3",
     "dslvm/Cargo.toml": "a088c22d6734b64833fe57d0c00398d82401224523398913ecc3bda64d2af0eb",
@@ -10,7 +10,7 @@
     "dslvm/src/stdlib/containers.rs": "3ccd4ee0d7bcb40686338732cd698f1f6fa4b13e7eda355a202b72d1ca6715dd",
     "dslvm/src/stdlib/encoding.rs": "25af6e937bddf667be96685ffec91fc051d5f30e3fdfaf35faeb09a6ab5e36bf",
     "dslvm/src/stdlib/file.rs": "67cc949b090dbe097785fae97af0e0c056ba5cf7705c64f7cd9f9a00a32c8eb1",
-    "dslvm/src/stdlib/json.rs": "b51871f9d9a0f994ee4182e0687eaa9ab4a8413041fac37b237d1b59c46894b7",
+    "dslvm/src/stdlib/json.rs": "3aa41251159344155841e0f5eb319e08582442478fae310a807fc24bac968885",
     "dslvm/src/stdlib/math.rs": "0f39a342142cd07ee975dd81ed72e4d68618bf72da710aca120946a928122131",
     "dslvm/src/stdlib/testing.rs": "562d0749cc0c248e4bc4902389ba8f99758bdcc4ad84c69edb690c7df9902f3a",
     "dslvm/src/stdlib/testing_tests.rs": "b5c91ea786c9cddabc310ee0f1e5540c987ce66891148ef6d58484aeb8a388e2",
@@ -21,11 +21,13 @@
     "dslvm/tests/fixtures/rule-methods/schema.json": "fbccc314e11d88a630e46981ba932e5ae4ced18f600d7b4af48a5a881608e76d",
     "dslvm/tests/fixtures/string.schema.json": "afd17de717b9cafbc2143c6df93b3553f3295c37dcd1cc10bbb057361050a986",
     "dslvm/tests/rule_methods.rs": "ebc33e1e3e5de1f863edca20af8fe38034c2989e0c92a23c982d4db04b56a481",
-    "dslvm/tests/stdlib_catalogs.rs": "9d244100dc947c33c74dbcd4466bbe83bc78850b533fad6d6673f8c90eb51e4d",
+    "dslvm/tests/stdlib_catalogs.rs": "ececf24104e0cdbbce046e9cd50f0e6ec608d43fae490896e21f37aa0e99885c",
     "dslvm/tests/stdlib_math.rs": "6bba003798b742140c146c71e337114fd625bbb13cbe80b20fb1891336592217",
     "dslvm/tests/stdlib_string.rs": "e683c2c1217080f52033fc19a1034d7c0877fc9a5e241dc0e870a3081dada658",
     "dslvm/tests/v6_entries.rs": "09f9b3c525b9e23ad9ff9fe86a9d978e7a4748b78fee44bb55bfb910c88dad30",
     "dslvm/tests/vm_tests.rs": "d73be3025b6981308c0a2b8dfe7ad6752dcd5555375a5255524c9447581e2227",
-    "std/lmcode-std.schema.json": "430588371274f09304d7c05c68819297c71d3ce4884f0e523d8ff19a33aff8af"
+    "std/lmcode-std.schema.json": "a530a09fe405c16569e39b1de2957f364999e85960c8543830cddb45009adb73",
+    "std/template-cases.json": "81217942cb8d112fd74e293b480de38743719b2d34c3922a11a3008d51c3297e",
+    "std/template.md": "94a9ca1a4b187304fa9b39180727b2c878bfa8b784abc0b4f30a0e9ab34ae954"
   }
 }

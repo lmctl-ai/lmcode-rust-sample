@@ -22,3 +22,11 @@ result = invoke(root, [host], ["--dsl", path_join(Directory, "target/rule-entrie
 expected = binary(root, {op:"hex", path:path_join(root, "expected/068-rule-entries.out")});
 assert(result.code == 0 && result.hex == expected && result.stderr_hex == "", "annotated interface example differs");
 println("PASS annotated interface example");
+
+# Small standalone text-template example, in addition to the shared corpus.
+mkdir("build");
+template_bytecode = path_join(Directory,"build/text-template.dslb");
+step(concat(compiler_command(),["--no-preflight","examples/text-template.lms",template_bytecode]));
+template_result = invoke(root,[host],["--dsl",template_bytecode],{},30000);
+assert(template_result.code == 0 && template_result.stderr_hex == "" && template_result.stdout == "Hello, Sam!\nItems: 0: apple, 1: pear\n{\"ok\": true, \"result\": {\"balance\": 0, \"entries\": 0, \"note\": \"\", \"entries_called\": 0}}\n","text template example differs");
+println("PASS text template example");

@@ -1968,6 +1968,15 @@
         ],
         "returns": "string"
       }
+    ],
+    "template_render": [
+      {
+        "params": [
+          "string",
+          "Json"
+        ],
+        "returns": "string"
+      }
     ]
   },
   "conversions": [

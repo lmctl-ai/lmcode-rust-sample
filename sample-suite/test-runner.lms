@@ -32,7 +32,7 @@ for (mode in ["ok", "wrong-exit", "whitespace", "stderr", "bad-cli", "bytecode",
   }
   result = invoke(original, command, [], {}, 120000);
   good = result.code != 0 && result.code != null && result.error == "";
-  if (mode == "ok") { good = result.code == 0 && contains(result.stdout, "PASS 94/94"); }
+  if (mode == "ok") { good = result.code == 0 && contains(result.stdout, "PASS " + str(len(manifest.cases)) + "/" + str(len(manifest.cases))); }
   if (mode == "bytecode" || mode == "source" || mode == "empty") { good = good && !file_exists(marker); }
   if (mode == "audit") { good = good && contains(result.stderr + result.stdout, "UNEXERCISED"); }
   rmdir(scratch, true);

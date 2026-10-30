@@ -1,0 +1,1 @@
+{"ok": false, "phase": "run", "code": "RUN_HOST", "message": "dsl line 4:7: template_render: missing variable count.name", "line": 4, "column": 7}

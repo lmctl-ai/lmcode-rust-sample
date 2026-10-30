@@ -25,9 +25,9 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
    record commit IDs and SHA-256s; [sync.py](scripts/sync.py) checks drift or archives
    reviewed Git commits. Build and verification use the checked-in copies.
 4. **Make a registry.** [Host::new and register](src/shop.rs) start with
-   `Registry::new()` (all 181 standard signatures), declare `shop`/`ledger`, then opt into
+   `Registry::new()` (all 182 standard signatures), declare `shop`/`ledger`, then opt into
    [testing helpers](vendor/lmcode-rust/dslvm/src/stdlib/testing.rs). The host contributes
-   45 signatures; the catalog audit imports all 181 standard signatures.
+   45 signatures; the catalog audit imports all 182 standard signatures.
 5. **Own live objects in Context.** [Host::new](src/shop.rs) inserts the domain
    objects and binds context names. `ObjRef` is an arena index, not a native pointer;
    `Context::get/get_mut` borrow typed Rust objects. No `unsafe` or leaked allocation.
@@ -92,7 +92,7 @@ a typed null Money with a private sentinel object and checks it before access.
 | Container empty/nonfinite-priority errors | 106–107 |
 | Bad bytecode and schema binding rejection | 090–092 |
 
-The current suite has 90 source programs plus four bytecode mutations: **94 cases**.
+The current suite has 104 source programs plus four bytecode mutations: **108 cases**.
 Every stdout byte, JSON field order/spacing, newline and process exit must match.
 Expected files are vendored unchanged from `lmctl-ai/lmcode-cpp/sample-suite`.
 If an oracle appears wrong, record both implementations and reasoning in that
@@ -123,4 +123,10 @@ Every push to main builds and tests Linux x64/arm64, macOS x64/arm64, and Window
 
 `examples/rule-entries.lms` demonstrates annotated functions implementing `Adjuster`. After running the body, this host dispatches `@item` once per item and `@total` once for the total; other annotations are ignored. Case 069 demonstrates returned values.
 
-The lmscript driver verifies locks, audits 181 standard and 45 host signatures, runs all 94 cases with exact bytes/exits, reproduces bytecode, exercises negative runner controls and checks the annotated example. Node provides binary/process adapters; Python is used only to verify/synchronize vendored file locks. Canonical suite changes belong in lmcode-cpp first.
+The lmscript driver verifies locks, audits 182 standard and 45 host signatures, runs all 108 cases with exact bytes/exits, reproduces bytecode, exercises negative runner controls and checks the annotated example. Node provides binary/process adapters; Python is used only to verify/synchronize vendored file locks. Canonical suite changes belong in lmcode-cpp first.
+
+## Text templates
+
+[examples/text-template.lms](examples/text-template.lms) renders ordinary text from a nested context with indexed lists, loops and boolean conditions. The standard `template_render(string, Json) -> string` function performs one pass; inserted values stay literal. Compile it with `lmscript --no-preflight examples/text-template.lms build/text-template.dslb`, then run the sample host with `--dsl build/text-template.dslb`.
+
+The lmscript-driven suite runs 108 cases, including template success/error cases. See the [portable template contract](https://github.com/lmctl-ai/lmcode-cpp/blob/main/std/template.md).

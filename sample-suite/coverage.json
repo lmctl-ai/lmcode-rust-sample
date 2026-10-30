@@ -410,6 +410,67 @@
       "rule value entry",
       "implements Score SAM interface",
       "entry result printed by host"
+    ],
+    "320-text-template.lms": [
+      "template_render(string, Json)",
+      "text templates",
+      "nested maps",
+      "indexed lists",
+      "loops",
+      "boolean conditions",
+      "opaque insertion"
+    ],
+    "321-template-missing-expected-fail.lms": [
+      "template_render errors",
+      "missing"
+    ],
+    "322-template-bounds-expected-fail.lms": [
+      "template_render errors",
+      "bounds"
+    ],
+    "323-template-canonical-index-expected-fail.lms": [
+      "template_render errors",
+      "canonical index"
+    ],
+    "324-template-wrong-parent-expected-fail.lms": [
+      "template_render errors",
+      "wrong parent"
+    ],
+    "325-template-list-required-expected-fail.lms": [
+      "template_render errors",
+      "list required"
+    ],
+    "326-template-bool-required-expected-fail.lms": [
+      "template_render errors",
+      "bool required"
+    ],
+    "327-template-context-object-expected-fail.lms": [
+      "template_render errors",
+      "context object"
+    ],
+    "328-template-unclosed-loop-expected-fail.lms": [
+      "template_render errors",
+      "unclosed loop"
+    ],
+    "329-template-unclosed-condition-expected-fail.lms": [
+      "template_render errors",
+      "unclosed condition"
+    ],
+    "330-template-unexpected-else-expected-fail.lms": [
+      "template_render errors",
+      "unexpected else"
+    ],
+    "331-template-invalid-separator-expected-fail.lms": [
+      "template_render errors",
+      "invalid separator"
+    ],
+    "332-template-index-reserved-expected-fail.lms": [
+      "template_render errors",
+      "index reserved"
+    ],
+    "333-template-validate-empty-body-syntax-expected-fail.lms": [
+      "template_render errors",
+      "validate empty body syntax"
     ]
   },
   "canonical_signatures": [
@@ -660,7 +721,20 @@
     "066-record-null-money.lms",
     "304-base64-invalid-expected-fail.lms",
     "305-hex-invalid-expected-fail.lms",
-    "313-codec-pad-bits-expected-fail.lms"
+    "313-codec-pad-bits-expected-fail.lms",
+    "321-template-missing-expected-fail.lms",
+    "322-template-bounds-expected-fail.lms",
+    "323-template-canonical-index-expected-fail.lms",
+    "324-template-wrong-parent-expected-fail.lms",
+    "325-template-list-required-expected-fail.lms",
+    "326-template-bool-required-expected-fail.lms",
+    "327-template-context-object-expected-fail.lms",
+    "328-template-unclosed-loop-expected-fail.lms",
+    "329-template-unclosed-condition-expected-fail.lms",
+    "330-template-unexpected-else-expected-fail.lms",
+    "331-template-invalid-separator-expected-fail.lms",
+    "332-template-index-reserved-expected-fail.lms",
+    "333-template-validate-empty-body-syntax-expected-fail.lms"
   ],
   "exit_codes": {
     "030-negative-balance-expected-fail.lms": 4

@@ -1,0 +1,1 @@
+{"ok": false, "phase": "run", "code": "RUN_HOST", "message": "dsl line 4:7: template_render: context must be an object", "line": 4, "column": 7}

@@ -1,0 +1,6 @@
+context = [];
+template = "hi";
+program = _lmcode_ schema="../sample.dsl.json";
+print(template_render(${template},json_parse(${json_stringify(context)})));
+end _lmcode_
+savedsl(program, ARGV[0]);
