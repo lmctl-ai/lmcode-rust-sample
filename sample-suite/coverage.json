@@ -471,6 +471,30 @@
     "333-template-validate-empty-body-syntax-expected-fail.lms": [
       "template_render errors",
       "validate empty body syntax"
+    ],
+    "070-empty-reversed-range.lms": [
+      "empty and reversed ranges",
+      "range boundary no-op"
+    ],
+    "071-nested-loop-control.lms": [
+      "nested break and continue",
+      "innermost loop control"
+    ],
+    "072-switch-no-fallthrough.lms": [
+      "switch selected arm",
+      "no fall-through"
+    ],
+    "073-inline-local-isolation.lms": [
+      "reused inline function locals",
+      "call-local isolation"
+    ],
+    "074-unicode-splice.lms": [
+      "outer splice Unicode preservation",
+      "UTF-8 text"
+    ],
+    "075-empty-collections.lms": [
+      "empty typed literals",
+      "empty stack queue map"
     ]
   },
   "canonical_signatures": [

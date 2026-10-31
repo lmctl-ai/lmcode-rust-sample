@@ -949,6 +949,84 @@
       ]
     },
     {
+      "name": "070-empty-reversed-range",
+      "source": "programs/070-empty-reversed-range.lms",
+      "source_sha256": "e8335e295aae0ef5c03a943398aac8c29c4a4c1e0a66e61cfd2fffeb02482e8a",
+      "bytecode": "bytecode/070-empty-reversed-range.dslb",
+      "bytecode_sha256": "76ff84b9b0ed474c6066e9385e095de20c5b1ff6714805697cae03fceb96ea94",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "empty and reversed ranges",
+        "range boundary no-op"
+      ]
+    },
+    {
+      "name": "071-nested-loop-control",
+      "source": "programs/071-nested-loop-control.lms",
+      "source_sha256": "42740729acb449d58c7e79677701ea1db93cad74e99f3baeeecf063f91f1966b",
+      "bytecode": "bytecode/071-nested-loop-control.dslb",
+      "bytecode_sha256": "b0095691c81eed414be5fb4704346734c494f48a6afb1ae36f4f20a6186c85ed",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "nested break and continue",
+        "innermost loop control"
+      ]
+    },
+    {
+      "name": "072-switch-no-fallthrough",
+      "source": "programs/072-switch-no-fallthrough.lms",
+      "source_sha256": "ce676583e778566e28b086c3152103e60d63c3038f3119d8df0f312ea3f54837",
+      "bytecode": "bytecode/072-switch-no-fallthrough.dslb",
+      "bytecode_sha256": "72b736b7ac4e0985c2e66a77738f2b535d44b671df7fb10a44314c23bf7bf7b5",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "switch selected arm",
+        "no fall-through"
+      ]
+    },
+    {
+      "name": "073-inline-local-isolation",
+      "source": "programs/073-inline-local-isolation.lms",
+      "source_sha256": "9fd1cbcb74feb418062920715e56624b6e5702d33a94d7542e12966d5b306af9",
+      "bytecode": "bytecode/073-inline-local-isolation.dslb",
+      "bytecode_sha256": "6a56c10e1480ac01fd8f5875615692e9281e2a3da4fb7c2582dd4c1c91edf965",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "reused inline function locals",
+        "call-local isolation"
+      ]
+    },
+    {
+      "name": "074-unicode-splice",
+      "source": "programs/074-unicode-splice.lms",
+      "source_sha256": "e0ea679a97edb22d6309b6970ed84ee03da0fbadfe1852d9a5ad07a3dc9b79c7",
+      "bytecode": "bytecode/074-unicode-splice.dslb",
+      "bytecode_sha256": "c2b6517c11815ba6cd717ca6a521cc0c58d1291d28daa8a42a3fb7b3f39d5969",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "outer splice Unicode preservation",
+        "UTF-8 text"
+      ]
+    },
+    {
+      "name": "075-empty-collections",
+      "source": "programs/075-empty-collections.lms",
+      "source_sha256": "5c14c02ddb72271d1bd01bc5b555475def74b377d701adf8b185d08828ffb0cb",
+      "bytecode": "bytecode/075-empty-collections.dslb",
+      "bytecode_sha256": "c9d330f9a4566cfc1fcda5c43ff84d625434353930f601f0daa9c3e7a231bda1",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "empty typed literals",
+        "empty stack queue map"
+      ]
+    },
+    {
       "name": "101-typed-maps",
       "source": "programs/101-typed-maps.lms",
       "source_sha256": "0e1794979c3cafb7b3f1ffb7af23a4b41ca6515fdafdab816fe5a575d20e712b",
@@ -1250,6 +1328,193 @@
       ]
     },
     {
+      "name": "320-text-template",
+      "source": "programs/320-text-template.lms",
+      "source_sha256": "6cfb71e9f807b30e5b759ba5a6d691e5de2553e703ba7dfa76195bea2639002a",
+      "bytecode": "bytecode/320-text-template.dslb",
+      "bytecode_sha256": "aa72c9e4aaaa006f52799f2ff4ace8954d978834f9fc56846934a873762ec541",
+      "expected_exit": 0,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render(string, Json)",
+        "text templates",
+        "nested maps",
+        "indexed lists",
+        "loops",
+        "boolean conditions",
+        "opaque insertion"
+      ]
+    },
+    {
+      "name": "321-template-missing-expected-fail",
+      "source": "programs/321-template-missing-expected-fail.lms",
+      "source_sha256": "f3e6c8318c9e77c9892c6f455289011143e7e157ddca0f77820515ca1c45ed95",
+      "bytecode": "bytecode/321-template-missing-expected-fail.dslb",
+      "bytecode_sha256": "5efd0318ba777d1eca35242813a21fe47246c6efe8a179f82eeb8d537bd2d350",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "missing"
+      ]
+    },
+    {
+      "name": "322-template-bounds-expected-fail",
+      "source": "programs/322-template-bounds-expected-fail.lms",
+      "source_sha256": "e20b2cec1da5472ceabe68cce297d166535db8b97b4590a175f3d07cc148ed26",
+      "bytecode": "bytecode/322-template-bounds-expected-fail.dslb",
+      "bytecode_sha256": "7a68b64a6eacb4d017772eb654096b88c47f5750c8b92b6e2f34456b635eced6",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "bounds"
+      ]
+    },
+    {
+      "name": "323-template-canonical-index-expected-fail",
+      "source": "programs/323-template-canonical-index-expected-fail.lms",
+      "source_sha256": "37c33a7cdf8a3201f4af0da4f9d6735fdbffa7fe531c4ff077e9e1723ccb551f",
+      "bytecode": "bytecode/323-template-canonical-index-expected-fail.dslb",
+      "bytecode_sha256": "55b5eedc041ade104725960cefc39b8c65b063170c38acce382120314dda047c",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "canonical index"
+      ]
+    },
+    {
+      "name": "324-template-wrong-parent-expected-fail",
+      "source": "programs/324-template-wrong-parent-expected-fail.lms",
+      "source_sha256": "e69b3b7b9dc7aacb9439d8b7a67abe026779bfe6f6f2a52337cd8466cae85fa8",
+      "bytecode": "bytecode/324-template-wrong-parent-expected-fail.dslb",
+      "bytecode_sha256": "ce6894230bab76eb2378dc199bcd324f0b9991ea23570dc3ec078b857d6a755f",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "wrong parent"
+      ]
+    },
+    {
+      "name": "325-template-list-required-expected-fail",
+      "source": "programs/325-template-list-required-expected-fail.lms",
+      "source_sha256": "dff75d2fdc95b755ea8f086ee3dba5484267160111c73cbabc9c9bf02075dcce",
+      "bytecode": "bytecode/325-template-list-required-expected-fail.dslb",
+      "bytecode_sha256": "55fbf717104b6b8dbbfb2b30cdfb0a11e57ab0dd5a8050da12ee51ab73e05ed3",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "list required"
+      ]
+    },
+    {
+      "name": "326-template-bool-required-expected-fail",
+      "source": "programs/326-template-bool-required-expected-fail.lms",
+      "source_sha256": "7fd3a0f10b73d5b6d0adfcb01baa89f8e97aab51eeb65e0b83e9283487db668b",
+      "bytecode": "bytecode/326-template-bool-required-expected-fail.dslb",
+      "bytecode_sha256": "9ca63e0a38569b96dbbb82019467295f2a5ea4bc2e583dcb6aa11e432064c7ff",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "bool required"
+      ]
+    },
+    {
+      "name": "327-template-context-object-expected-fail",
+      "source": "programs/327-template-context-object-expected-fail.lms",
+      "source_sha256": "26fdb9c5e817cb4514e2592d88e7aeb7d906f21767c5028329d07d46b862c2bf",
+      "bytecode": "bytecode/327-template-context-object-expected-fail.dslb",
+      "bytecode_sha256": "45fcb59be951f65ad82fbcc936a11850888d641ec9f8df7262d4b0e72a299eab",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "context object"
+      ]
+    },
+    {
+      "name": "328-template-unclosed-loop-expected-fail",
+      "source": "programs/328-template-unclosed-loop-expected-fail.lms",
+      "source_sha256": "f02a98dc064d0821f46beae75bb6adfc591711d0a6c6e3ba0d58d2c6ad074554",
+      "bytecode": "bytecode/328-template-unclosed-loop-expected-fail.dslb",
+      "bytecode_sha256": "561bdc39d1ad2afba5b7e21d0f571ece5e68591a4fc3b2f38e494c8d840ce35f",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "unclosed loop"
+      ]
+    },
+    {
+      "name": "329-template-unclosed-condition-expected-fail",
+      "source": "programs/329-template-unclosed-condition-expected-fail.lms",
+      "source_sha256": "7428f8eef65dc1d7359aa4d39234f091bdb45c1012ac64ce2f84888240ab26cd",
+      "bytecode": "bytecode/329-template-unclosed-condition-expected-fail.dslb",
+      "bytecode_sha256": "78a5a997a15bfbd020aeb909699fe406e11ef700c0048c5290bc8fbd5582edbc",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "unclosed condition"
+      ]
+    },
+    {
+      "name": "330-template-unexpected-else-expected-fail",
+      "source": "programs/330-template-unexpected-else-expected-fail.lms",
+      "source_sha256": "053488ddb2835ea4d44c8b9e2df58d916b1939f6207d712d10d2ba040318d12a",
+      "bytecode": "bytecode/330-template-unexpected-else-expected-fail.dslb",
+      "bytecode_sha256": "025d75180392f76d6e97295b0f03b864cd7372ed5071f34b495fd21b288355ba",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "unexpected else"
+      ]
+    },
+    {
+      "name": "331-template-invalid-separator-expected-fail",
+      "source": "programs/331-template-invalid-separator-expected-fail.lms",
+      "source_sha256": "11f5e34183a8b1f4c072130eb633a870d8062b6a3800dc266864bca233ad4043",
+      "bytecode": "bytecode/331-template-invalid-separator-expected-fail.dslb",
+      "bytecode_sha256": "f9460ea06e06780be02de891e3a09804a1f11acdee9e0a19afa4e356235e2127",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "invalid separator"
+      ]
+    },
+    {
+      "name": "332-template-index-reserved-expected-fail",
+      "source": "programs/332-template-index-reserved-expected-fail.lms",
+      "source_sha256": "c8dd4884cb07702206e79dba87e8ea7a794a5d46f5efc5c6f1d6e279f476408b",
+      "bytecode": "bytecode/332-template-index-reserved-expected-fail.dslb",
+      "bytecode_sha256": "53eb47280ba3d4052b830b90834c79bb265a58ecba44d75713a7039fe05f1aa6",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "index reserved"
+      ]
+    },
+    {
+      "name": "333-template-validate-empty-body-syntax-expected-fail",
+      "source": "programs/333-template-validate-empty-body-syntax-expected-fail.lms",
+      "source_sha256": "fcaf6706f3d0e741e39f1ba1d1235c41d09e135ae1630b9f576e40f5a661b19a",
+      "bytecode": "bytecode/333-template-validate-empty-body-syntax-expected-fail.dslb",
+      "bytecode_sha256": "92c1d42ec6595fa7b0f06be28a7fd6380d7411f77106a2c207d19cfd56456ada",
+      "expected_exit": 3,
+      "timeout_seconds": 30,
+      "features": [
+        "template_render errors",
+        "validate empty body syntax"
+      ]
+    },
+    {
       "name": "090-bad-bytecode",
       "bytecode": "bytecode/090-bad-bytecode.dslb",
       "bytecode_sha256": "9a8503785947196fd823748257d3fceaa198ccf05ba26b4a9a3354c8087ec108",
@@ -1301,193 +1566,6 @@
       "features": [
         "declared wrong handle type load error"
       ]
-    },
-    {
-      "name": "320-text-template",
-      "source": "programs/320-text-template.lms",
-      "bytecode": "bytecode/320-text-template.dslb",
-      "expected_exit": 0,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render(string, Json)",
-        "text templates",
-        "nested maps",
-        "indexed lists",
-        "loops",
-        "boolean conditions",
-        "opaque insertion"
-      ],
-      "source_sha256": "6cfb71e9f807b30e5b759ba5a6d691e5de2553e703ba7dfa76195bea2639002a",
-      "bytecode_sha256": "aa72c9e4aaaa006f52799f2ff4ace8954d978834f9fc56846934a873762ec541"
-    },
-    {
-      "name": "321-template-missing-expected-fail",
-      "source": "programs/321-template-missing-expected-fail.lms",
-      "bytecode": "bytecode/321-template-missing-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "missing"
-      ],
-      "source_sha256": "f3e6c8318c9e77c9892c6f455289011143e7e157ddca0f77820515ca1c45ed95",
-      "bytecode_sha256": "5efd0318ba777d1eca35242813a21fe47246c6efe8a179f82eeb8d537bd2d350"
-    },
-    {
-      "name": "322-template-bounds-expected-fail",
-      "source": "programs/322-template-bounds-expected-fail.lms",
-      "bytecode": "bytecode/322-template-bounds-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "bounds"
-      ],
-      "source_sha256": "e20b2cec1da5472ceabe68cce297d166535db8b97b4590a175f3d07cc148ed26",
-      "bytecode_sha256": "7a68b64a6eacb4d017772eb654096b88c47f5750c8b92b6e2f34456b635eced6"
-    },
-    {
-      "name": "323-template-canonical-index-expected-fail",
-      "source": "programs/323-template-canonical-index-expected-fail.lms",
-      "bytecode": "bytecode/323-template-canonical-index-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "canonical index"
-      ],
-      "source_sha256": "37c33a7cdf8a3201f4af0da4f9d6735fdbffa7fe531c4ff077e9e1723ccb551f",
-      "bytecode_sha256": "55b5eedc041ade104725960cefc39b8c65b063170c38acce382120314dda047c"
-    },
-    {
-      "name": "324-template-wrong-parent-expected-fail",
-      "source": "programs/324-template-wrong-parent-expected-fail.lms",
-      "bytecode": "bytecode/324-template-wrong-parent-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "wrong parent"
-      ],
-      "source_sha256": "e69b3b7b9dc7aacb9439d8b7a67abe026779bfe6f6f2a52337cd8466cae85fa8",
-      "bytecode_sha256": "ce6894230bab76eb2378dc199bcd324f0b9991ea23570dc3ec078b857d6a755f"
-    },
-    {
-      "name": "325-template-list-required-expected-fail",
-      "source": "programs/325-template-list-required-expected-fail.lms",
-      "bytecode": "bytecode/325-template-list-required-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "list required"
-      ],
-      "source_sha256": "dff75d2fdc95b755ea8f086ee3dba5484267160111c73cbabc9c9bf02075dcce",
-      "bytecode_sha256": "55fbf717104b6b8dbbfb2b30cdfb0a11e57ab0dd5a8050da12ee51ab73e05ed3"
-    },
-    {
-      "name": "326-template-bool-required-expected-fail",
-      "source": "programs/326-template-bool-required-expected-fail.lms",
-      "bytecode": "bytecode/326-template-bool-required-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "bool required"
-      ],
-      "source_sha256": "7fd3a0f10b73d5b6d0adfcb01baa89f8e97aab51eeb65e0b83e9283487db668b",
-      "bytecode_sha256": "9ca63e0a38569b96dbbb82019467295f2a5ea4bc2e583dcb6aa11e432064c7ff"
-    },
-    {
-      "name": "327-template-context-object-expected-fail",
-      "source": "programs/327-template-context-object-expected-fail.lms",
-      "bytecode": "bytecode/327-template-context-object-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "context object"
-      ],
-      "source_sha256": "26fdb9c5e817cb4514e2592d88e7aeb7d906f21767c5028329d07d46b862c2bf",
-      "bytecode_sha256": "45fcb59be951f65ad82fbcc936a11850888d641ec9f8df7262d4b0e72a299eab"
-    },
-    {
-      "name": "328-template-unclosed-loop-expected-fail",
-      "source": "programs/328-template-unclosed-loop-expected-fail.lms",
-      "bytecode": "bytecode/328-template-unclosed-loop-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "unclosed loop"
-      ],
-      "source_sha256": "f02a98dc064d0821f46beae75bb6adfc591711d0a6c6e3ba0d58d2c6ad074554",
-      "bytecode_sha256": "561bdc39d1ad2afba5b7e21d0f571ece5e68591a4fc3b2f38e494c8d840ce35f"
-    },
-    {
-      "name": "329-template-unclosed-condition-expected-fail",
-      "source": "programs/329-template-unclosed-condition-expected-fail.lms",
-      "bytecode": "bytecode/329-template-unclosed-condition-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "unclosed condition"
-      ],
-      "source_sha256": "7428f8eef65dc1d7359aa4d39234f091bdb45c1012ac64ce2f84888240ab26cd",
-      "bytecode_sha256": "78a5a997a15bfbd020aeb909699fe406e11ef700c0048c5290bc8fbd5582edbc"
-    },
-    {
-      "name": "330-template-unexpected-else-expected-fail",
-      "source": "programs/330-template-unexpected-else-expected-fail.lms",
-      "bytecode": "bytecode/330-template-unexpected-else-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "unexpected else"
-      ],
-      "source_sha256": "053488ddb2835ea4d44c8b9e2df58d916b1939f6207d712d10d2ba040318d12a",
-      "bytecode_sha256": "025d75180392f76d6e97295b0f03b864cd7372ed5071f34b495fd21b288355ba"
-    },
-    {
-      "name": "331-template-invalid-separator-expected-fail",
-      "source": "programs/331-template-invalid-separator-expected-fail.lms",
-      "bytecode": "bytecode/331-template-invalid-separator-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "invalid separator"
-      ],
-      "source_sha256": "11f5e34183a8b1f4c072130eb633a870d8062b6a3800dc266864bca233ad4043",
-      "bytecode_sha256": "f9460ea06e06780be02de891e3a09804a1f11acdee9e0a19afa4e356235e2127"
-    },
-    {
-      "name": "332-template-index-reserved-expected-fail",
-      "source": "programs/332-template-index-reserved-expected-fail.lms",
-      "bytecode": "bytecode/332-template-index-reserved-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "index reserved"
-      ],
-      "source_sha256": "c8dd4884cb07702206e79dba87e8ea7a794a5d46f5efc5c6f1d6e279f476408b",
-      "bytecode_sha256": "53eb47280ba3d4052b830b90834c79bb265a58ecba44d75713a7039fe05f1aa6"
-    },
-    {
-      "name": "333-template-validate-empty-body-syntax-expected-fail",
-      "source": "programs/333-template-validate-empty-body-syntax-expected-fail.lms",
-      "bytecode": "bytecode/333-template-validate-empty-body-syntax-expected-fail.dslb",
-      "expected_exit": 3,
-      "timeout_seconds": 30,
-      "features": [
-        "template_render errors",
-        "validate empty body syntax"
-      ],
-      "source_sha256": "fcaf6706f3d0e741e39f1ba1d1235c41d09e135ae1630b9f576e40f5a661b19a",
-      "bytecode_sha256": "92c1d42ec6595fa7b0f06be28a7fd6380d7411f77106a2c207d19cfd56456ada"
     }
   ],
   "fixtures": {
