@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let name = shop.label();
 let balance = ledger.balance();
 print(name + ":" + str(balance.amount()));

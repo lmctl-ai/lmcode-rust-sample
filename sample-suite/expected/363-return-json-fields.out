@@ -1,4 +1,4 @@
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}
+{"host_summary":{"balance": 0, "entries": 0, "note": "", "entries_called": 0}}
 LMCODE_RETURN_BEGIN
-{"tree":{"nested":{"items":[1,true,null,"text"]}},"missing":null,"flag":true,"text":"LMCODE_RETURN_BEGIN\nquoted 水","integer":7,"fraction":1.25}
+{"ok":true,"result":{"tree":{"nested":{"items":[1,true,null,"text"]}},"missing":null,"flag":true,"text":"LMCODE_RETURN_BEGIN\nquoted 水","integer":7,"fraction":1.25}}
 LMCODE_RETURN_END

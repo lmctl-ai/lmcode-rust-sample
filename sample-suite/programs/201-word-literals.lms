@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let labels = qw(alpha β comma, api/v1 $money);
 print(labels.join("|"));
 let lines = qw(first # comments end at the newline

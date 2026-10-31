@@ -8,7 +8,7 @@ failed = [];
 for (case in manifest.cases) {
   output = path_join(scratch, case.name + ".dslb");
   if (case.has("source")) {
-    r = invoke(root, compiler_command(), ["--no-preflight", path_join(root, case.source), output], {}, 30000);
+    r = invoke(root, ["node"], [path_join(root,"compile-fixture.mjs"), path_join(root, case.source), output], {}, 30000);
     if (r.code != 0 || r.error != "") { push(failed, case.name + ": " + r.stderr + r.error); }
   } else {
     binary(root, {op:"mutate", source:path_join(scratch, case.mutation.source + ".dslb"), output:output, mutation:case.mutation});

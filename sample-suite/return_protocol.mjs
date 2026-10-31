@@ -1,17 +1,9 @@
-// Independent assertion before a reference output can become an expectation.
-export function validateReturn(hex, code, expected = null) {
-  const bytes = Buffer.from(hex, 'hex');
-  const text = new TextDecoder('utf-8', {fatal:true}).decode(bytes);
-  const lines = text.split('\n');
-  const count = marker => lines.filter(line => line === marker).length;
-  if (code !== 0) {
-    if (count('LMCODE_RETURN_BEGIN') || count('LMCODE_RETURN_END')) throw Error('failed invocation emitted return frame');
-    return true;
-  }
-  if (lines.length < 5 || lines.at(-1) !== '' || lines.at(-2) !== 'LMCODE_RETURN_END' || lines.at(-4) !== 'LMCODE_RETURN_BEGIN' || count('LMCODE_RETURN_BEGIN') !== 1 || count('LMCODE_RETURN_END') !== 1)
-    throw Error('missing, duplicate or nonterminal return frame');
-  const actual = JSON.parse(lines.at(-3));
-  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw Error('result differs from independent return oracle');
-  if (JSON.parse(lines.at(-5)).ok !== true) throw Error('success diagnostic must precede frame');
-  return true;
+// Independent frame and summary oracle; never infer the expected return value.
+export function validateReturn(hex, code, expected=null) {
+ const text=new TextDecoder('utf-8',{fatal:true}).decode(Buffer.from(hex,'hex')),lines=text.split('\n');
+ if(lines.at(-1)!==''||lines.at(-2)!=='LMCODE_RETURN_END'||lines.at(-4)!=='LMCODE_RETURN_BEGIN'||lines.filter(x=>x==='LMCODE_RETURN_BEGIN').length!==1||lines.filter(x=>x==='LMCODE_RETURN_END').length!==1||lines.slice(-4).join('').includes('\r'))throw Error('missing, duplicate or nonterminal invocation frame');
+ const v=JSON.parse(lines.at(-3));if(!v||typeof v!=='object'||typeof v.ok!=='boolean')throw Error('envelope required');
+ if(code){if(v.ok||Object.keys(v).some(k=>!['ok','phase','code','message','line','column','part'].includes(k))||!['phase','code','message'].every(k=>typeof v[k]==='string')||({cli:2,load:3,run:3,app:4})[v.phase]!==code)throw Error('invalid failure envelope');}
+ else {if(!v.ok||Object.keys(v).join(',')!=='ok,result'||JSON.stringify(v.result)!==JSON.stringify(expected))throw Error('result differs from oracle');if(Object.keys(JSON.parse(lines.at(-5))).join(',')!=='host_summary')throw Error('missing tagged host summary');}
+ return true;
 }

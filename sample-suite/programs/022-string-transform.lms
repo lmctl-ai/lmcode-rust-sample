@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let a = str_len("abc");
 let b = str_lower("ABC");
 let c = str_repeat("ab", 2);

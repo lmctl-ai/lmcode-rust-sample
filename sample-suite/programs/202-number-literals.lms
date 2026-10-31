@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let limits = qi(-9223372036854775808 0 9223372036854775807);
 for (number in limits) { print(str(number)); }
 let values = qf(2 1.5 1e-3 -0);

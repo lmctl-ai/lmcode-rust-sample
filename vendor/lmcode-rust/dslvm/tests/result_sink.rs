@@ -46,9 +46,23 @@ fn owned_sink_numeric_and_lifecycle_contract() {
     ctx.result_sink = Some(ResultSink::default());
     set_result(&mut ctx, &Value::Float(0.1 + 0.2)).unwrap();
     assert_eq!(
-        ctx.result_sink.as_ref().unwrap().frame(),
-        "LMCODE_RETURN_BEGIN\n0.30000000000000004\nLMCODE_RETURN_END\n"
+        {
+            let mut results = dslvm::stdlib::InvocationResults::from_command_with_manifest(
+                &["test".into()],
+                None,
+            )
+            .unwrap();
+            results.select(0, &mut ctx, Default::default()).unwrap();
+            set_result(&mut ctx, &Value::Float(0.1 + 0.2)).unwrap();
+            results.complete(0).unwrap();
+            let mut out = Vec::new();
+            assert_eq!(results.write_frame(&mut out), 0);
+            String::from_utf8(out).unwrap()
+        },
+        "LMCODE_RETURN_BEGIN\n{\"ok\":true,\"result\":0.30000000000000004}\nLMCODE_RETURN_END\n"
     );
+    ctx.result_sink = Some(ResultSink::default());
+    set_result(&mut ctx, &Value::Float(0.1 + 0.2)).unwrap();
     for v in [
         Value::Int(9007199254740992),
         Value::Float(f64::INFINITY),
@@ -69,11 +83,7 @@ fn owned_sink_numeric_and_lifecycle_contract() {
         ctx.result_sink.as_ref().unwrap().json(),
         "{\"a\":2,\"b\":null}"
     );
-    assert_eq!(
-        ctx.result_sink.as_ref().unwrap().frame_if_success(false),
-        None
-    );
-    ctx.result_sink.as_mut().unwrap().reset();
+    ctx.result_sink.as_mut().unwrap().reset().unwrap();
     assert_eq!(ctx.result_sink.as_ref().unwrap().json(), "null");
 }
 

@@ -40,16 +40,16 @@ def check(command):
     retired = '--' + 'dsl'
     for suffix in ['', '-schema', '-signatures']:
         result = call(*([retired, str(ROOT / 'does-not-exist.dslb')] if not suffix else [retired + suffix]))
-        value = json.loads(result.stdout)
+        value = json.loads(result.stdout.splitlines()[-2])
         if result.returncode != 2 or value.get('code') != 'CLI_USAGE':
             raise ValueError('retired option must be rejected before opening input')
     for args in [(), ('--unknown',), ('--lmcode',), ('--lmcode-schema', '--bad')]:
         result = call(*args)
-        value = json.loads(result.stdout)
+        value = json.loads(result.stdout.splitlines()[-2])
         if result.returncode != 2 or value.get('code') != 'CLI_USAGE' or value.get('phase') != 'cli' or value.get('ok') is not False:
             raise ValueError('usage must produce one JSON CLI_USAGE and exit 2')
     result = call('--lmcode', str(ROOT / 'does-not-exist.dslb'))
-    value = json.loads(result.stdout)
+    value = json.loads(result.stdout.splitlines()[-2])
     if result.returncode != 4 or value.get('code') != 'APP_FAIL':
         raise ValueError('unreadable input must produce APP_FAIL and exit 4')
     print('PASS host CLI protocol (0/2/3/4; schema/signatures/discovery)')

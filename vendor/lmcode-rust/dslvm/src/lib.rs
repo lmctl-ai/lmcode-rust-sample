@@ -39,7 +39,7 @@ const MAGIC: &[u8; 4] = b"DSLB";
 /// Load, verify and run-time failures: a message naming the problem and a code (`LOAD_BAD_BYTECODE`, `LOAD_SCHEMA_MISMATCH`,
 /// `LOAD_UNBOUND`, `RUN_ERROR` for a VM error, `RUN_HOST` for an error a host closure returned, `APP_FAIL` for the host's own
 /// application failure). `Error::host(msg)` is what host closures return. Exit-code convention (runtime result protocol).: 2 compile
-/// (lmscript), 3 load or run, 4 application; see [`report_error`].
+/// (lmscript), 3 load or run, 4 application; see [`stdlib::failure_frame`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Error { pub code: String, pub message: String, pub line: Option<u32>, pub column: Option<u16> }
 impl Error {
@@ -57,23 +57,14 @@ fn load_err<T>(code: &str, message: impl Into<String>) -> Result<T, Error> { Err
 /// JSON string literal for the result line.
 pub fn json_escape(s: &str) -> String {
     let mut out = String::from("\"");
-    for c in s.chars() { match c { '"' => out.push_str("\\\""), '\\' => out.push_str("\\\\"), '\n' => out.push_str("\\n"), '\r' => out.push_str("\\r"), '\t' => out.push_str("\\t"), c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)), c => out.push(c) } }
+    for c in s.chars() { match c { '"' => out.push_str("\\\""), '\\' => out.push_str("\\\\"), '\u{8}' => out.push_str("\\b"), '\u{c}' => out.push_str("\\f"), '\n' => out.push_str("\\n"), '\r' => out.push_str("\\r"), '\t' => out.push_str("\\t"), c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)), c => out.push(c) } }
     out.push('"'); out
 }
-/// The standard result line: exactly one JSON line on stdout. `result_json` is JSON text already.
-pub fn report_ok(result_json: &str) -> i32 { println!("{{\"ok\": true, \"result\": {}}}", result_json); 0 }
 pub fn error_json(phase: &str, e: &Error) -> String {
     let mut result = format!("{{\"ok\": false, \"phase\": {}, \"code\": {}, \"message\": {}", json_escape(phase), json_escape(&e.code), json_escape(&e.message));
     if let Some(line) = e.line { result.push_str(&format!(", \"line\": {}", line)); if let Some(column) = e.column { result.push_str(&format!(", \"column\": {}", column)); } }
     result.push('}'); result
 }
-/// phase is "load" or "run" (compile failures are lmscript's, exit 2); returns the exit code: 4 for APP_FAIL, else 3.
-pub fn report_error(phase: &str, e: &Error) -> i32 {
-    println!("{}", error_json(phase, e));
-    if e.code == "APP_FAIL" { 4 } else { 3 }
-}
-pub fn report_app_failure(message: &str) -> i32 { report_error("app", &Error::new("APP_FAIL", message)) }
-
 /// A handle to a host object living in a [`Context`] for one run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ObjRef(usize);

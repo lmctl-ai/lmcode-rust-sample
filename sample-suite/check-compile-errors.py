@@ -18,7 +18,7 @@ def check():
     for case in cases:
         with tempfile.TemporaryDirectory(prefix='sample-compile-error-') as work:
             output = Path(work) / 'must-not-exist.dslb'
-            result = subprocess.run([compiler, '--no-preflight', str(ROOT/'compile-errors'/case['source']), str(output)], capture_output=True, timeout=30)
+            result = subprocess.run(['node',str(ROOT/'compile-fixture.mjs'),str(ROOT/'compile-errors'/case['source']),str(output)], capture_output=True, timeout=30)
             location = ''
             if 'line' in case:
                 location = ':' + str(case['line']) + ':' + str(case['column']) + ':'

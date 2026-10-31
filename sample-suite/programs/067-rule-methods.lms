@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 @PRICE_RULE
 fn round_up(m: Money) -> void implements Adjuster {
   let cents = m.amount();

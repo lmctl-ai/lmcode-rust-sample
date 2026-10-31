@@ -24,24 +24,32 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
   are never called. A non-void entry result is printed as `entry NAME = VALUE` in call order (VALUE uses
   the same text as `str()`). Entry-call failures are run-phase errors. The result object gains
   `"entries_called": N`, the number of entry calls the host made (0 for programs without rules).
-- Every execution prints trace lines via print, then the existing JSON diagnostic line and LF.
-  On success only, append exactly `LMCODE_RETURN_BEGIN\n<compact JSON>\nLMCODE_RETURN_END\n`.
-  This terminal frame is mandatory (unset result is null), LF-only, and follows all entry traces
-  and application validation. One host-owned ResultSink spans the body and all selected entries;
-  never reset it between item/total calls or store it in a region arena. Entry/HALT values and
-  shop diagnostics stay independent of `$return`. Failed invocations emit no frame.
-  Success result fields/order/spacing: `{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}`.
-  Negative final ledger balance is application failure (after VM success), exit 4:
-  `{"ok": false, "phase": "app", "code": "APP_FAIL", "message": "ledger: negative balance"}`.
-- VM errors use SDK codes/location and standard JSON order/spaces: ok,phase,code,message,line,column.
-  Canonical load messages: LOAD_BAD_BYTECODE -> `invalid sample bytecode`;
-  LOAD_SCHEMA_MISMATCH -> `sample schema mismatch`; LOAD_UNBOUND -> `sample import mismatch`.
-  Host/VM run messages retain the SDK's message (including `dsl line N:C: `).
-- CLI: --version => `lmcode-cpp-sample 0.2.0` (other ports use their own binary name);
-  `--lmcode-schema [--json]` => exact schema bytes; `--lmcode-signatures` => sorted canonical signatures + LF;
-  `--lmcode FILE` => run, exit 0/3/4; usage/unknown option => exit 2 and JSON phase cli,
-  code CLI_USAGE, message `usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE`.
-  Other command/IO setup errors become APP_FAIL, without machine-specific paths.
+- One invocation accepts repeated `--lmcode FILE` pairs. `--first FILE` and
+  `--last FILE` are role fragments: first roles dispatch before normal roles, last
+  roles afterward, stable within each role. The private invocation descriptor maps
+  unchanged file strings to add indices; standalone pairs use occurrence order.
+- One Host/context/ledger spans the invocation. Each slot owns its own result sink,
+  spanning body and selected entries; complete validates/seals before another slot.
+  Results are emitted in add order regardless of dispatch order. Same program twice
+  means two independent slots sharing host effects. No implicit merge/deduplication.
+- Preserve traces/entry diagnostics. Successful global application validation emits
+  one tagged `{"host_summary":{"balance": N, "entries": N, "note": TEXT,
+  "entries_called": N}}` diagnostic. It is not the program result.
+- One terminal compact invocation envelope frame, including controlled failures:
+  `LMCODE_RETURN_BEGIN\n<ENVELOPE>\nLMCODE_RETURN_END\n` (final LF, flush once).
+  Single success is `{"ok":true,"result":VALUE}`; builder success has an add-order
+  result array and required `parts`, including one-slot builders. Unset is null.
+  No per-part frames or duplicate unframed success records.
+- Failures use compact ordered ok/phase/code/message/line/column/part fields. No
+  payload/parts on failure. First failure wins; known builder slot has part including
+  zero; single/global omits it. A negative final shared ledger is global APP_FAIL,
+  `ledger: negative balance`, exit4. CLI/load/run/app exit2/3/3/4 respectively.
+- Canonical load messages remain LOAD_BAD_BYTECODE -> `invalid sample bytecode`,
+  LOAD_SCHEMA_MISMATCH -> `sample schema mismatch`, LOAD_UNBOUND -> `sample import
+  mismatch`; run errors retain the located SDK diagnostic. Other IO setup failures
+  become APP_FAIL `cannot read sample input`, without machine paths.
+- Discovery flags retain exact schema/signature/version bytes and ignore execution
+  metadata. Usage/unknown options produce CLI_USAGE failure frames before file IO.
 
 ## Native conversion probes (shared by all ports)
 

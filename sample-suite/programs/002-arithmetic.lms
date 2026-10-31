@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let a = (7 + 3) * 2;
 let b = a / 4;
 let c = a % 3;

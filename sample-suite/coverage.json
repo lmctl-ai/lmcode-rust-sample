@@ -870,7 +870,7 @@
       },
       "missing": null,
       "flag": true,
-      "text": "LMCODE_RETURN_BEGIN\nquoted 水",
+      "text": "LMCODE_RETURN_BEGIN\nquoted \u6c34",
       "integer": 7,
       "fraction": 1.25
     },
@@ -884,5 +884,18 @@
       "item375": 375,
       "total": 750
     }
-  }
+  },
+  "invocation_flows": [
+    "single",
+    "builder",
+    "reused sealed builder",
+    "duplicate program",
+    "one-slot builder/list",
+    "role reverse dispatch",
+    "shared ledger",
+    "entry failure part 1",
+    "single entry failure",
+    "global app failure",
+    "summary preservation"
+  ]
 }

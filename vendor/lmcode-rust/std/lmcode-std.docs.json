@@ -10,7 +10,7 @@
     "encoding": "Hex is lowercase on encode and accepts ASCII mixed-case digits on decode. Base64 is canonical padded RFC 4648 section 4, rejecting whitespace, URL-safe alphabet, invalid padding and nonzero pad bits. Strings are raw bytes.",
     "snapshots": "Map keys()/values() each allocate one independent list snapshot in insertion order; mutation never aliases map storage. Float payload bits are preserved.",
     "templates": "One-pass text rendering with nested JSON context, zero-based indexed lists, list loops and strict boolean conditions. Strings insert verbatim; other values use compact JSON. No recursive interpolation or format-specific escaping.",
-    "results": "The invocation-owned ResultSink is external to arenas and retains owned writes across body/entry calls. JSON values use strict UTF-8, safe mathematical integers (\u00b19007199254740991), finite binary64 and shortest-round-trip formatting; explicit successful host framing follows dispatch and application validation."
+    "results": "The invocation-owned ResultSink is external to arenas and retains owned writes across body/entry calls. JSON values use strict UTF-8, safe mathematical integers (±9007199254740991), finite binary64 and shortest-round-trip formatting; explicit successful host framing follows dispatch and application validation."
   },
   "schema": "std/lmcode-std.schema.json",
   "signatures": {
@@ -161,9 +161,11 @@
     "fn lmcode_return_null() -> void": {
       "area": "return",
       "params": [],
-      "summary": "Replace the invocation result with null.",
+      "summary": "Replace the selected program result with null.",
       "errors": [
-        "lmcode return: no result sink"
+        "lmcode return: no result sink",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, bool) -> void": {
@@ -172,11 +174,13 @@
         "string",
         "bool"
       ],
-      "summary": "Store a bool at a JSON object path in the invocation result.",
+      "summary": "Store a bool at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, float) -> void": {
@@ -185,11 +189,13 @@
         "string",
         "float"
       ],
-      "summary": "Store a float at a JSON object path in the invocation result.",
+      "summary": "Store a float at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, FloatList) -> void": {
@@ -198,11 +204,13 @@
         "string",
         "FloatList"
       ],
-      "summary": "Store an owned float list at a JSON object path in the invocation result.",
+      "summary": "Store an owned float list at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, FloatMap) -> void": {
@@ -211,11 +219,13 @@
         "string",
         "FloatMap"
       ],
-      "summary": "Store an owned float map at a JSON object path in the invocation result.",
+      "summary": "Store an owned float map at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, int) -> void": {
@@ -224,11 +234,13 @@
         "string",
         "int"
       ],
-      "summary": "Store an int at a JSON object path in the invocation result.",
+      "summary": "Store an int at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, IntList) -> void": {
@@ -237,11 +249,13 @@
         "string",
         "IntList"
       ],
-      "summary": "Store an owned int list at a JSON object path in the invocation result.",
+      "summary": "Store an owned int list at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, IntMap) -> void": {
@@ -250,11 +264,13 @@
         "string",
         "IntMap"
       ],
-      "summary": "Store an owned int map at a JSON object path in the invocation result.",
+      "summary": "Store an owned int map at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, Json) -> void": {
@@ -263,11 +279,13 @@
         "string",
         "Json"
       ],
-      "summary": "Store an owned JSON value at a JSON object path in the invocation result.",
+      "summary": "Store an owned JSON value at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, StrList) -> void": {
@@ -276,11 +294,13 @@
         "string",
         "StrList"
       ],
-      "summary": "Store an owned string list at a JSON object path in the invocation result.",
+      "summary": "Store an owned string list at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, StrMap) -> void": {
@@ -289,11 +309,13 @@
         "string",
         "StrMap"
       ],
-      "summary": "Store an owned string map at a JSON object path in the invocation result.",
+      "summary": "Store an owned string map at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put(string, string) -> void": {
@@ -302,11 +324,13 @@
         "string",
         "string"
       ],
-      "summary": "Store a string at a JSON object path in the invocation result.",
+      "summary": "Store a string at a top-level JSON object key in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_put_null(string) -> void": {
@@ -314,11 +338,13 @@
       "params": [
         "string"
       ],
-      "summary": "Store null at a JSON object path in the invocation result.",
+      "summary": "Store null at a JSON object path in the selected program result.",
       "errors": [
         "lmcode return: no result sink",
         "lmcode return: field assignment requires object or null",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(bool) -> void": {
@@ -326,10 +352,12 @@
       "params": [
         "bool"
       ],
-      "summary": "Replace the invocation result with an owned bool.",
+      "summary": "Replace the selected program result with an owned bool.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(float) -> void": {
@@ -337,10 +365,12 @@
       "params": [
         "float"
       ],
-      "summary": "Replace the invocation result with an owned float.",
+      "summary": "Replace the selected program result with an owned float.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(FloatList) -> void": {
@@ -348,10 +378,12 @@
       "params": [
         "FloatList"
       ],
-      "summary": "Replace the invocation result with an owned float list.",
+      "summary": "Replace the selected program result with an owned float list.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(FloatMap) -> void": {
@@ -359,10 +391,12 @@
       "params": [
         "FloatMap"
       ],
-      "summary": "Replace the invocation result with an owned float map.",
+      "summary": "Replace the selected program result with an owned float map.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(int) -> void": {
@@ -370,10 +404,12 @@
       "params": [
         "int"
       ],
-      "summary": "Replace the invocation result with an owned int.",
+      "summary": "Replace the selected program result with an owned int.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(IntList) -> void": {
@@ -381,10 +417,12 @@
       "params": [
         "IntList"
       ],
-      "summary": "Replace the invocation result with an owned int list.",
+      "summary": "Replace the selected program result with an owned int list.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(IntMap) -> void": {
@@ -392,10 +430,12 @@
       "params": [
         "IntMap"
       ],
-      "summary": "Replace the invocation result with an owned int map.",
+      "summary": "Replace the selected program result with an owned int map.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(Json) -> void": {
@@ -403,10 +443,12 @@
       "params": [
         "Json"
       ],
-      "summary": "Replace the invocation result with an owned JSON value.",
+      "summary": "Replace the selected program result with an owned JSON value.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(StrList) -> void": {
@@ -414,10 +456,12 @@
       "params": [
         "StrList"
       ],
-      "summary": "Replace the invocation result with an owned string list.",
+      "summary": "Replace the selected program result with an owned string list.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(StrMap) -> void": {
@@ -425,10 +469,12 @@
       "params": [
         "StrMap"
       ],
-      "summary": "Replace the invocation result with an owned string map.",
+      "summary": "Replace the selected program result with an owned string map.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn lmcode_return_set(string) -> void": {
@@ -436,10 +482,12 @@
       "params": [
         "string"
       ],
-      "summary": "Replace the invocation result with an owned string.",
+      "summary": "Replace the selected program result with an owned string.",
       "errors": [
         "lmcode return: no result sink",
-        "lmcode return: invalid JSON value at PATH: REASON"
+        "lmcode return: invalid JSON value at PATH: REASON",
+        "lmcode return: result sink is sealed",
+        "lmcode return: result type mismatch at PATH: expected T; got K"
       ]
     },
     "fn math_abs(float) -> float": {

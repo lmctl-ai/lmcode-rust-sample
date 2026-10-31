@@ -46,7 +46,9 @@ fn fixture(name: &str, expect: &str, repeat: usize, should_fail: bool) {
     .unwrap();
     let reg = registry();
     let mut ctx = Context::new();
-    ctx.result_sink = Some(dslvm::stdlib::ResultSink::default());
+    let mut results =
+        dslvm::stdlib::InvocationResults::from_command_with_manifest(&[name.into()], None).unwrap();
+    results.select(0, &mut ctx, Default::default()).unwrap();
     let body = program.run(&mut ctx, &reg);
     if should_fail {
         let error = if name == "entry-error" {
@@ -73,12 +75,10 @@ fn fixture(name: &str, expect: &str, repeat: usize, should_fail: bool) {
             "{name}: missing source location: {}",
             error.message
         );
-        assert!(ctx
-            .result_sink
-            .as_ref()
-            .unwrap()
-            .frame_if_success(false)
-            .is_none());
+        results.fail(Some(0), "run", error).unwrap();
+        let mut out = Vec::new();
+        assert_eq!(results.write_frame(&mut out), 3);
+        assert_eq!(out, fs::read(dir.join(format!("{name}.expect"))).unwrap());
         return;
     }
     body.unwrap_or_else(|e| panic!("{name}: body failed: {e}"));
@@ -92,10 +92,10 @@ fn fixture(name: &str, expect: &str, repeat: usize, should_fail: bool) {
     let sink = ctx.result_sink.as_ref().unwrap();
     assert_eq!(sink.json(), expect, "{name}: payload");
     let expected_frame = fs::read_to_string(dir.join(format!("{name}.expect"))).unwrap();
-    assert_eq!(
-        sink.frame_if_success(true).as_deref(),
-        Some(expected_frame.as_str())
-    );
+    results.complete(0).unwrap();
+    let mut out = Vec::new();
+    assert_eq!(results.write_frame(&mut out), 0);
+    assert_eq!(String::from_utf8(out).unwrap(), expected_frame);
 }
 
 #[test]

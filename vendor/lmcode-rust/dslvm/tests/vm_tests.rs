@@ -376,7 +376,8 @@ fn host_byte_string_helpers_validate_or_convert_lossily() {
     assert_eq!(run(&Asm::default().func(BOOM, 0).halt().file()).unwrap_err().code, "RUN_HOST");
     assert_eq!(run(&Asm::default().push_int(1).push_int(0).u8(0x16).halt().file()).unwrap_err().code, "RUN_ERROR");
 }
-#[test] fn result_line_exit_codes() { assert_eq!(report_error("load", &Error::new("LOAD_UNBOUND", "x")), 3); assert_eq!(report_error("run", &Error::host("no")), 3); assert_eq!(report_app_failure("nothing"), 4); assert_eq!(report_ok("42"), 0); assert_eq!(json_escape("a\"b\n"), "\"a\\\"b\\n\""); }
+#[test] fn result_line_exit_codes() { use dslvm::stdlib::failure_frame; let mut out=Vec::new(); assert_eq!(failure_frame(&mut out,"load", &Error::new("LOAD_UNBOUND", "x")).unwrap(), 3); assert_eq!(failure_frame(&mut out,"run", &Error::host("no")).unwrap(), 3); assert_eq!(failure_frame(&mut out,"app", &Error::new("APP_FAIL","nothing")).unwrap(),4); }
+
 #[test] fn error_json_has_exact_optional_location_fields() {
     let mut full = Error::new("RUN_ERROR", "bad"); full.locate(4, 2);
     let mut line = Error::host("host"); line.locate(5, 0);

@@ -8,9 +8,7 @@ library, with no crates.io dependencies or sibling checkout needed to build.
 
 ## Prerequisites
 
-Use a compiler built from mono main at **177e38ca or later**. Published
-`@lmctl-ai/lmctl` 0.2.448 lacks `out=`; a source build may report 0.2.38, so
-its source commit and successful corpus reproduction establish capability.
+Build lmscript from current mono main with opaque program and builder support.
 Set `LMSCRIPT_BIN` to that build's `lmscript/bin/lmscript`, then run `./test.sh`.
 The compiler is external to this host; no global installation is required.
 
@@ -41,12 +39,12 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
 7. **Translate lmcode concepts.** [Money/Items/Ledger methods](src/shop.rs) show
    operators, `money(int)` conversion, string-backed `Currency`, `len/at` foreach,
    `returns:self` registered as its owner type, and `Value::None` for void.
-8. **Compile outside the host.** [program wrappers](sample-suite/programs) use
-   `_lmcode_ schema="..." out=ARGV[0]`. [main.rs](src/main.rs) embeds the exact schema bytes,
-   `Program::load` verifies/binds `.dslb`, and `run` executes against this context.
-9. **Keep error boundaries separate.** [main.rs](src/main.rs) uses SDK result/error
-   helpers: CLI 2, load/run 3, application 4, success 0. Only loader wording is
-   normalized; the VM adds lmcode line/column. A negative final balance is an app rule.
+8. **Compile outside the host.** `_lmcode_ schema="..."` constructs an opaque
+   program; `run_lmcode` executes it. [main.rs](src/main.rs) embeds the exact schema,
+   loads each submitted program once, and shares one host context across its slots.
+9. **Keep error boundaries separate.** [main.rs](src/main.rs) records per-part
+   load/run failures and global application failures in one collector envelope. CLI
+   exits 2, load/run 3, application 4, and success 0. A negative final balance is an app rule.
 10. **Check the shared oracle.** [test.sh](test.sh) checks locks and all imports,
     reproduces bytecode with the compiler, runs every case, and runs negative harness
     controls. Read the [coverage matrix](sample-suite/README.md) before adding APIs.
@@ -132,49 +130,38 @@ The lmscript driver verifies locks, audits 206 standard and 45 host signatures, 
 
 ## Text templates
 
-[examples/text-template.lms](examples/text-template.lms) renders ordinary text from a nested context with indexed lists, loops and boolean conditions. The standard `template_render(string, Json) -> string` function performs one pass; inserted values stay literal. Compile it with `$LMSCRIPT_BIN --no-preflight examples/text-template.lms build/text-template.dslb`, then run the sample host with `--lmcode build/text-template.dslb`.
+[examples/text-template.lms](examples/text-template.lms) builds an opaque lmcode
+program that renders ordinary text from nested JSON, indexed lists, loops and
+boolean conditions. `template_render(string, Json) -> string` performs one pass;
+inserted values stay literal. The example calls `run_lmcode` with this host and
+checks the returned envelope. The shared 123-case corpus covers template success
+and error cases. See the [portable template contract](https://github.com/lmctl-ai/lmcode-cpp/blob/main/std/template.md).
 
-The lmscript-driven suite runs 123 cases, including template success/error cases. See the [portable template contract](https://github.com/lmctl-ai/lmcode-cpp/blob/main/std/template.md).
+## Invocation adapter
 
-## Return protocol
+Each host process constructs one host context and accepts ordered flag/file pairs:
+`--lmcode FILE`, `--first FILE`, or `--last FILE`. Role flags affect execution
+order while result slots retain command-line add order. The same shop, ledger,
+registry, and domain handles serve all submitted programs in that process.
 
-`Context.result_sink` owns one `ResultSink` for the body and all selected entry
-calls. Standard arena cleanup must not reset it. `$return` does not change the
-existing shop diagnostic or an entry's non-void HALT trace. After dispatch and
-negative-balance validation, the CLI writes the shop diagnostic and the sink's
-terminal frame. Unset means null; load, body, entry and application errors emit
-no frame. Frame floats use the SDK's shortest-round-trip formatter, independent
-of the VM's `str(float)` formatting.
+A single program returns one terminal envelope. Multiple programs return one
+builder envelope with independent results in add order and a required `parts`
+count. Failures return one failure envelope without partial results. Shop output
+remains a tagged `host_summary` diagnostic before the frame; entry traces and
+application validation keep their existing behavior. The SDK's invocation
+collector owns one result sink per program across body and selected entry calls.
 
-### Program
+Public scripts construct and execute programs through `run_lmcode`; they do not
+name bytecode files. The rule and text-template examples use this path. The real
+integration control also checks repeated builder runs, two programs sharing one
+ledger, duplicate program slots, a one-slot builder versus a single list result,
+entry results, part failures, and global application failures.
 
-For a source file in `examples/`:
-
-```lmscript
-program = _lmcode_ schema="../sample-suite/sample.dsl.json" out=ARGV[0];
-$return.name = "shop";
-$return.total = shop.total().amount();
-end _lmcode_
-```
-
-### Expected result
-
-```text
-{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}
-LMCODE_RETURN_BEGIN
-{"name":"shop","total":750}
-LMCODE_RETURN_END
-```
-
-### Validation
-
-The normal gate runs ten shared Python/Node protocol controls and the actual
-compiled-host controls in `scripts/test-return-controls.py`. Missing framing and
-per-entry sink reset must fail independent canonical expectations; compilation
-failure or a changed process exit is not counted as a caught fault.
-See [durable notes](durable-memory/index.md) for pins and ownership boundaries.
-
-The host loads lmcode bytecode (DSLB v6).
+The normal `./test.sh` gate verifies the SDK and suite locks, all 123 byte/exit
+cases, bytecode reproduction, runner refusals, reusable examples, exact terminal
+frames, and compiled mutation controls. The invocation mutation driver requires a
+passing baseline build and proves shared-state reset, stale bare frames, duplicate
+and missing parts, and lost role argv are caught as assertion failures.
 
 ## Historical literal names
 

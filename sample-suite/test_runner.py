@@ -22,6 +22,8 @@ import runpy
 import sys
 
 sys.stdout.reconfigure(newline="\n")
+def failure(v):
+ print("LMCODE_RETURN_BEGIN");print(json.dumps(v));print("LMCODE_RETURN_END")
 root = Path(os.environ["FAKE_SUITE"])
 mode = os.environ.get("FAKE_MODE", "ok")
 args = sys.argv[1:]
@@ -36,7 +38,7 @@ if args == ["--version"]:
     raise SystemExit(0)
 if args[:1] == ["--lmcode-schema"]:
     if len(args) > 2 or (len(args) == 2 and args[1] != "--json"):
-        print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
+        failure({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"})
         raise SystemExit(2)
     print((root / "sample.dsl.json").read_text(), end="")
     raise SystemExit(0)
@@ -45,12 +47,12 @@ if args == ["--lmcode-signatures"]:
     sys.stdout.buffer.write(fn(json.loads((root / "sample.dsl.json").read_text())))
     raise SystemExit(0)
 if not args or args[0] == "--unknown" or (args[0] == "--lmcode" and len(args) != 2):
-    print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
+    failure({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"})
     raise SystemExit(2)
 if args[0] == "--lmcode" and len(args) == 2:
     path = Path(args[1])
     if not path.exists():
-        print(json.dumps({"ok": False, "phase": "app", "code": "APP_FAIL", "message": "invalid sample bytecode"}))
+        failure({"ok": False, "phase": "app", "code": "APP_FAIL", "message": "invalid sample bytecode"})
         raise SystemExit(4)
     stem = path.stem
     expected = root / "expected" / (stem + ".out")
@@ -64,7 +66,7 @@ if args[0] == "--lmcode" and len(args) == 2:
     if mode == "stderr":
         sys.stderr.write("unexpected host stderr\n")
     raise SystemExit(code + 1 if mode == "wrong-exit" else code)
-print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
+failure({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"})
 raise SystemExit(2)
 '''
 

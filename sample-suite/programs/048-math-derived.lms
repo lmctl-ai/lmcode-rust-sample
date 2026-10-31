@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 assert_close(sin(0.0), 0.0, 0.000000001);
 assert_close(cos(0.0), 1.0, 0.000000001);
 assert_close(sqrt(4.0), 2.0, 0.000000001);

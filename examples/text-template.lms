@@ -4,6 +4,9 @@ context = {
  items: [{name:"apple"}, {name:"pear"}]
 };
 template = "Hello, <user.name>!\n<if(user.active)>Items: <items:{item|<index>: <item.name>}; separator=\", \"><else>Inactive<endif>";
-program = _lmcode_ schema="../sample-suite/sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample-suite/sample.dsl.json";
 print(template_render(${template}, json_parse(${json_stringify(context)})));
 end _lmcode_
+
+r = run_lmcode(program, {command:[ARGV[0], "--lmcode", "$DSLFILE"]});
+assert(r.ok, "example host failed");

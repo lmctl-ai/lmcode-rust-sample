@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let a = str_contains("abc", "b");
 let b = str_ends_with("abc", "c");
 let c = str_find("abc", "b");

@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let a = math_abs(-4);
 let b = math_ceil(3);
 let c = math_floor(3);

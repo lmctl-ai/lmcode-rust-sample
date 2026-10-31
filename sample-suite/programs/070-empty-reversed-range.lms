@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let count = 0;
 for (i in range(3, 3)) { count = count + 1; }
 for (i in range(5, 2)) { count = count + 1; }

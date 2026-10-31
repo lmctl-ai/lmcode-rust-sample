@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let ints = int_map().set("a",7).set("b",8);
 let ik = ints.keys(); let iv = ints.values(); ints.clear();
 print(ik.join(",") + ":" + str(iv.at(0)) + ":" + str(iv.at(1)));

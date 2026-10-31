@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let total = 0;
 for (i in range(0, 3)) { if (i == 1) { total = total + 10; } else { total = total + i; } }
 print(str(total));

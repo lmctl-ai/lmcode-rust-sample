@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let strings = str_map().set("b", "two").set("a", "one");
 let keys = strings.keys(); let values = strings.values();
 strings.set("b", "changed").clear();

@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let doc = json_parse("{ \"\\u0061\" : [1.25,\"x\",true], \"n\":42 }");
 print(doc.kind() + ":" + str(doc.len()) + ":" + str(doc.has("a")));
 let keys = doc.keys(); print(keys.join(","));

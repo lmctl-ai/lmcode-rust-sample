@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let strings = str_list().add("owned");
 let ints = int_list().add(7);
 let floats = float_list().add(1.25);

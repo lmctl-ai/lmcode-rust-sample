@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 $return.body = "discard";
 @item fn partial(m: Money) -> void implements Adjuster {
   $return.partial = m.amount();

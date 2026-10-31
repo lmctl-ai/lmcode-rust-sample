@@ -63,13 +63,14 @@ fn check_compiler(root) {
   failed = [];
   for (case in cases) {
     output = path_join(scratch, "must-not-exist.dslb");
-    r = invoke(root, compiler_command(), ["--no-preflight", path_join(root, "compile-errors", case.source), output], {}, 30000);
+    r = invoke(root, [], ["node", path_join(root,"compile-fixture.mjs"), path_join(root, "compile-errors", case.source), output], {}, 30000);
     if (r.code != case.exit || !contains(r.stderr, case.diagnostic) || file_exists(output) || r.error != "") { push(failed, case.source + ": " + r.stderr + r.error); }
   }
   rmdir(scratch, true);
   assert(len(failed) == 0, "compiler rejection mismatch: " + join(failed, "\n"));
   println("PASS " + str(len(cases)) + " compiler rejection cases");
 }
+fn envelope(stdout) { lines = split(trim(stdout), "\n"); return json_parse(lines[len(lines)-2]); }
 fn protocol(root, command) {
   r = invoke(root, command, ["--version"], {}, 30000);
   assert(r.code == 0 && r.stderr_hex == "" && regex_test(r.stdout, "^lmcode-[a-z]+-sample [0-9]+\\.[0-9]+\\.[0-9]+\\n$"), "invalid --version protocol");
@@ -87,15 +88,15 @@ fn protocol(root, command) {
     args = [retired + suffix];
     if (suffix == "") { args = [retired, path_join(root, "does-not-exist.dslb")]; }
     r = invoke(root, command, args, {}, 30000);
-    value = json_parse(r.stdout);
+    value = envelope(r.stdout);
     assert(r.code == 2 && r.stderr_hex == "" && value.code == "CLI_USAGE", "retired flag must be refused before file access");
   }
   for (args in [[], ["--unknown"], ["--lmcode"], ["--lmcode-schema", "--bad"]]) {
     r = invoke(root, command, args, {}, 30000);
-    value = json_parse(r.stdout);
+    value = envelope(r.stdout);
     assert(r.code == 2 && r.stderr_hex == "" && value.code == "CLI_USAGE" && value.phase == "cli" && value.ok == false, "invalid CLI_USAGE protocol");
   }
   r = invoke(root, command, ["--lmcode", path_join(root, "does-not-exist.dslb")], {}, 30000);
-  assert(r.code == 4 && r.stderr_hex == "" && json_parse(r.stdout).code == "APP_FAIL", "invalid APP_FAIL protocol");
+  assert(r.code == 4 && r.stderr_hex == "" && envelope(r.stdout).code == "APP_FAIL", "invalid APP_FAIL protocol");
   println("PASS host CLI protocol (0/2/3/4; schema/signatures/discovery)");
 }

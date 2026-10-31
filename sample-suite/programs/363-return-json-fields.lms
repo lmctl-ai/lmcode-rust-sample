@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let tree = json_parse("{\"nested\":{\"items\":[1,true,null,\"text\"]}}");
 $return = tree;
 $return = null;

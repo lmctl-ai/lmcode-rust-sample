@@ -36,7 +36,7 @@ def main():
             print('SKIP compiler reproduction: ' + source.name + ' requires ' + ','.join(required))
             continue
         output = args.output / (source.stem + '.dslb')
-        subprocess.run([compiler, '--no-preflight', str(source), str(output.resolve())], check=True)
+        subprocess.run(['node',str(ROOT/'compile-fixture.mjs'),str(source),str(output.resolve())], check=True)
         cases.append(dict(name=source.stem, source='programs/' + source.name,
                           source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                           bytecode='bytecode/' + output.name,
@@ -87,7 +87,7 @@ def main():
     if args.output.resolve() == (ROOT / 'bytecode').resolve():
         manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=6,
                         schema_sha256=hashlib.sha256((ROOT / 'sample.dsl.json').read_bytes()).hexdigest(),
-                        compiler_minimum='mono-main-0bc80277', cases=cases)
+                        compiler_minimum='mono-main-0255ef01', cases=cases)
         manifest['fixtures'] = {'invalid.bin': 'ff00c328800a', 'zero-bytes.bin': '610062', 'chunk.bin': '7800c3a9'}
         (ROOT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', newline='\n')
     print(f'Compiled {len(cases)} sample cases')

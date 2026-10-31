@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let cents = money(125);
 let units = money(1.25);
 let fixed = shop.price(250);

@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 const root=process.env.FAKE_SUITE, mode=process.env.FAKE_MODE, args=process.argv.slice(2);
-function finish(code, value) { process.stdout.write(typeof value==='string'||Buffer.isBuffer(value)?value:JSON.stringify(value)+'\n');process.exit(code); }
+function finish(code, value) { process.stdout.write(typeof value==='string'||Buffer.isBuffer(value)?value:'LMCODE_RETURN_BEGIN\n'+JSON.stringify({...value,message:value.message??'fixture error'})+'\nLMCODE_RETURN_END\n');process.exit(code); }
 const usage=()=>finish(2,{ok:false,phase:'cli',code:'CLI_USAGE'});
 if(args.length===1 && args[0]==='--version') finish(mode==='bad-cli'?1:0,'lmcode-fake-sample 0.1.0\n');
 if(args[0]==='--lmcode-schema') { if(args.length>2 || args.length===2 && args[1]!=='--json') usage(); finish(0,fs.readFileSync(path.join(root,'sample.dsl.json'))); }

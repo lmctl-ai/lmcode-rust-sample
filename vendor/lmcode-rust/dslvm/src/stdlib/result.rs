@@ -7,37 +7,62 @@ use crate::{Context, Error, Registry, Value};
 use std::rc::Rc;
 
 #[derive(Clone, Debug, Default)]
-enum OwnedJson {
+pub(super) enum OwnedJson {
     #[default]
     Null,
     Bool(bool),
     Number(String),
+    Float(String),
     String(String),
     Array(Vec<OwnedJson>),
     Object(Vec<(String, OwnedJson)>),
 }
-/// A deep owned result, independent of the Context's collection arena. Reset only
-/// at the start of a new logical invocation, not between body/entry calls.
+/// A shared binding to one owned slot. Clones bind the SAME slot, including its seal.
+/// Collection data written into it is copied, never shared with the VM arena.
 #[derive(Clone, Debug, Default)]
-pub struct ResultSink {
+pub struct ResultSink(std::rc::Rc<std::cell::RefCell<SinkState>>);
+#[derive(Debug, Default)]
+struct SinkState {
     value: OwnedJson,
+    contract: super::result_contract::ResultContract,
+    sealed: bool,
 }
 impl ResultSink {
-    pub fn reset(&mut self) {
-        self.value = OwnedJson::Null;
+    pub fn new(contract: super::result_contract::ResultContract) -> Self {
+        Self(Rc::new(std::cell::RefCell::new(SinkState {
+            contract,
+            ..Default::default()
+        })))
+    }
+    pub fn reset(&self) -> Result<(), Error> {
+        self.writable()?;
+        self.0.borrow_mut().value = OwnedJson::Null;
+        Ok(())
     }
     pub fn json(&self) -> String {
         let mut out = String::new();
-        emit(&self.value, &mut out);
+        emit(&self.0.borrow().value, &mut out);
         out
     }
-    pub fn frame(&self) -> String {
-        format!("LMCODE_RETURN_BEGIN\n{}\nLMCODE_RETURN_END\n", self.json())
+    pub fn sealed(&self) -> bool {
+        self.0.borrow().sealed
     }
-    /// Call after host dispatch AND application validation. A failed invocation
-    /// must not emit even a partially written result.
-    pub fn frame_if_success(&self, success: bool) -> Option<String> {
-        success.then(|| self.frame())
+    pub fn contract(&self) -> super::result_contract::ResultContract {
+        self.0.borrow().contract.clone()
+    }
+    fn writable(&self) -> Result<(), Error> {
+        if self.sealed() {
+            return Err(Error::host("lmcode return: result sink is sealed"));
+        }
+        Ok(())
+    }
+    pub(super) fn seal(&self) -> Result<OwnedJson, Error> {
+        self.writable()?;
+        let mut state = self.0.borrow_mut();
+        state.contract.validate(&state.value, "")?;
+        let result = state.value.clone();
+        state.sealed = true;
+        Ok(result)
     }
 }
 fn invalid(path: &str, reason: &str) -> Error {
@@ -50,7 +75,7 @@ fn text(bytes: &[u8], path: &str) -> Result<String, Error> {
         .map(str::to_owned)
         .map_err(|_| invalid(path, "utf8"))
 }
-fn pointer(path: &str, key: &str) -> String {
+pub(super) fn pointer(path: &str, key: &str) -> String {
     format!("{}/{}", path, key.replace('~', "~0").replace('/', "~1"))
 }
 fn integer(n: i64, path: &str) -> Result<OwnedJson, Error> {
@@ -67,11 +92,67 @@ fn float(n: f64, path: &str) -> Result<OwnedJson, Error> {
         return Err(invalid(path, "unsafe_integer"));
     }
     // Debug is Rust's shortest-round-trip formatter, NOT the VM's F2S/str(float).
-    Ok(OwnedJson::Number(if n == 0.0 {
+    Ok(OwnedJson::Float(if n == 0.0 {
         "0".into()
     } else {
-        format!("{n:?}").trim_end_matches(".0").to_owned()
+        canonical_float(n)
     }))
+}
+// Keep Rust's shortest-round-trip digits, using the canonical C++ general layout.
+fn canonical_float(n: f64) -> String {
+    let shortest = format!("{n:?}");
+    let mantissa = shortest.split('e').next().unwrap().trim_start_matches('-');
+    let joined = mantissa.replace('.', "");
+    let precision = joined.trim_start_matches('0').trim_end_matches('0').len();
+    // Debug's shortest formatter rounds exact decimal ties upward. The precision
+    // formatter uses ties-to-even; prefer it only if it still round trips (the
+    // nearest decimal at this precision can lie outside the rounding interval).
+    let rounded = format!("{:.*e}", precision - 1, n);
+    let raw = if rounded.parse::<f64>().ok() == Some(n) {
+        rounded
+    } else {
+        shortest
+    };
+    let (sign, raw) = raw
+        .strip_prefix('-')
+        .map_or(("", raw.as_str()), |v| ("-", v));
+    let (mantissa, e) = raw
+        .split_once('e')
+        .map_or((raw, 0), |(m, e)| (m, e.parse::<i32>().unwrap()));
+    let dot = mantissa.find('.').unwrap_or(mantissa.len()) as i32;
+    let joined = mantissa.replace('.', "");
+    let zeros = joined.len() - joined.trim_start_matches('0').len();
+    let digits = joined.trim_start_matches('0').trim_end_matches('0');
+    let exponent = e + dot - zeros as i32 - 1;
+    if !(-4..6).contains(&exponent) {
+        let fraction = if digits.len() > 1 {
+            format!(".{}", &digits[1..])
+        } else {
+            String::new()
+        };
+        format!(
+            "{sign}{}{fraction}e{}{:#02}",
+            &digits[..1],
+            if exponent < 0 { "-" } else { "+" },
+            exponent.abs()
+        )
+    } else {
+        let point = exponent + 1;
+        if point <= 0 {
+            format!("{sign}0.{}{}", "0".repeat((-point) as usize), digits)
+        } else if point as usize >= digits.len() {
+            format!(
+                "{sign}{digits}{}",
+                "0".repeat(point as usize - digits.len())
+            )
+        } else {
+            format!(
+                "{sign}{}.{}",
+                &digits[..point as usize],
+                &digits[point as usize..]
+            )
+        }
+    }
 }
 fn number_token(raw: &[u8], path: &str) -> Result<OwnedJson, Error> {
     let s = std::str::from_utf8(raw).map_err(|_| invalid(path, "utf8"))?;
@@ -108,9 +189,16 @@ fn number_token(raw: &[u8], path: &str) -> Result<OwnedJson, Error> {
     if n == 0.0 && !digits.is_empty() {
         return Err(invalid(path, "underflow"));
     }
+    if !s.contains(['.', 'e', 'E']) {
+        return integer(
+            s.parse::<i64>()
+                .map_err(|_| invalid(path, "unsafe_integer"))?,
+            path,
+        );
+    }
     float(n, path)
 }
-fn json_node(n: &JsonNode, path: &str) -> Result<OwnedJson, Error> {
+pub(super) fn json_node(n: &JsonNode, path: &str) -> Result<OwnedJson, Error> {
     Ok(match n.kind {
         Kind::Null => OwnedJson::Null,
         Kind::Bool => OwnedJson::Bool(n.boolean),
@@ -231,9 +319,14 @@ pub fn set_result(ctx: &mut Context, value: &Value) -> Result<(), Error> {
     if ctx.result_sink.is_none() {
         return Err(Error::host("lmcode return: no result sink"));
     }
+    let sink = ctx.result_sink.as_ref().unwrap();
+    sink.writable()?;
     let owned = convert(ctx, value, "")?;
     validate_keys(&owned, "")?;
-    ctx.result_sink.as_mut().unwrap().value = owned;
+    let mut state = sink.0.borrow_mut();
+    state.contract.validate_source(value, None)?;
+    state.contract.validate(&owned, "")?;
+    state.value = owned;
     Ok(())
 }
 pub fn put_result(ctx: &mut Context, key: &[u8], value: &Value) -> Result<(), Error> {
@@ -241,25 +334,33 @@ pub fn put_result(ctx: &mut Context, key: &[u8], value: &Value) -> Result<(), Er
         .result_sink
         .as_ref()
         .ok_or_else(|| Error::host("lmcode return: no result sink"))?;
-    if !matches!(sink.value, OwnedJson::Null | OwnedJson::Object(_)) {
+    sink.writable()?;
+    if !matches!(
+        sink.0.borrow().value,
+        OwnedJson::Null | OwnedJson::Object(_)
+    ) {
         return Err(Error::host(
             "lmcode return: field assignment requires object or null",
         ));
     }
     let key = text(key, "")?;
-    let value = convert(ctx, value, &pointer("", &key))?;
-    validate_keys(&value, &pointer("", &key))?;
-    let sink = ctx.result_sink.as_mut().unwrap();
-    if matches!(sink.value, OwnedJson::Null) {
-        sink.value = OwnedJson::Object(Vec::new());
+    let owned = convert(ctx, value, &pointer("", &key))?;
+    validate_keys(&owned, &pointer("", &key))?;
+    let mut state = sink.0.borrow_mut();
+    state.contract.validate_source(value, Some(&key))?;
+    let mut next = state.value.clone();
+    if matches!(next, OwnedJson::Null) {
+        next = OwnedJson::Object(Vec::new());
     }
-    if let OwnedJson::Object(items) = &mut sink.value {
+    if let OwnedJson::Object(items) = &mut next {
         if let Some((_, old)) = items.iter_mut().find(|(k, _)| k == &key) {
-            *old = value;
+            *old = owned;
         } else {
-            items.push((key, value));
+            items.push((key, owned));
         }
     }
+    state.contract.validate(&next, "")?;
+    state.value = next;
     Ok(())
 }
 pub fn register_result(registry: &mut Registry) -> Result<&mut Registry, Error> {
@@ -308,6 +409,8 @@ fn quote(s: &str, out: &mut String) {
         match c {
             '"' => out.push_str("\\\""),
             '\\' => out.push_str("\\\\"),
+            '\u{8}' => out.push_str("\\b"),
+            '\u{c}' => out.push_str("\\f"),
             '\n' => out.push_str("\\n"),
             '\r' => out.push_str("\\r"),
             '\t' => out.push_str("\\t"),
@@ -317,11 +420,11 @@ fn quote(s: &str, out: &mut String) {
     }
     out.push('"');
 }
-fn emit(value: &OwnedJson, out: &mut String) {
+pub(super) fn emit(value: &OwnedJson, out: &mut String) {
     match value {
         OwnedJson::Null => out.push_str("null"),
         OwnedJson::Bool(v) => out.push_str(if *v { "true" } else { "false" }),
-        OwnedJson::Number(v) => out.push_str(v),
+        OwnedJson::Number(v) | OwnedJson::Float(v) => out.push_str(v),
         OwnedJson::String(v) => quote(v, out),
         OwnedJson::Array(items) => {
             out.push('[');
@@ -363,6 +466,20 @@ mod tests {
         let mut ctx = Context::new();
         ctx.result_sink = Some(ResultSink::default());
         ctx
+    }
+    #[test]
+    fn json_shape_contract_vs_known_float() {
+        let mut ctx = context();
+        ctx.result_sink = Some(ResultSink::new(
+            super::super::ResultContract::from_schema(
+                br#"{"dsl.schema":2,"result":{"type":"int"}}"#,
+            )
+            .unwrap(),
+        ));
+        assert!(set_result(&mut ctx, &Value::Float(2.0)).is_err());
+        let v = call(&mut ctx, "json_parse", "string", &[Value::string("2.0")]).unwrap();
+        set_result(&mut ctx, &v).unwrap();
+        assert_eq!(ctx.result_sink.as_ref().unwrap().json(), "2");
     }
     #[test]
     fn raw_json_tokens_and_pointer_errors() {

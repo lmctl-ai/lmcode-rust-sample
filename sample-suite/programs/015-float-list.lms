@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let xs = float_list();
 let ys = xs.add(1.5).add(2.5);
 let n = ys.len();

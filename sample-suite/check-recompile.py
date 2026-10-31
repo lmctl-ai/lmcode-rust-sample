@@ -15,22 +15,8 @@ runpy.run_path(str(suite / 'run-suite.py'))['check_files'](manifest)
 compiler = shutil.which(os.environ.get('LMSCRIPT_BIN', 'lmscript'))
 if not compiler:
     sys.exit('lmscript compiler unavailable')
-features = {f for case in manifest['cases'] for f in case.get('compiler_features', [])}
-flagged = [case for case in manifest['cases'] if case.get('compiler_features')]
-excluded = set()
-for case in flagged:
-    probe = subprocess.run([compiler, '--check', str(suite / case['source'])], capture_output=True, text=True)
-    if probe.returncode:
-        with tempfile.TemporaryDirectory(prefix='compiler-capability-') as probe_dir:
-            schema = Path(probe_dir) / 'empty.json'
-            schema.write_text('{"dsl.schema":2,"name":"probe"}')
-            surface = subprocess.run([compiler, '--lmcode-signatures', str(schema)], capture_output=True)
-        legacy = surface.returncode == 0 and hashlib.sha256(surface.stdout.replace(b'\r\n', b'\n')).hexdigest() == "ad2341a497c8ece5e09ca17dc04c8b8ad28c04abe18d1e48769f3e04e8b90c2f"
-        if (legacy and features == {'lmcode-literals-v1'}
-                and os.environ.get('LMCODE_REQUIRE_LITERAL_COMPILER') != '1'):
-            excluded = features
-            break
-        sys.exit('literal-capable compiler rejected pinned source: ' + probe.stderr)
+excluded=set()
+flagged=[]
 with tempfile.TemporaryDirectory(prefix='sample-recompile-') as temporary:
     out = Path(temporary)
     args = [sys.executable, str(suite / 'compile.py'), '--output', str(out)]

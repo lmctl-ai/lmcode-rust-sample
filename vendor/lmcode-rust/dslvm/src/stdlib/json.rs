@@ -688,10 +688,7 @@ fn render_template(source: &[u8], context: &Rc<JsonNode>) -> Result<Vec<u8>, Err
 
 /// Register JSON parsing and immutable navigation. Roots consume one arena slot;
 /// navigation shares immutable nodes through reference-counted handles.
-pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
-    r.begin_compatibility_registration();
-    r.function("json_parse", &["string"], "Json", |ctx, args| {
-        let b = args[0].as_bytes()?;
+pub(super) fn parse_document(b: &[u8]) -> Result<JsonNode, Error> {
         std::str::from_utf8(b).map_err(|e| {
             Error::host(format!(
                 "json_parse: invalid UTF-8 at byte {}",
@@ -710,6 +707,14 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
                 p.p
             )));
         }
+        Ok(n)
+}
+
+pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
+    r.begin_compatibility_registration();
+    r.function("json_parse", &["string"], "Json", |ctx, args| {
+        let b = args[0].as_bytes()?;
+        let n = parse_document(b)?;
         Ok(Value::object(
             "Json",
             ctx.insert_collection("Json", Rc::new(n))?,

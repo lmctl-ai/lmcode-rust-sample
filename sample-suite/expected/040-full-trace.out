@@ -1,5 +1,5 @@
 125:complete
-{"ok": true, "result": {"balance": 125, "entries": 1, "note": "complete", "entries_called": 0}}
+{"host_summary":{"balance": 125, "entries": 1, "note": "complete", "entries_called": 0}}
 LMCODE_RETURN_BEGIN
-null
+{"ok":true,"result":null}
 LMCODE_RETURN_END

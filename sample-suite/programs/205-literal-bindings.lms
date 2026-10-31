@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 fn qw(n: int) -> int { return n + 1; }
 fn add(qi: int, qf: int) -> int { return qi + qf; }
 fn json(n: int) -> int { return n * 2; }

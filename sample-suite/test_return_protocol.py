@@ -6,8 +6,8 @@ import subprocess
 import unittest
 ROOT=Path(__file__).resolve().parent
 validate=runpy.run_path(str(ROOT/'return_protocol.py'))['validate']
-DIAG=b'{"ok":true,"result":{}}\n'
-def frame(value):return DIAG+b'LMCODE_RETURN_BEGIN\n'+json.dumps(value,ensure_ascii=False).encode()+b'\nLMCODE_RETURN_END\n'
+DIAG=b'{"host_summary":{}}\n'
+def frame(value):return DIAG+b'LMCODE_RETURN_BEGIN\n'+json.dumps({"ok":True,"result":value},ensure_ascii=False).encode()+b'\nLMCODE_RETURN_END\n'
 class FrameOracle(unittest.TestCase):
     def both(self, output, code, expected=None, good=True):
         if good:validate(output,code,expected)
@@ -28,7 +28,7 @@ class FrameOracle(unittest.TestCase):
     def test_reset_result(self):self.both(frame({'entry':1}),0,{'body':1,'entry':1},good=False)
     def test_wrong_nested_type(self):self.both(frame({'flag':1}),0,{'flag':True},good=False)
     def test_failed_invocation_cannot_frame(self):
-        self.both(b'{"ok":false}\n',3)
+        self.both(b'LMCODE_RETURN_BEGIN\n{"ok":false,"phase":"run","code":"RUN_HOST","message":"bad"}\nLMCODE_RETURN_END\n',3)
         self.both(frame(None),3,good=False)
     def test_invalid_utf8(self):self.both(DIAG+b'LMCODE_RETURN_BEGIN\n"\xff"\nLMCODE_RETURN_END\n',0,'x',good=False)
 if __name__=='__main__':unittest.main()

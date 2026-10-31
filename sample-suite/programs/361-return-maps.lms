@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 let strings = str_map().set("key", "value");
 let ints = int_map().set("count", 7);
 let floats = float_map().set("fraction", 1.25);

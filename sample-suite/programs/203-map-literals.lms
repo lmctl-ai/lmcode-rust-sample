@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
+program = _lmcode_ schema="../sample.dsl.json";
 fn key(n: int) -> string { print("key=" + str(n)); return "k" + str(n); }
 fn value(n: int) -> int { print("value=" + str(n)); return n; }
 let ordered = %((key(1)) => value(2), (key(3)) => value(4));
