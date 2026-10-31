@@ -201,7 +201,7 @@ published `@lmctl-ai/lmctl` 0.2.442 or later. Source reproduction with an older
 compiler is an explicit error, as for any unsupported compiler.
 
 Cases 068/069, compile-errors/rule-annotation-without-implements and mutation
-093-v5-refused cover R49 rule entries using lmcode bytecode (DSLB v6): every annotated rule compiles to
+093-v5-refused cover R49 rule entries (lmcode bytecode (DSLB v6)): every annotated rule compiles to
 a self-contained entry; after the body runs the host calls each `@item` entry once
 per shop item in order and each `@total` entry once with `shop.total()`, never
 calls other annotations, prints non-void results as `entry NAME = VALUE`, and
