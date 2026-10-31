@@ -1,6 +1,6 @@
 {
   "repo": "lmctl-ai/lmcode-cpp",
-  "commit": "6ee3d62ea9b480aa6f42a592055233959f7f6162",
+  "commit": "249af7744ab95caa20094493a2934a3916f46956",
   "sha256": {
     "CONTRACT.md": "dc60e46278f112917df5a2a5b1b54de04ae8bffa30094c256f0bb0ecb90a36b9",
     "README.md": "28e9684287e3bc58edb489f8ade29a42e2aff7a241dbc4f5d4065d248eb78c18",

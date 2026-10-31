@@ -2,7 +2,8 @@
 
 ## Pins
 
-Suite: lmcode-cpp 6ee3d62ea9b480aa6f42a592055233959f7f6162 (123 cases).
+Suite: lmcode-cpp 249af7744ab95caa20094493a2934a3916f46956 (123 cases; identical suite bytes
+to the slice-6 6ee3d62 pin used in the full gate).
 SDK: lmcode-rust ce8584fcf42575db133f53805974898dde8c4832.
 Compiler qualification: private mono main build 177e38ca; npm 0.2.448 is too old.
 Exact vendored hashes live in suite.lock and sdk.lock. Sync using scripts/sync.py;
