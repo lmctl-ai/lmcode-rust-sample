@@ -38,7 +38,7 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
 6. **Bind callbacks.** [register](src/shop.rs) uses `function` and `method` with
    complete parameter/return signatures. Closures receive `&mut Context` plus values;
    methods also receive the receiver handle. Distinct tuples implement overloads.
-7. **Translate DSL concepts.** [Money/Items/Ledger methods](src/shop.rs) show
+7. **Translate lmcode concepts.** [Money/Items/Ledger methods](src/shop.rs) show
    operators, `money(int)` conversion, string-backed `Currency`, `len/at` foreach,
    `returns:self` registered as its owner type, and `Value::None` for void.
 8. **Compile outside the host.** [program wrappers](sample-suite/programs) use
@@ -46,7 +46,7 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
    `Program::load` verifies/binds `.dslb`, and `run` executes against this context.
 9. **Keep error boundaries separate.** [main.rs](src/main.rs) uses SDK result/error
    helpers: CLI 2, load/run 3, application 4, success 0. Only loader wording is
-   normalized; the VM adds DSL line/column. A negative final balance is an app rule.
+   normalized; the VM adds lmcode line/column. A negative final balance is an app rule.
 10. **Check the shared oracle.** [test.sh](test.sh) checks locks and all imports,
     reproduces bytecode with the compiler, runs every case, and runs negative harness
     controls. Read the [coverage matrix](sample-suite/README.md) before adding APIs.
@@ -173,3 +173,7 @@ compiled-host controls in `scripts/test-return-controls.py`. Missing framing and
 per-entry sink reset must fail independent canonical expectations; compilation
 failure or a changed process exit is not counted as a caught fault.
 See [durable notes](durable-memory/index.md) for pins and ownership boundaries.
+
+## Historical literal names
+
+The documentation calls the language lmcode. `--dsl`, `--dsl-schema` and `--dsl-signatures` are current host flag literals; `DSLB` is the bytecode magic and `DSLB v6` is the current format name; `.dslb` is the current bytecode filename extension. Other code-formatted API names, paths, manifest names and diagnostic text retain their current literal spellings.

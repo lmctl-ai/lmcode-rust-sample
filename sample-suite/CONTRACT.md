@@ -16,7 +16,7 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
 - The schema's `interfaces` map declares two SAM interfaces: `Adjuster` (`(Money) -> void`) and `Score`
   (`(Money) -> int`). A rule method is a top-level `fn` with a leading `@NAME` annotation and a trailing
   `implements NAME` clause; its signature must match the interface exactly. An annotated rule compiles to a
-  DSLB v6 rule entry (own code/locals/line table, shared pools); a plain call from the chunk body still
+  lmcode bytecode (DSLB v6) rule entry (own code/locals/line table, shared pools); a plain call from the chunk body still
   invokes an inlined copy. An annotation without `implements` is a compile error (exit 2).
 - After the body runs, the host enumerates the program's rule entries in source order: every entry
   annotated `@item` is called once per shop item, in order, with the item's Money handle; every entry
@@ -38,8 +38,8 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
   LOAD_SCHEMA_MISMATCH -> `sample schema mismatch`; LOAD_UNBOUND -> `sample import mismatch`.
   Host/VM run messages retain the SDK's message (including `dsl line N:C: `).
 - CLI: --version => `lmcode-cpp-sample 0.2.0` (other ports use their own binary name);
-  --dsl-schema [--json] => exact schema bytes; --dsl-signatures => sorted canonical signatures + LF;
-  --dsl FILE => run, exit 0/3/4; usage/unknown option => exit 2 and JSON phase cli,
+  `--dsl-schema [--json]` => exact schema bytes; `--dsl-signatures` => sorted canonical signatures + LF;
+  `--dsl FILE` => run, exit 0/3/4; usage/unknown option => exit 2 and JSON phase cli,
   code CLI_USAGE, message `usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE`.
   Other command/IO setup errors become APP_FAIL, without machine-specific paths.
 
