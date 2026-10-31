@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+fn nope() -> void { return 1; }
+nope();
+end _lmcode_
+savedsl(program, ARGV[0]);

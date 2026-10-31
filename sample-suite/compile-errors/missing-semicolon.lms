@@ -1,0 +1,5 @@
+program = _lmcode_ schema="../sample.dsl.json";
+let x = 1
+print(str(x));
+end _lmcode_
+savedsl(program, ARGV[0]);

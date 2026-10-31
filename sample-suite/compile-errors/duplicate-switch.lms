@@ -1,0 +1,4 @@
+program = _lmcode_ schema="../sample.dsl.json";
+switch (1) { case 1: { print("a"); } case 1: { print("b"); } }
+end _lmcode_
+savedsl(program, ARGV[0]);

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import re
 ROOT = Path(__file__).resolve().parent
 
 def check():
@@ -18,7 +19,12 @@ def check():
         with tempfile.TemporaryDirectory(prefix='sample-compile-error-') as work:
             output = Path(work) / 'must-not-exist.dslb'
             result = subprocess.run([compiler, '--no-preflight', str(ROOT/'compile-errors'/case['source']), str(output)], capture_output=True, timeout=30)
-            if result.returncode != case['exit'] or case['diagnostic'].encode() not in result.stderr or output.exists():
+            location = ''
+            if 'line' in case:
+                location = ':' + str(case['line']) + ':' + str(case['column']) + ':'
+            diagnostic_ok = case['diagnostic'].encode() in result.stderr
+            location_ok = not location or re.search(re.escape(location), result.stderr.decode(errors='replace')) is not None
+            if result.returncode != case['exit'] or not diagnostic_ok or not location_ok or output.exists():
                 raise ValueError('compiler rejection mismatch: ' + case['source'] + ': ' + result.stderr.decode(errors='replace'))
     print(f'PASS {len(cases)} compiler rejection case(s), exit 2')
 

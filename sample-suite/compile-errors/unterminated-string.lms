@@ -1,0 +1,4 @@
+program = _lmcode_ schema="../sample.dsl.json";
+print("bad);
+end _lmcode_
+savedsl(program, ARGV[0]);

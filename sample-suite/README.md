@@ -23,6 +23,11 @@ part of expected output. `assert_close` checks approximate math without unstable
 traces. Call arguments are an argv array, not a shell string. Each case has a
 30-second harness timeout; the SDK VM itself has no execution limit.
 
+`compile-errors/` contains 23 independently expected compiler rejections. The
+checker asserts exit 2, diagnostic text, and that no bytecode is written; the
+newer syntax/type cases also pin the reported source line and column. This is a
+negative control suite, separate from runtime bytecode cases.
+
 ## Change the language or add a standard function
 
 1. Change `programs/NNN-name.lms` (maximum 40 lines), and update `coverage.json`.

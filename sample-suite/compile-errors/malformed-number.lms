@@ -1,0 +1,4 @@
+program = _lmcode_ schema="../sample.dsl.json";
+print(str(1e3));
+end _lmcode_
+savedsl(program, ARGV[0]);
