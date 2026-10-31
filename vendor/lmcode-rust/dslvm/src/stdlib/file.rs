@@ -91,11 +91,11 @@ fn lines(bytes: &[u8]) -> Vec<ByteString> {
 /// Register raw-byte regular-file helpers and `file_lines` using the context-owned StrList arena.
 pub fn register_file(registry: &mut Registry) -> Result<&mut Registry, Error> {
     registry.begin_compatibility_registration();
-    registry.function("file_read", &["string"], "string", |_, args| Ok(Value::string(read_bytes("file_read", args[0].as_string()?)?)))?;
+    registry.read_function("file_read", &["string"], "string", |_, args| Ok(Value::string(read_bytes("file_read", args[0].as_string()?)?)))?;
     registry.function("file_write", &["string", "string"], "void", |_, args| { let path = args[0].as_string()?; write_bytes("file_write", path, args[1].as_bytes()?, false)?; Ok(Value::None) })?;
     registry.function("file_append", &["string", "string"], "void", |_, args| { let path = args[0].as_string()?; write_bytes("file_append", path, args[1].as_bytes()?, true)?; Ok(Value::None) })?;
-    registry.function("file_exists", &["string"], "bool", |_, args| Ok(Value::Bool(exists("file_exists", args[0].as_string()?)?)))?;
-    registry.function("file_lines", &["string"], "StrList", |ctx: &mut Context, args| {
+    registry.read_function("file_exists", &["string"], "bool", |_, args| Ok(Value::Bool(exists("file_exists", args[0].as_string()?)?)))?;
+    registry.read_function("file_lines", &["string"], "StrList", |ctx: &mut Context, args| {
         let bytes = read_bytes("file_lines", args[0].as_string()?)?;
         Ok(Value::object("StrList", ctx.insert_collection("StrList", crate::stdlib::collections::CollectionList { items: lines(&bytes) })?))
     })?;

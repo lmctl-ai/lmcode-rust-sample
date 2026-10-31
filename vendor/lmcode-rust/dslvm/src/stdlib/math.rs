@@ -133,61 +133,61 @@ pub fn math_sqrt_float(x: f64) -> f64 {
 /// Register the numeric catalog. Each name has an int and float overload where applicable.
 pub fn register_math(reg: &mut Registry) -> Result<&mut Registry, Error> {
     reg.begin_compatibility_registration();
-    reg.function("math_abs", &["int"], "int", |_, a| {
+    reg.pure_function("math_abs", &["int"], "int", |_, a| {
         Ok(Value::Int(math_abs(a[0].as_int()?)))
     })?;
-    reg.function("math_abs", &["float"], "float", |_, a| {
+    reg.pure_function("math_abs", &["float"], "float", |_, a| {
         Ok(Value::Float(math_abs_float(a[0].as_float()?)))
     })?;
-    reg.function("math_min", &["int", "int"], "int", |_, a| {
+    reg.pure_function("math_min", &["int", "int"], "int", |_, a| {
         Ok(Value::Int(math_min(a[0].as_int()?, a[1].as_int()?)))
     })?;
-    reg.function("math_min", &["float", "float"], "float", |_, a| {
+    reg.pure_function("math_min", &["float", "float"], "float", |_, a| {
         Ok(Value::Float(math_min_float(
             a[0].as_float()?,
             a[1].as_float()?,
         )))
     })?;
-    reg.function("math_max", &["int", "int"], "int", |_, a| {
+    reg.pure_function("math_max", &["int", "int"], "int", |_, a| {
         Ok(Value::Int(math_max(a[0].as_int()?, a[1].as_int()?)))
     })?;
-    reg.function("math_max", &["float", "float"], "float", |_, a| {
+    reg.pure_function("math_max", &["float", "float"], "float", |_, a| {
         Ok(Value::Float(math_max_float(
             a[0].as_float()?,
             a[1].as_float()?,
         )))
     })?;
-    reg.function("math_floor", &["int"], "int", |_, a| {
+    reg.pure_function("math_floor", &["int"], "int", |_, a| {
         Ok(Value::Int(math_floor(a[0].as_int()?)))
     })?;
-    reg.function("math_floor", &["float"], "float", |_, a| {
+    reg.pure_function("math_floor", &["float"], "float", |_, a| {
         Ok(Value::Float(math_floor_float(a[0].as_float()?)))
     })?;
-    reg.function("math_ceil", &["int"], "int", |_, a| {
+    reg.pure_function("math_ceil", &["int"], "int", |_, a| {
         Ok(Value::Int(math_ceil(a[0].as_int()?)))
     })?;
-    reg.function("math_ceil", &["float"], "float", |_, a| {
+    reg.pure_function("math_ceil", &["float"], "float", |_, a| {
         Ok(Value::Float(math_ceil_float(a[0].as_float()?)))
     })?;
-    reg.function("math_round", &["int"], "int", |_, a| {
+    reg.pure_function("math_round", &["int"], "int", |_, a| {
         Ok(Value::Int(math_round(a[0].as_int()?)))
     })?;
-    reg.function("math_round", &["float"], "float", |_, a| {
+    reg.pure_function("math_round", &["float"], "float", |_, a| {
         Ok(Value::Float(math_round_float(a[0].as_float()?)))
     })?;
-    reg.function("math_pow", &["int", "int"], "int", |_, a| {
+    reg.pure_function("math_pow", &["int", "int"], "int", |_, a| {
         Ok(Value::Int(math_pow(a[0].as_int()?, a[1].as_int()?)?))
     })?;
-    reg.function("math_pow", &["float", "float"], "float", |_, a| {
+    reg.pure_function("math_pow", &["float", "float"], "float", |_, a| {
         Ok(Value::Float(math_pow_float(
             a[0].as_float()?,
             a[1].as_float()?,
         )))
     })?;
-    reg.function("math_sqrt", &["int"], "int", |_, a| {
+    reg.pure_function("math_sqrt", &["int"], "int", |_, a| {
         Ok(Value::Int(math_sqrt(a[0].as_int()?)?))
     })?;
-    reg.function("math_sqrt", &["float"], "float", |_, a| {
+    reg.pure_function("math_sqrt", &["float"], "float", |_, a| {
         Ok(Value::Float(math_sqrt_float(a[0].as_float()?)))
     })?;
     reg.end_compatibility_registration();

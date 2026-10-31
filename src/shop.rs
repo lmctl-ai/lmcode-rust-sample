@@ -66,7 +66,7 @@ impl Host {
     pub fn total_handle(&mut self) -> Result<Value, Error> {
         total_money(&mut self.context, self.items)
     }
-    pub fn new() -> Result<Self, Error> {
+    pub fn new(dry: bool) -> Result<Self, Error> {
         // Default std registers strings, math, containers, JSON and files. Testing is opt-in.
         let mut registry = Registry::new();
         dslvm::stdlib::register_testing(&mut registry, None)?;
@@ -76,10 +76,16 @@ impl Host {
         register(&mut registry)?;
 
         let mut context = Context::new();
-        let values = [125, 250, 375]
-            .into_iter()
-            .map(|cents| context.insert("Money", Money { cents }))
-            .collect();
+        // These are live, host-owned inventory handles. A dry invocation gets
+        // no live inventory during setup; callbacks may still create previews.
+        let values = if dry {
+            Vec::new()
+        } else {
+            [125, 250, 375]
+                .into_iter()
+                .map(|cents| context.insert("Money", Money { cents }))
+                .collect()
+        };
         let items = context.insert("Items", Items { values });
         context.set_object("shop", "Shop", Shop { items });
         let ledger = context.set_object("ledger", "Ledger", Ledger::default());
@@ -89,6 +95,25 @@ impl Host {
             ledger,
             items,
         })
+    }
+}
+
+fn sample_tmp(_: &mut Context, _: &[Value]) -> Result<Value, Error> {
+    match std::env::var_os("SAMPLE_TMP").filter(|s| !s.is_empty()) {
+        Some(path) => {
+            #[cfg(unix)]
+            {
+                use std::os::unix::ffi::OsStrExt;
+                Ok(Value::string(path.as_bytes()))
+            }
+            #[cfg(not(unix))]
+            {
+                path.into_string()
+                    .map(Value::string)
+                    .map_err(|_| Error::host("SAMPLE_TMP is not valid UTF-8"))
+            }
+        }
+        None => Err(Error::host("SAMPLE_TMP is required")),
     }
 }
 
@@ -103,27 +128,7 @@ fn register(r: &mut Registry) -> Result<(), Error> {
     r.function("fee", &["int"], "int", |_, a| {
         Ok(Value::Int(a[0].as_int()?.wrapping_add(5)))
     })?;
-    r.function(
-        "sample_tmp",
-        &[],
-        "string",
-        |_, _| match std::env::var_os("SAMPLE_TMP").filter(|s| !s.is_empty()) {
-            Some(path) => {
-                #[cfg(unix)]
-                {
-                    use std::os::unix::ffi::OsStrExt;
-                    Ok(Value::string(path.as_bytes()))
-                }
-                #[cfg(not(unix))]
-                {
-                    path.into_string()
-                        .map(Value::string)
-                        .map_err(|_| Error::host("SAMPLE_TMP is not valid UTF-8"))
-                }
-            }
-            None => Err(Error::host("SAMPLE_TMP is required")),
-        },
-    )?;
+    r.function_with_dry("sample_tmp", &[], "string", sample_tmp, dslvm::dry(sample_tmp))?;
 
     // Explicit scalar boundaries preserve bytes, IEEE values, and boolean tags.
     r.function("host_int", &["int"], "int", |_, a| {

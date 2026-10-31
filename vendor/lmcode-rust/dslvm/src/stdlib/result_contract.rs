@@ -172,6 +172,7 @@ impl ResultContract {
         }
         let actual = match v {
             Value::None => "null",
+            Value::DryNull(_) => "null",
             Value::Bool(_) => "bool",
             Value::Int(_) => "int",
             Value::Float(_) => "float",
@@ -188,7 +189,7 @@ impl ResultContract {
                 _ => return Ok(()),
             };
             path = pointer("", key)
-        } else if matches!(v, Value::None) {
+        } else if matches!(v, Value::None | Value::DryNull(_)) {
             return Ok(());
         }
         if actual == expected

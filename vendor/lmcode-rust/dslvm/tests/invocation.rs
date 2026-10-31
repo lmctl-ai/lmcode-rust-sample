@@ -199,7 +199,7 @@ fn manifest_strictness_and_single_builder_distinction() {
         .to_str()
         .unwrap()
         .to_owned();
-    let raw=format!("{{\"version\":1,\"mode\":\"builder\",\"parts\":[{{\"index\":0,\"file\":{}}},{{\"index\":1,\"file\":{}}}]}}",dslvm::json_escape(&a),dslvm::json_escape(&b));
+    let raw=format!("{{\"version\":1,\"mode\":\"builder\",\"dry\":false,\"parts\":[{{\"index\":0,\"file\":{}}},{{\"index\":1,\"file\":{}}}]}}",dslvm::json_escape(&a),dslvm::json_escape(&b));
     let r = Results::from_metadata(raw.as_bytes(), &[b.clone(), a.clone()]).unwrap();
     assert_eq!(r.registrations()[0].index, 1);
     for files in [
@@ -224,7 +224,7 @@ fn manifest_strictness_and_single_builder_distinction() {
         );
     }
     let raw = format!(
-        "{{\"version\":1,\"mode\":\"builder\",\"parts\":[{{\"index\":0,\"file\":{}}}]}}",
+        "{{\"version\":1,\"mode\":\"builder\",\"dry\":false,\"parts\":[{{\"index\":0,\"file\":{}}}]}}",
         dslvm::json_escape(&a)
     );
     let mut r = Results::from_metadata(raw.as_bytes(), &[a]).unwrap();
@@ -241,6 +241,88 @@ fn manifest_strictness_and_single_builder_distinction() {
     assert!(
         Results::from_command_with_manifest(&["x".into()], Some(std::path::Path::new(""))).is_err()
     );
+}
+
+#[test]
+fn dry_mode_is_invocation_wide_and_marks_success_and_failure_frames() {
+    let a = std::env::current_dir().unwrap().join("dry-a").to_str().unwrap().to_owned();
+    let b = std::env::current_dir().unwrap().join("dry-b").to_str().unwrap().to_owned();
+    let raw = format!(
+        "{{\"version\":1,\"mode\":\"builder\",\"dry\":true,\"parts\":[{{\"index\":0,\"file\":{}}},{{\"index\":1,\"file\":{}}}]}}",
+        dslvm::json_escape(&a), dslvm::json_escape(&b)
+    );
+    let mut results = Results::from_metadata(raw.as_bytes(), &[b.clone(), a.clone()]).unwrap();
+    assert!(results.dry());
+    let mut ctx = Context::new();
+    results.select(1, &mut ctx, Contract::default()).unwrap();
+    assert!(ctx.dry());
+    set_result(&mut ctx, &Value::Int(2)).unwrap();
+    results.complete(1).unwrap();
+    results.select(0, &mut ctx, Contract::default()).unwrap();
+    assert!(ctx.dry());
+    set_result(&mut ctx, &Value::Int(1)).unwrap();
+    results.complete(0).unwrap();
+    let mut out = Vec::new();
+    assert_eq!(results.write_frame(&mut out), 0);
+    assert_eq!(String::from_utf8(out).unwrap(), framed("{\"ok\":true,\"result\":[1,2],\"parts\":2,\"dry\":true}"));
+
+    let mut failed = Results::from_command_with_dry(&["dry".into()], true).unwrap();
+    failed.fail(None, "run", Error::host("preview failed")).unwrap();
+    let mut failure = Vec::new();
+    assert_eq!(failed.write_frame(&mut failure), 3);
+    assert_eq!(String::from_utf8(failure).unwrap(), framed("{\"ok\":false,\"phase\":\"run\",\"code\":\"RUN_HOST\",\"message\":\"preview failed\",\"dry\":true}"));
+
+    let mut real = Results::from_command_with_dry(&["real".into()], false).unwrap();
+    let mut real_ctx = Context::new();
+    real.select(0, &mut real_ctx, Contract::default()).unwrap();
+    assert!(!real_ctx.dry());
+    real.complete(0).unwrap();
+    let mut real_frame = Vec::new();
+    assert_eq!(real.write_frame(&mut real_frame), 0);
+    assert_eq!(String::from_utf8(real_frame).unwrap(), framed("{\"ok\":true,\"result\":null}"));
+}
+
+#[test]
+fn dry_mode_is_invocation_wide_and_written_after_existing_envelope_keys() {
+    let a = std::env::current_dir().unwrap().join("dry-a").to_str().unwrap().to_owned();
+    let b = std::env::current_dir().unwrap().join("dry-b").to_str().unwrap().to_owned();
+    let manifest = format!(
+        "{{\"version\":1,\"mode\":\"builder\",\"dry\":true,\"parts\":[{{\"index\":0,\"file\":{}}},{{\"index\":1,\"file\":{}}}]}}",
+        dslvm::json_escape(&a), dslvm::json_escape(&b)
+    );
+    let mut results = Results::from_metadata(manifest.as_bytes(), &[b.clone(), a.clone()]).unwrap();
+    assert!(results.dry());
+    let mut ctx = Context::new();
+    results.select(1, &mut ctx, Contract::default()).unwrap();
+    assert!(ctx.dry());
+    set_result(&mut ctx, &Value::Int(2)).unwrap();
+    results.complete(1).unwrap();
+    results.select(0, &mut ctx, Contract::default()).unwrap();
+    assert!(ctx.dry());
+    set_result(&mut ctx, &Value::Int(1)).unwrap();
+    results.complete(0).unwrap();
+    let mut frame = Vec::new();
+    assert_eq!(results.write_frame(&mut frame), 0);
+    assert_eq!(String::from_utf8(frame).unwrap(), framed("{\"ok\":true,\"result\":[1,2],\"parts\":2,\"dry\":true}"));
+
+    let mut real = Results::from_command_with_dry(&["real".into()], false).unwrap();
+    let mut real_ctx = Context::new();
+    real.select(0, &mut real_ctx, Contract::default()).unwrap();
+    assert!(!real_ctx.dry());
+    real.complete(0).unwrap();
+    let mut real_frame = Vec::new();
+    assert_eq!(real.write_frame(&mut real_frame), 0);
+    assert_eq!(String::from_utf8(real_frame).unwrap(), framed("{\"ok\":true,\"result\":null}"));
+
+    let invalid = "{\"version\":1,\"mode\":\"single\",\"dry\":true,\"parts\":[]}".to_string();
+    let error = match Results::from_metadata(invalid.as_bytes(), &[]) {
+        Ok(_) => panic!("invalid parts accepted"),
+        Err(error) => error,
+    };
+    assert!(error.has_invocation_dry && error.invocation_dry);
+    let mut failure = Vec::new();
+    assert_eq!(dslvm::stdlib::failure_frame(&mut failure, "cli", &error).unwrap(), 2);
+    assert_eq!(String::from_utf8(failure).unwrap(), framed("{\"ok\":false,\"phase\":\"cli\",\"code\":\"CLI_USAGE\",\"message\":\"lmcode invocation: invalid parts\",\"dry\":true}"));
 }
 
 #[test]

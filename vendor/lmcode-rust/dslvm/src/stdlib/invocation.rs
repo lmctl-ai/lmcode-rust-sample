@@ -23,6 +23,7 @@ struct Failure {
 }
 pub struct InvocationResults {
     builder: bool,
+    dry: bool,
     writing: bool,
     registrations: Vec<InvocationRegistration>,
     slots: Vec<Slot>,
@@ -51,7 +52,7 @@ fn phase_code(phase: &str) -> Result<i32, Error> {
         _ => Err(Error::host("lmcode invocation: invalid failure phase")),
     }
 }
-fn failure_json(phase: &str, e: &Error, part: Option<usize>) -> Result<String, Error> {
+fn failure_json(phase: &str, e: &Error, part: Option<usize>, dry: bool) -> Result<String, Error> {
     phase_code(phase)?;
     let mut s = format!(
         "{{\"ok\":false,\"phase\":{},\"code\":{},\"message\":{}",
@@ -76,6 +77,9 @@ fn failure_json(phase: &str, e: &Error, part: Option<usize>) -> Result<String, E
     if let Some(part) = part {
         s.push_str(&format!(",\"part\":{part}"));
     }
+    if dry {
+        s.push_str(",\"dry\":true");
+    }
     s.push('}');
     Ok(s)
 }
@@ -99,15 +103,16 @@ fn output<W: Write>(out: &mut W, json: &str, code: i32) -> i32 {
 pub fn failure_frame<W: Write>(out: &mut W, phase: &str, error: &Error) -> Result<i32, Error> {
     Ok(output(
         out,
-        &failure_json(phase, error, None)?,
+        &failure_json(phase, error, None, error.has_invocation_dry && error.invocation_dry)?,
         phase_code(phase)?,
     ))
 }
 impl InvocationResults {
-    fn new(builder: bool, registrations: Vec<InvocationRegistration>) -> Self {
+    fn new(builder: bool, dry: bool, registrations: Vec<InvocationRegistration>) -> Self {
         let slots = (0..registrations.len()).map(|_| Slot::default()).collect();
         Self {
             builder,
+            dry,
             writing: false,
             registrations,
             slots,
@@ -115,6 +120,7 @@ impl InvocationResults {
         }
     }
     pub fn from_metadata(raw: &[u8], parsed_files: &[String]) -> Result<Self, Error> {
+        let mode_dry = std::cell::Cell::new(None);
         let parse = || -> Result<Self, Error> {
             let root = parse_document(raw).map_err(|e| {
                 if e.message == "json_parse: BOM is not allowed at byte 0" {
@@ -126,7 +132,7 @@ impl InvocationResults {
                 }
             })?;
             json_node(&root, "")?;
-            keys(&root, &["version", "mode", "parts"])?;
+            keys(&root, &["version", "mode", "dry", "parts"])?;
             if member(&root, "version").and_then(node_integer) != Some(1) {
                 return Err(metadata("unsupported version"));
             }
@@ -138,6 +144,11 @@ impl InvocationResults {
                 Some(b"builder") => true,
                 _ => return Err(metadata("invalid mode")),
             };
+            let dry = member(&root, "dry")
+                .filter(|n| n.kind == Kind::Bool)
+                .map(|n| n.boolean)
+                .ok_or_else(|| metadata("dry must be boolean"))?;
+            mode_dry.set(Some(dry));
             let parts = member(&root, "parts")
                 .filter(|n| {
                     n.kind == Kind::Array && !n.array.is_empty() && (builder || n.array.len() == 1)
@@ -180,14 +191,15 @@ impl InvocationResults {
                     index,
                 });
             }
-            Ok(Self::new(builder, registrations))
+            Ok(Self::new(builder, dry, registrations))
         };
         parse().map_err(|e| {
-            if e.code == "CLI_USAGE" {
-                e
-            } else {
-                metadata(e.message)
+            let mut error = if e.code == "CLI_USAGE" { e } else { metadata(e.message) };
+            if let Some(dry) = mode_dry.get() {
+                error.has_invocation_dry = true;
+                error.invocation_dry = dry;
             }
+            error
         })
     }
     /// Explicit environment seam; None means standalone, not ambient discovery.
@@ -215,7 +227,13 @@ impl InvocationResults {
                 index,
             });
         }
-        Ok(Self::new(files.len() > 1, regs))
+        Ok(Self::new(files.len() > 1, false, regs))
+    }
+    /// Construct an embedded invocation with an explicit dry mode and no ambient manifest lookup.
+    pub fn from_command_with_dry(files: &[String], dry: bool) -> Result<Self, Error> {
+        let mut results = Self::from_command_with_manifest(files, None)?;
+        results.dry = dry;
+        Ok(results)
     }
     pub fn from_command(files: &[String]) -> Result<Self, Error> {
         let path = std::env::var_os("LMCODE_INVOCATION_FILE");
@@ -224,6 +242,7 @@ impl InvocationResults {
     pub fn registrations(&self) -> &[InvocationRegistration] {
         &self.registrations
     }
+    pub fn dry(&self) -> bool { self.dry }
     fn active(&self) -> Result<(), Error> {
         if self.writing {
             Err(Error::host("lmcode invocation: finalized"))
@@ -262,6 +281,7 @@ impl InvocationResults {
             return Err(Error::host("lmcode invocation: result contract changed"));
         }
         ctx.result_sink = Some(sink.clone());
+        ctx.set_dry(self.dry);
         Ok(())
     }
     pub fn complete(&mut self, index: usize) -> Result<(), Error> {
@@ -290,7 +310,7 @@ impl InvocationResults {
         if let Some(i) = index {
             self.slot(i)?;
         }
-        failure_json(phase, &error, None)?;
+        failure_json(phase, &error, None, self.dry)?;
         self.failure = Some(Failure {
             phase: phase.into(),
             error,
@@ -313,7 +333,7 @@ impl InvocationResults {
         }
         let (json, code) = if let Some(f) = &self.failure {
             (
-                failure_json(&f.phase, &f.error, f.part).unwrap(),
+                failure_json(&f.phase, &f.error, f.part, self.dry).unwrap(),
                 phase_code(&f.phase).unwrap(),
             )
         } else {
@@ -331,6 +351,7 @@ impl InvocationResults {
                 emit(self.slots[0].result.as_ref().unwrap(), &mut s);
             }
             s.push('}');
+            if self.dry { s.insert_str(s.len() - 1, ",\"dry\":true"); }
             (s, 0)
         };
         self.writing = true;

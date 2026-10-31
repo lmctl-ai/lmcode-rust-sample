@@ -712,7 +712,7 @@ pub(super) fn parse_document(b: &[u8]) -> Result<JsonNode, Error> {
 
 pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
     r.begin_compatibility_registration();
-    r.function("json_parse", &["string"], "Json", |ctx, args| {
+    r.pure_function("json_parse", &["string"], "Json", |ctx, args| {
         let b = args[0].as_bytes()?;
         let n = parse_document(b)?;
         Ok(Value::object(
@@ -720,7 +720,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             ctx.insert_collection("Json", Rc::new(n))?,
         ))
     })?;
-    r.function(
+    r.pure_function(
         "template_render",
         &["string", "Json"],
         "string",
@@ -735,10 +735,10 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             )?))
         },
     )?;
-    r.method("Json", "kind", &[], "string", |ctx, t, _| {
+    r.pure_method("Json", "kind", &[], "string", |ctx, t, _| {
         Ok(Value::string(kind(ctx.get::<Rc<JsonNode>>(t)?)))
     })?;
-    r.method("Json", "len", &[], "int", |ctx, t, _| {
+    r.pure_method("Json", "len", &[], "int", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         match n.kind {
             Kind::Array => Ok(Value::Int(n.array.len() as i64)),
@@ -746,12 +746,12 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             _ => Err(Error::host("Json.len: expected array or object")),
         }
     })?;
-    r.method("Json", "to_json", &[], "string", |ctx, t, _| {
+    r.pure_method("Json", "to_json", &[], "string", |ctx, t, _| {
         let mut o = Vec::new();
         emit(ctx.get::<Rc<JsonNode>>(t)?, &mut o);
         Ok(Value::string(o))
     })?;
-    r.method("Json", "as_string", &[], "string", |ctx, t, _| {
+    r.pure_method("Json", "as_string", &[], "string", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind == Kind::String {
             Ok(Value::string(n.text.clone()))
@@ -759,7 +759,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             Err(Error::host("Json.as_string: expected string"))
         }
     })?;
-    r.method("Json", "as_int", &[], "int", |ctx, t, _| {
+    r.pure_method("Json", "as_int", &[], "int", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind == Kind::Int {
             Ok(Value::Int(n.integer))
@@ -767,7 +767,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             Err(Error::host("Json.as_int: expected int"))
         }
     })?;
-    r.method("Json", "as_float", &[], "float", |ctx, t, _| {
+    r.pure_method("Json", "as_float", &[], "float", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         match n.kind {
             Kind::Float => Ok(Value::Float(n.float)),
@@ -775,7 +775,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             _ => Err(Error::host("Json.as_float: expected number")),
         }
     })?;
-    r.method("Json", "as_bool", &[], "bool", |ctx, t, _| {
+    r.pure_method("Json", "as_bool", &[], "bool", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind == Kind::Bool {
             Ok(Value::Bool(n.boolean))
@@ -783,7 +783,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             Err(Error::host("Json.as_bool: expected bool"))
         }
     })?;
-    r.method("Json", "has", &["string"], "bool", |ctx, t, a| {
+    r.pure_method("Json", "has", &["string"], "bool", |ctx, t, a| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind != Kind::Object {
             return Err(Error::host("Json.has: expected object"));
@@ -791,7 +791,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
         let key = a[0].as_bytes()?;
         Ok(Value::Bool(n.object.iter().any(|(k, _, _)| k == key)))
     })?;
-    r.method("Json", "get", &["string"], "Json", |ctx, t, a| {
+    r.pure_method("Json", "get", &["string"], "Json", |ctx, t, a| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind != Kind::Object {
             return Err(Error::host("Json.get: expected object"));
@@ -805,7 +805,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
             .ok_or_else(|| Error::host("Json.get: missing key"))?;
         borrowed(ctx, "Json", x)
     })?;
-    r.method("Json", "at", &["int"], "Json", |ctx, t, a| {
+    r.pure_method("Json", "at", &["int"], "Json", |ctx, t, a| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind != Kind::Array {
             return Err(Error::host("Json.at: expected array"));
@@ -816,7 +816,7 @@ pub fn register_json(r: &mut Registry) -> Result<&mut Registry, Error> {
         }
         borrowed(ctx, "Json", n.array[i as usize].clone())
     })?;
-    r.method("Json", "keys", &[], "StrList", |ctx, t, _| {
+    r.pure_method("Json", "keys", &[], "StrList", |ctx, t, _| {
         let n = ctx.get::<Rc<JsonNode>>(t)?;
         if n.kind != Kind::Object {
             return Err(Error::host("Json.keys: expected object"));

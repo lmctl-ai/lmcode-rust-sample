@@ -32,7 +32,6 @@ fn run() -> Result<i32, Error> {
                 .map_err(|_| Error::new("CLI_USAGE", "arguments must be UTF-8"))
         })
         .collect::<Result<_, _>>()?;
-    let mut host = shop::Host::new().map_err(|_| Error::host("cannot initialize sample host"))?;
     if args.len() == 1 && args[0] == "--version" {
         println!("lmcode-rust-sample {}", env!("SAMPLE_BUILD_VERSION"));
         return Ok(0);
@@ -46,6 +45,7 @@ fn run() -> Result<i32, Error> {
         return Ok(0);
     }
     if args.len() == 1 && args[0] == "--lmcode-signatures" {
+        let host = shop::Host::new(false).map_err(|_| Error::host("cannot initialize sample host"))?;
         for signature in host.registry.signatures() {
             println!("{signature}");
         }
@@ -74,6 +74,10 @@ fn run() -> Result<i32, Error> {
     }
 
     let mut results = InvocationResults::from_command(&files)?;
+    // Parse the invocation descriptor before creating host resources. Dry mode
+    // is invocation metadata, not a second command-line switch.
+    let mut host = shop::Host::new(results.dry())
+        .map_err(|_| Error::host("cannot initialize sample host"))?;
     let mut execution: Vec<usize> = (0..files.len()).collect();
     execution.sort_by_key(|index| priorities[*index]);
     let schema = std::str::from_utf8(SCHEMA).map_err(|_| Error::host("invalid embedded schema"))?;

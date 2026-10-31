@@ -58,34 +58,34 @@ pub(super) fn index(i: i64, size: usize, method: &str) -> Result<usize, Error> {
 }
 
 fn register_list<T: Element>(registry: &mut Registry, type_name: &'static str) -> Result<(), Error> {
-    registry.method(type_name, "len", &[], "int", move |ctx, this, _| {
+    registry.pure_method(type_name, "len", &[], "int", move |ctx, this, _| {
         Ok(Value::Int(ctx.get::<CollectionList<T>>(this)?.items.len() as i64))
     })?;
-    registry.method(type_name, "at", &["int"], T::TYPE, move |ctx, this, args| {
+    registry.pure_method(type_name, "at", &["int"], T::TYPE, move |ctx, this, args| {
         let list = ctx.get::<CollectionList<T>>(this)?;
         let i = index(args[0].as_int()?, list.items.len(), &format!("{}.at", type_name))?;
         Ok(T::put(list.items[i].clone()))
     })?;
-    registry.method(type_name, "add", &[T::TYPE], type_name, move |ctx, this, args| {
+    registry.pure_method(type_name, "add", &[T::TYPE], type_name, move |ctx, this, args| {
         ctx.get_mut::<CollectionList<T>>(this)?.items.push(T::get(&args[0])?);
         Ok(Value::object(type_name, this))
     })?;
-    registry.method(type_name, "set", &["int", T::TYPE], type_name, move |ctx, this, args| {
+    registry.pure_method(type_name, "set", &["int", T::TYPE], type_name, move |ctx, this, args| {
         let list = ctx.get_mut::<CollectionList<T>>(this)?;
         let i = index(args[0].as_int()?, list.items.len(), &format!("{}.set", type_name))?;
         list.items[i] = T::get(&args[1])?;
         Ok(Value::object(type_name, this))
     })?;
-    registry.method(type_name, "contains", &[T::TYPE], "bool", move |ctx, this, args| {
+    registry.pure_method(type_name, "contains", &[T::TYPE], "bool", move |ctx, this, args| {
         let needle = T::get(&args[0])?;
         Ok(Value::Bool(ctx.get::<CollectionList<T>>(this)?.items.iter().any(|v| v == &needle)))
     })?;
-    registry.method(type_name, "index_of", &[T::TYPE], "int", move |ctx, this, args| {
+    registry.pure_method(type_name, "index_of", &[T::TYPE], "int", move |ctx, this, args| {
         let needle = T::get(&args[0])?;
         let list = &ctx.get::<CollectionList<T>>(this)?.items;
         Ok(Value::Int(list.iter().position(|v| v == &needle).map(|i| i as i64).unwrap_or(-1)))
     })?;
-    registry.method(type_name, "clear", &[], type_name, move |ctx, this, _| {
+    registry.pure_method(type_name, "clear", &[], type_name, move |ctx, this, _| {
         ctx.get_mut::<CollectionList<T>>(this)?.items.clear();
         Ok(Value::object(type_name, this))
     })?;
@@ -102,7 +102,7 @@ pub fn register_collections(registry: &mut Registry) -> Result<&mut Registry, Er
     register_list::<crate::ByteString>(registry, "StrList")?;
     register_list::<i64>(registry, "IntList")?;
     register_list::<f64>(registry, "FloatList")?;
-    registry.method("StrList", "join", &["string"], "string", |ctx, this, args| {
+    registry.pure_method("StrList", "join", &["string"], "string", |ctx, this, args| {
         let list = &ctx.get::<StrList>(this)?.items;
         let sep = args[0].as_bytes()?;
         let mut out = Vec::new();
@@ -112,11 +112,11 @@ pub fn register_collections(registry: &mut Registry) -> Result<&mut Registry, Er
         }
         Ok(Value::string(out))
     })?;
-    registry.function("str_list", &[], "StrList", |ctx, _| make_collection(ctx, "StrList", CollectionList::<crate::ByteString> { items: Vec::new() }))?;
-    registry.function("int_list", &[], "IntList", |ctx, _| make_collection(ctx, "IntList", CollectionList::<i64> { items: Vec::new() }))?;
-    registry.function("float_list", &[], "FloatList", |ctx, _| make_collection(ctx, "FloatList", CollectionList::<f64> { items: Vec::new() }))?;
-    registry.function("str_map", &[], "StrMap", |ctx, _| Ok(Value::object("StrMap", ctx.insert_collection("StrMap", StrMap::default())?)))?;
-    registry.function("str_split", &["string", "string"], "StrList", |ctx, args| {
+    registry.pure_function("str_list", &[], "StrList", |ctx, _| make_collection(ctx, "StrList", CollectionList::<crate::ByteString> { items: Vec::new() }))?;
+    registry.pure_function("int_list", &[], "IntList", |ctx, _| make_collection(ctx, "IntList", CollectionList::<i64> { items: Vec::new() }))?;
+    registry.pure_function("float_list", &[], "FloatList", |ctx, _| make_collection(ctx, "FloatList", CollectionList::<f64> { items: Vec::new() }))?;
+    registry.pure_function("str_map", &[], "StrMap", |ctx, _| Ok(Value::object("StrMap", ctx.insert_collection("StrMap", StrMap::default())?)))?;
+    registry.pure_function("str_split", &["string", "string"], "StrList", |ctx, args| {
         let source = args[0].as_bytes()?;
         let separator = args[1].as_bytes()?;
         if separator.is_empty() { return Err(Error::host("str_split: separator must not be empty")); }
@@ -130,40 +130,40 @@ pub fn register_collections(registry: &mut Registry) -> Result<&mut Registry, Er
         items.push(crate::ByteString::from(&source[at..]));
         make_collection(ctx, "StrList", CollectionList { items })
     })?;
-    registry.method("StrMap", "len", &[], "int", |ctx, this, _| Ok(Value::Int(ctx.get::<StrMap>(this)?.active as i64)))?;
-    registry.method("StrMap", "has", &["string"], "bool", |ctx, this, args| {
+    registry.pure_method("StrMap", "len", &[], "int", |ctx, this, _| Ok(Value::Int(ctx.get::<StrMap>(this)?.active as i64)))?;
+    registry.pure_method("StrMap", "has", &["string"], "bool", |ctx, this, args| {
         let key = args[0].as_string()?;
         Ok(Value::Bool(ctx.get::<StrMap>(this)?.find(key).is_some()))
     })?;
-    registry.method("StrMap", "get", &["string"], "string", |ctx, this, args| {
+    registry.pure_method("StrMap", "get", &["string"], "string", |ctx, this, args| {
         let key = args[0].as_string()?;
         ctx.get::<StrMap>(this)?.find(key).map(|i| Value::string(ctx.get::<StrMap>(this).unwrap().items[i].1.clone())).ok_or_else(|| Error::host("StrMap.get: missing key"))
     })?;
-    registry.method("StrMap", "get_or", &["string", "string"], "string", |ctx, this, args| {
+    registry.pure_method("StrMap", "get_or", &["string", "string"], "string", |ctx, this, args| {
         let key = args[0].as_string()?;
         let fallback = args[1].as_string()?.clone();
         Ok(ctx.get::<StrMap>(this)?.find(key).map(|i| Value::string(ctx.get::<StrMap>(this).unwrap().items[i].1.clone())).unwrap_or_else(|| Value::string(fallback)))
     })?;
-    registry.method("StrMap", "set", &["string", "string"], "StrMap", |ctx, this, args| {
+    registry.pure_method("StrMap", "set", &["string", "string"], "StrMap", |ctx, this, args| {
         let key = args[0].as_string()?.clone();
         let value = args[1].as_string()?.clone();
         ctx.get_mut::<StrMap>(this)?.set(key, value);
         Ok(Value::object("StrMap", this))
     })?;
-    registry.method("StrMap", "key_at", &["int"], "string", |ctx, this, args| {
+    registry.pure_method("StrMap", "key_at", &["int"], "string", |ctx, this, args| {
         let map = ctx.get_mut::<StrMap>(this)?;
         let wanted = args[0].as_int()?;
         if wanted < 0 || wanted as usize >= map.active { return Err(Error::host(format!("StrMap.key_at: index out of range: {}", wanted))); }
         Ok(Value::string(map.items[map.select_rank(wanted as usize)].0.clone()))
     })?;
-    registry.method("StrMap", "remove", &["string"], "bool", |ctx, this, args| {
+    registry.pure_method("StrMap", "remove", &["string"], "bool", |ctx, this, args| {
         let key = args[0].as_string()?;
         let map = ctx.get_mut::<StrMap>(this)?;
         if let Some(pos) = map.find(key) { map.index.remove(key); map.add_rank(pos, -1); map.active -= 1; Ok(Value::Bool(true)) } else { Ok(Value::Bool(false)) }
     })?;
-    registry.method("StrMap", "clear", &[], "StrMap", |ctx, this, _| { let map = ctx.get_mut::<StrMap>(this)?; map.items.clear(); map.index.clear(); map.active = 0; map.fenwick.clear(); Ok(Value::object("StrMap", this)) })?;
+    registry.pure_method("StrMap", "clear", &[], "StrMap", |ctx, this, _| { let map = ctx.get_mut::<StrMap>(this)?; map.items.clear(); map.index.clear(); map.active = 0; map.fenwick.clear(); Ok(Value::object("StrMap", this)) })?;
     for (method, keys) in [("keys", true), ("values", false)] {
-        registry.method("StrMap", method, &[], "StrList", move |ctx, this, _| {
+        registry.pure_method("StrMap", method, &[], "StrList", move |ctx, this, _| {
             let map = ctx.get::<StrMap>(this)?;
             let items = map.items.iter().enumerate()
                 .filter(|(pos, (key, _))| map.index.get(key) == Some(pos))
@@ -240,7 +240,7 @@ mod tests {
         let result = {
             let mut registry = Registry::without_std();
             register_collections(&mut registry).unwrap();
-            let (_, _, function) = registry.functions.get("fn str_split(string, string) -> StrList").unwrap();
+            let (_, _, function, _) = registry.functions.get("fn str_split(string, string) -> StrList").unwrap();
             function(&mut context, &args).unwrap()
         };
         let object = result.as_obj().unwrap();

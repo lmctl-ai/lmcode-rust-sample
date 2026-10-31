@@ -92,23 +92,23 @@ pub type FloatPQ = PriorityQueue<f64>;
 pub type StrPQ = PriorityQueue<ByteString>;
 
 fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Result<(), Error> {
-    r.function(constructor, &[], t, move |ctx, _| {
+    r.pure_function(constructor, &[], t, move |ctx, _| {
         Ok(Value::object(
             t,
             ctx.insert_collection(t, TypedMap::<T>::default())?,
         ))
     })?;
-    r.method(t, "len", &[], "int", move |ctx, this, _| {
+    r.pure_method(t, "len", &[], "int", move |ctx, this, _| {
         Ok(Value::Int(ctx.get::<TypedMap<T>>(this)?.items.len() as i64))
     })?;
-    r.method(t, "has", &["string"], "bool", move |ctx, this, a| {
+    r.pure_method(t, "has", &["string"], "bool", move |ctx, this, a| {
         Ok(Value::Bool(
             ctx.get::<TypedMap<T>>(this)?
                 .index
                 .contains_key(a[0].as_string()?),
         ))
     })?;
-    r.method(t, "get", &["string"], T::TYPE, move |ctx, this, a| {
+    r.pure_method(t, "get", &["string"], T::TYPE, move |ctx, this, a| {
         let m = ctx.get::<TypedMap<T>>(this)?;
         let i = m
             .index
@@ -116,7 +116,7 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
             .ok_or_else(|| Error::host(format!("{t}.get: missing key")))?;
         Ok(T::put(m.items[*i].1.clone()))
     })?;
-    r.method(
+    r.pure_method(
         t,
         "get_or",
         &["string", T::TYPE],
@@ -129,17 +129,17 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
             })
         },
     )?;
-    r.method(t, "set", &["string", T::TYPE], t, move |ctx, this, a| {
+    r.pure_method(t, "set", &["string", T::TYPE], t, move |ctx, this, a| {
         ctx.get_mut::<TypedMap<T>>(this)?
             .set(a[0].as_string()?.clone(), T::get(&a[1])?);
         Ok(Value::object(t, this))
     })?;
-    r.method(t, "key_at", &["int"], "string", move |ctx, this, a| {
+    r.pure_method(t, "key_at", &["int"], "string", move |ctx, this, a| {
         let m = ctx.get::<TypedMap<T>>(this)?;
         let i = index(a[0].as_int()?, m.items.len(), &format!("{t}.key_at"))?;
         Ok(Value::string(m.items[i].0.clone()))
     })?;
-    r.method(t, "keys", &[], "StrList", move |ctx, this, _| {
+    r.pure_method(t, "keys", &[], "StrList", move |ctx, this, _| {
         let items = ctx
             .get::<TypedMap<T>>(this)?
             .items
@@ -156,7 +156,7 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
     } else {
         "FloatList"
     };
-    r.method(t, "values", &[], list_type, move |ctx, this, _| {
+    r.pure_method(t, "values", &[], list_type, move |ctx, this, _| {
         let items: Vec<T> = ctx
             .get::<TypedMap<T>>(this)?
             .items
@@ -168,7 +168,7 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
             ctx.insert_collection(list_type, CollectionList { items })?,
         ))
     })?;
-    r.method(t, "remove", &["string"], "bool", move |ctx, this, a| {
+    r.pure_method(t, "remove", &["string"], "bool", move |ctx, this, a| {
         let m = ctx.get_mut::<TypedMap<T>>(this)?;
         if let Some(i) = m.index.remove(a[0].as_string()?) {
             m.items.remove(i);
@@ -180,7 +180,7 @@ fn map<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resu
             Ok(Value::Bool(false))
         }
     })?;
-    r.method(t, "clear", &[], t, move |ctx, this, _| {
+    r.pure_method(t, "clear", &[], t, move |ctx, this, _| {
         let m = ctx.get_mut::<TypedMap<T>>(this)?;
         m.items.clear();
         m.index.clear();
@@ -194,60 +194,60 @@ fn pop_container<T: Element>(
     constructor: &str,
     stack: bool,
 ) -> Result<(), Error> {
-    r.function(constructor, &[], t, move |ctx, _| {
+    r.pure_function(constructor, &[], t, move |ctx, _| {
         Ok(Value::object(
             t,
             ctx.insert_collection(t, PopContainer::<T>::default())?,
         ))
     })?;
-    r.method(t, "push", &[T::TYPE], t, move |ctx, this, a| {
+    r.pure_method(t, "push", &[T::TYPE], t, move |ctx, this, a| {
         ctx.get_mut::<PopContainer<T>>(this)?
             .items
             .push_back(T::get(&a[0])?);
         Ok(Value::object(t, this))
     })?;
-    r.method(t, "pop", &[], T::TYPE, move |ctx, this, _| {
+    r.pure_method(t, "pop", &[], T::TYPE, move |ctx, this, _| {
         let q = &mut ctx.get_mut::<PopContainer<T>>(this)?.items;
         let v = if stack { q.pop_back() } else { q.pop_front() };
         v.map(T::put)
             .ok_or_else(|| Error::host(format!("{t}.pop: empty")))
     })?;
-    r.method(t, "peek", &[], T::TYPE, move |ctx, this, _| {
+    r.pure_method(t, "peek", &[], T::TYPE, move |ctx, this, _| {
         let q = &ctx.get::<PopContainer<T>>(this)?.items;
         let v = if stack { q.back() } else { q.front() };
         v.cloned()
             .map(T::put)
             .ok_or_else(|| Error::host(format!("{t}.peek: empty")))
     })?;
-    r.method(t, "at", &["int"], T::TYPE, move |ctx, this, a| {
+    r.pure_method(t, "at", &["int"], T::TYPE, move |ctx, this, a| {
         let q = &ctx.get::<PopContainer<T>>(this)?.items;
         let i = index(a[0].as_int()?, q.len(), &format!("{t}.at"))?;
         Ok(T::put(q[if stack { q.len() - 1 - i } else { i }].clone()))
     })?;
-    r.method(t, "len", &[], "int", move |ctx, this, _| {
+    r.pure_method(t, "len", &[], "int", move |ctx, this, _| {
         Ok(Value::Int(
             ctx.get::<PopContainer<T>>(this)?.items.len() as i64
         ))
     })?;
-    r.method(t, "empty", &[], "bool", move |ctx, this, _| {
+    r.pure_method(t, "empty", &[], "bool", move |ctx, this, _| {
         Ok(Value::Bool(
             ctx.get::<PopContainer<T>>(this)?.items.is_empty(),
         ))
     })?;
-    r.method(t, "clear", &[], t, move |ctx, this, _| {
+    r.pure_method(t, "clear", &[], t, move |ctx, this, _| {
         ctx.get_mut::<PopContainer<T>>(this)?.items.clear();
         Ok(Value::object(t, this))
     })?;
     Ok(())
 }
 fn pq<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Result<(), Error> {
-    r.function(constructor, &[], t, move |ctx, _| {
+    r.pure_function(constructor, &[], t, move |ctx, _| {
         Ok(Value::object(
             t,
             ctx.insert_collection(t, PriorityQueue::<T>::default())?,
         ))
     })?;
-    r.method(t, "push", &[T::TYPE, "float"], t, move |ctx, this, a| {
+    r.pure_method(t, "push", &[T::TYPE, "float"], t, move |ctx, this, a| {
         let priority = a[1].as_float()?;
         if !priority.is_finite() {
             return Err(Error::host(format!("{t}.push: priority must be finite")));
@@ -266,31 +266,31 @@ fn pq<T: Element>(r: &mut Registry, t: &'static str, constructor: &str) -> Resul
         q.next_sequence += 1;
         Ok(Value::object(t, this))
     })?;
-    r.method(t, "pop", &[], T::TYPE, move |ctx, this, _| {
+    r.pure_method(t, "pop", &[], T::TYPE, move |ctx, this, _| {
         ctx.get_mut::<PriorityQueue<T>>(this)?
             .items
             .pop()
             .map(|x| T::put(x.value))
             .ok_or_else(|| Error::host(format!("{t}.pop: empty")))
     })?;
-    r.method(t, "peek", &[], T::TYPE, move |ctx, this, _| {
+    r.pure_method(t, "peek", &[], T::TYPE, move |ctx, this, _| {
         ctx.get::<PriorityQueue<T>>(this)?
             .items
             .peek()
             .map(|x| T::put(x.value.clone()))
             .ok_or_else(|| Error::host(format!("{t}.peek: empty")))
     })?;
-    r.method(t, "len", &[], "int", move |ctx, this, _| {
+    r.pure_method(t, "len", &[], "int", move |ctx, this, _| {
         Ok(Value::Int(
             ctx.get::<PriorityQueue<T>>(this)?.items.len() as i64
         ))
     })?;
-    r.method(t, "empty", &[], "bool", move |ctx, this, _| {
+    r.pure_method(t, "empty", &[], "bool", move |ctx, this, _| {
         Ok(Value::Bool(
             ctx.get::<PriorityQueue<T>>(this)?.items.is_empty(),
         ))
     })?;
-    r.method(t, "clear", &[], t, move |ctx, this, _| {
+    r.pure_method(t, "clear", &[], t, move |ctx, this, _| {
         let q = ctx.get_mut::<PriorityQueue<T>>(this)?;
         q.items.clear();
         q.next_sequence = 0;

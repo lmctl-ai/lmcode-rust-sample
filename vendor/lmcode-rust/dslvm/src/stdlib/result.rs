@@ -226,6 +226,7 @@ pub(super) fn json_node(n: &JsonNode, path: &str) -> Result<OwnedJson, Error> {
 fn convert(ctx: &Context, v: &Value, path: &str) -> Result<OwnedJson, Error> {
     Ok(match v {
         Value::None => OwnedJson::Null,
+        Value::DryNull(_) => OwnedJson::Null,
         Value::Bool(v) => OwnedJson::Bool(*v),
         Value::Int(v) => integer(*v, path)?,
         Value::Float(v) => float(*v, path)?,
@@ -378,20 +379,20 @@ pub fn register_result(registry: &mut Registry) -> Result<&mut Registry, Error> 
         "IntMap",
         "FloatMap",
     ] {
-        registry.function("lmcode_return_set", &[ty], "void", |ctx, args| {
+        registry.pure_function("lmcode_return_set", &[ty], "void", |ctx, args| {
             set_result(ctx, &args[0])?;
             Ok(Value::None)
         })?;
-        registry.function("lmcode_return_put", &["string", ty], "void", |ctx, args| {
+        registry.pure_function("lmcode_return_put", &["string", ty], "void", |ctx, args| {
             put_result(ctx, args[0].as_bytes()?, &args[1])?;
             Ok(Value::None)
         })?;
     }
-    registry.function("lmcode_return_null", &[], "void", |ctx, _| {
+    registry.pure_function("lmcode_return_null", &[], "void", |ctx, _| {
         set_result(ctx, &Value::None)?;
         Ok(Value::None)
     })?;
-    registry.function(
+    registry.pure_function(
         "lmcode_return_put_null",
         &["string"],
         "void",

@@ -22,10 +22,33 @@ pub use collections::register_collections;
 pub use testing::register_testing;
 pub use file::register_file;
 
-use crate::{Error, Registry, Value};
+use crate::{Context, Error, Registry, Value};
 use std::collections::HashSet;
 pub mod math;
 pub use math::*;
+
+pub(crate) fn dry_dummy(ctx: &mut Context, declared: &str) -> Result<Value, Error> {
+    let normalized = match declared {
+        "integer" | "int64" => "int",
+        "double" | "number" => "float",
+        other => other,
+    };
+    Ok(match normalized {
+        "void" => Value::None,
+        "null" => Value::dry_null(declared),
+        "bool" => Value::Bool(true),
+        "int" => Value::Int(0),
+        "float" => Value::Float(0.0),
+        "string" => Value::string(""),
+        "StrList" => Value::object("StrList", ctx.insert_collection("StrList", collections::StrList::default())?),
+        "IntList" => Value::object("IntList", ctx.insert_collection("IntList", collections::IntList::default())?),
+        "FloatList" => Value::object("FloatList", ctx.insert_collection("FloatList", collections::FloatList::default())?),
+        "StrMap" => Value::object("StrMap", ctx.insert_collection("StrMap", collections::StrMap::default())?),
+        "IntMap" => Value::object("IntMap", ctx.insert_collection("IntMap", containers::IntMap::default())?),
+        "FloatMap" => Value::object("FloatMap", ctx.insert_collection("FloatMap", containers::FloatMap::default())?),
+        _ => Value::dry_null(declared),
+    })
+}
 
 /// Install the complete built-in lmcode standard catalog once. Explicit subset
 /// binders remain compatible: built-in entries may be replaced by a host binder.
@@ -337,62 +360,62 @@ pub fn str_match<S: AsRef<[u8]>, P: AsRef<[u8]>>(text: S, pattern: P) -> Result<
 /// Register all 16 optional string functions once, using their canonical schema signatures.
 pub fn register_string(reg: &mut Registry) -> Result<&mut Registry, Error> {
     reg.begin_compatibility_registration();
-    reg.function("str_starts_with", &["string", "string"], "bool", |_, a| {
+    reg.pure_function("str_starts_with", &["string", "string"], "bool", |_, a| {
         Ok(Value::Bool(str_starts_with(
             a[0].as_bytes()?,
             a[1].as_bytes()?,
         )))
     })?;
-    reg.function("str_ends_with", &["string", "string"], "bool", |_, a| {
+    reg.pure_function("str_ends_with", &["string", "string"], "bool", |_, a| {
         Ok(Value::Bool(str_ends_with(
             a[0].as_bytes()?,
             a[1].as_bytes()?,
         )))
     })?;
-    reg.function("str_contains", &["string", "string"], "bool", |_, a| {
+    reg.pure_function("str_contains", &["string", "string"], "bool", |_, a| {
         Ok(Value::Bool(str_contains(
             a[0].as_bytes()?,
             a[1].as_bytes()?,
         )))
     })?;
-    reg.function("str_len", &["string"], "int", |_, a| {
+    reg.pure_function("str_len", &["string"], "int", |_, a| {
         Ok(Value::Int(str_len(a[0].as_bytes()?)))
     })?;
-    reg.function("str_substr", &["string", "int", "int"], "string", |_, a| {
+    reg.pure_function("str_substr", &["string", "int", "int"], "string", |_, a| {
         Ok(Value::string(str_substr(
             a[0].as_bytes()?,
             a[1].as_int()?,
             a[2].as_int()?,
         )))
     })?;
-    reg.function("str_lower", &["string"], "string", |_, a| {
+    reg.pure_function("str_lower", &["string"], "string", |_, a| {
         Ok(Value::string(str_lower(a[0].as_bytes()?)))
     })?;
-    reg.function("str_upper", &["string"], "string", |_, a| {
+    reg.pure_function("str_upper", &["string"], "string", |_, a| {
         Ok(Value::string(str_upper(a[0].as_bytes()?)))
     })?;
-    reg.function("str_trim", &["string"], "string", |_, a| {
+    reg.pure_function("str_trim", &["string"], "string", |_, a| {
         Ok(Value::string(str_trim(a[0].as_bytes()?)))
     })?;
-    reg.function("str_repeat", &["string", "int"], "string", |_, a| {
+    reg.pure_function("str_repeat", &["string", "int"], "string", |_, a| {
         Ok(Value::string(str_repeat(a[0].as_bytes()?, a[1].as_int()?)?))
     })?;
-    reg.function("str_to_int", &["string"], "int", |_, a| {
+    reg.pure_function("str_to_int", &["string"], "int", |_, a| {
         Ok(Value::Int(str_to_int(a[0].as_bytes()?)))
     })?;
-    reg.function("str_is_int", &["string"], "bool", |_, a| {
+    reg.pure_function("str_is_int", &["string"], "bool", |_, a| {
         Ok(Value::Bool(str_is_int(a[0].as_bytes()?)))
     })?;
-    reg.function("str_to_float", &["string"], "float", |_, a| {
+    reg.pure_function("str_to_float", &["string"], "float", |_, a| {
         Ok(Value::Float(str_to_float(a[0].as_bytes()?)))
     })?;
-    reg.function("str_is_float", &["string"], "bool", |_, a| {
+    reg.pure_function("str_is_float", &["string"], "bool", |_, a| {
         Ok(Value::Bool(str_is_float(a[0].as_bytes()?)))
     })?;
-    reg.function("str_find", &["string", "string"], "int", |_, a| {
+    reg.pure_function("str_find", &["string", "string"], "int", |_, a| {
         Ok(Value::Int(str_find(a[0].as_bytes()?, a[1].as_bytes()?)))
     })?;
-    reg.function(
+    reg.pure_function(
         "str_replace",
         &["string", "string", "string"],
         "string",
@@ -404,9 +427,13 @@ pub fn register_string(reg: &mut Registry) -> Result<&mut Registry, Error> {
             )?))
         },
     )?;
-    reg.function("str_match", &["string", "string"], "bool", |_, a| {
+    reg.pure_function("str_match", &["string", "string"], "bool", |_, a| {
         Ok(Value::Bool(str_match(a[0].as_bytes()?, a[1].as_bytes()?)?))
     })?;
     reg.end_compatibility_registration();
     Ok(reg)
 }
+
+#[cfg(test)]
+#[path = "stdlib/dry_tests.rs"]
+mod dry_tests;

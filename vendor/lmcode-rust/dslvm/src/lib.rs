@@ -41,9 +41,17 @@ const MAGIC: &[u8; 4] = b"DSLB";
 /// application failure). `Error::host(msg)` is what host closures return. Exit-code convention (runtime result protocol).: 2 compile
 /// (lmscript), 3 load or run, 4 application; see [`stdlib::failure_frame`].
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Error { pub code: String, pub message: String, pub line: Option<u32>, pub column: Option<u16> }
+pub struct Error {
+    pub code: String,
+    pub message: String,
+    pub line: Option<u32>,
+    pub column: Option<u16>,
+    /// A valid dry invocation mode was established before this error occurred.
+    pub has_invocation_dry: bool,
+    pub invocation_dry: bool,
+}
 impl Error {
-    pub fn new(code: &str, message: impl Into<String>) -> Error { Error { code: code.to_string(), message: message.into(), line: None, column: None } }
+    pub fn new(code: &str, message: impl Into<String>) -> Error { Error { code: code.to_string(), message: message.into(), line: None, column: None, has_invocation_dry: false, invocation_dry: false } }
     pub fn host(message: impl Into<String>) -> Error { Error::new("RUN_HOST", message) }
     pub fn locate(&mut self, line: u32, column: u16) { if self.line.is_some() || line == 0 { return; } self.line = Some(line); self.column = (column != 0).then_some(column); self.message = format!("dsl line {}{}: {}", line, self.column.map(|c| format!(":{}", c)).unwrap_or_default(), self.message); }
 }
@@ -99,15 +107,23 @@ impl fmt::Display for ByteString {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     None,
+    /// SDK-created typed null used as an object/opaque return dummy in dry mode.
+    /// Its private payload prevents hosts from forging dummy provenance.
+    DryNull(DryNull),
     Int(i64),
     Float(f64),
     Str(ByteString),
     Bool(bool),
     Obj { type_name: String, obj: ObjRef },
 }
+#[derive(Debug, Clone, PartialEq)]
+pub struct DryNull {
+    type_name: String,
+    _private: (),
+}
 impl Value {
     pub fn kind_name(&self) -> &'static str {
-        match self { Value::None => "void", Value::Int(_) => "int", Value::Float(_) => "float", Value::Str(_) => "string", Value::Bool(_) => "bool", Value::Obj { .. } => "object" }
+        match self { Value::None => "void", Value::DryNull(_) => "dry null", Value::Int(_) => "int", Value::Float(_) => "float", Value::Str(_) => "string", Value::Bool(_) => "bool", Value::Obj { .. } => "object" }
     }
     pub fn object(type_name: impl Into<String>, obj: ObjRef) -> Value { Value::Obj { type_name: type_name.into(), obj } }
     /// Accessors for host callbacks: the VM guarantees the kinds the schema declares, so a mismatch is a host or compiler bug.
@@ -122,6 +138,9 @@ impl Value {
     pub fn to_string_lossy(&self) -> Result<String, Error> { Ok(self.as_string()?.to_string_lossy()) }
     pub fn as_bool(&self) -> Result<bool, Error> { if let Value::Bool(b) = self { Ok(*b) } else { err(format!("expected bool, got {}", self.kind_name())) } }
     pub fn as_obj(&self) -> Result<ObjRef, Error> { if let Value::Obj { obj, .. } = self { Ok(*obj) } else { err(format!("expected object, got {}", self.kind_name())) } }
+    pub(crate) fn dry_null(type_name: impl Into<String>) -> Self { Self::DryNull(DryNull { type_name: type_name.into(), _private: () }) }
+    pub(crate) fn dry_null_type(&self) -> Option<&str> { match self { Self::DryNull(value) => Some(&value.type_name), _ => None } }
+    pub(crate) fn is_dry_null(&self) -> bool { matches!(self, Self::DryNull(_)) }
 }
 
 /// The live objects of one run: an arena the host fills before `run` and empties (or drops) after it.
@@ -129,6 +148,7 @@ impl Value {
 pub struct Context {
     /// Explicit invocation result; never reset by collection-region teardown.
     pub result_sink: Option<stdlib::result::ResultSink>,
+    dry: bool,
     objects: Vec<Option<Box<dyn Any>>>,
     types: Vec<String>,
     names: HashMap<String, ObjRef>,
@@ -138,6 +158,9 @@ pub struct Context {
 }
 impl Context {
     pub fn new() -> Context { Context::default() }
+    /// True while executing an invocation marked dry by its collector.
+    pub fn dry(&self) -> bool { self.dry }
+    pub(crate) fn set_dry(&mut self, dry: bool) { self.dry = dry; }
     /// Stores a host object under its schema type name and returns the handle.
     pub fn insert<T: Any>(&mut self, type_name: impl Into<String>, object: T) -> ObjRef {
         self.objects.push(Some(Box::new(object)));
@@ -179,6 +202,7 @@ impl Context {
         let r = self.insert(type_name, object); self.set(name, r); r
     }
     pub fn type_name(&self, obj: ObjRef) -> &str { &self.types[obj.0] }
+    pub(crate) fn object_type(&self, obj: ObjRef) -> Option<&str> { self.types.get(obj.0).map(String::as_str) }
     pub fn get<T: Any>(&self, obj: ObjRef) -> Result<&T, Error> {
         self.objects.get(obj.0).and_then(|o| o.as_ref()).and_then(|b| b.downcast_ref::<T>()).ok_or_else(|| Error::host(format!("context object #{} is not a {}", obj.0, std::any::type_name::<T>())))
     }
@@ -201,6 +225,29 @@ pub type Function = Box<dyn Fn(&mut Context, &Args) -> Result<Value, Error>>;
 /// A host method: the receiver handle, the context (borrow the object with `ctx.get_mut::<T>(this)`) and the arguments.
 pub type Method = Box<dyn Fn(&mut Context, ObjRef, &Args) -> Result<Value, Error>>;
 
+/// Rust-owned dry registration argument. `dry(callback)` stores the supplied closure
+/// without cloning it; `dry(real)` explicitly reuses the registration's real callback.
+pub struct Dry<T>(T);
+pub struct Real;
+#[allow(non_upper_case_globals)]
+pub const real: Real = Real;
+pub fn dry<T>(callback: T) -> Dry<T> { Dry(callback) }
+
+pub enum DryFunctionSlot { Real, Callback(Function) }
+pub enum DryMethodSlot { Real, Callback(Method) }
+pub trait IntoDryFunctionSlot { fn into_dry_function_slot(self) -> DryFunctionSlot; }
+pub trait IntoDryMethodSlot { fn into_dry_method_slot(self) -> DryMethodSlot; }
+impl IntoDryFunctionSlot for Dry<Real> { fn into_dry_function_slot(self) -> DryFunctionSlot { DryFunctionSlot::Real } }
+impl<F> IntoDryFunctionSlot for Dry<F>
+where F: Fn(&mut Context, &Args) -> Result<Value, Error> + 'static {
+    fn into_dry_function_slot(self) -> DryFunctionSlot { DryFunctionSlot::Callback(Box::new(self.0)) }
+}
+impl IntoDryMethodSlot for Dry<Real> { fn into_dry_method_slot(self) -> DryMethodSlot { DryMethodSlot::Real } }
+impl<F> IntoDryMethodSlot for Dry<F>
+where F: Fn(&mut Context, ObjRef, &Args) -> Result<Value, Error> + 'static {
+    fn into_dry_method_slot(self) -> DryMethodSlot { DryMethodSlot::Callback(Box::new(self.0)) }
+}
+
 /// A declared signature: the schema's parameter type names and return type name (`void` for none).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Signature { pub params: Vec<String>, pub returns: String }
@@ -213,8 +260,8 @@ impl Signature { fn text(&self) -> String { format!("({}) -> {}", self.params.jo
 pub struct Registry {
     // Keys include the complete canonical signature. This permits overloads while keeping
     // import binding exact and deterministic; a duplicate parameter tuple is rejected below.
-    functions: HashMap<String, (String, Signature, Function)>,
-    methods: HashMap<String, (String, String, Signature, Method)>,
+    functions: HashMap<String, (String, Signature, Function, Option<DryFunctionSlot>)>,
+    methods: HashMap<String, (String, String, Signature, Method, Option<DryMethodSlot>)>,
     contexts: HashMap<String, String>,
     std_signatures: HashSet<String>,
     std_enabled: bool,
@@ -264,23 +311,47 @@ impl Registry {
     }
     pub fn matches_schema_signatures(&self, schema: &[String]) -> bool { self.check_schema_signatures(schema).is_ok() }
     pub fn function(&mut self, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, &Args) -> Result<Value, Error> + 'static) -> Result<&mut Self, Error> {
+        self.register_function(name, params, returns, Box::new(f), None)
+    }
+    /// Register one signature with an explicit dry callback slot. `dry(real)` opts into
+    /// the normal callback; `dry(closure)` supplies a preview without cloning it.
+    pub fn function_with_dry<D: IntoDryFunctionSlot>(&mut self, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, &Args) -> Result<Value, Error> + 'static, dry: D) -> Result<&mut Self, Error> {
+        self.register_function(name, params, returns, Box::new(f), Some(dry.into_dry_function_slot()))
+    }
+    pub(crate) fn pure_function(&mut self, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, &Args) -> Result<Value, Error> + 'static) -> Result<&mut Self, Error> {
+        self.function_with_dry(name, params, returns, f, crate::dry(crate::real))
+    }
+    pub(crate) fn read_function(&mut self, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, &Args) -> Result<Value, Error> + 'static) -> Result<&mut Self, Error> {
+        self.pure_function(name, params, returns, f)
+    }
+    fn register_function(&mut self, name: &str, params: &[&str], returns: &str, f: Function, dry: Option<DryFunctionSlot>) -> Result<&mut Self, Error> {
         let sig = Signature { params: params.iter().map(|p| p.to_string()).collect(), returns: returns.to_string() };
         let canonical = format!("fn {}{}", name, sig.text());
-        if self.functions.values().any(|(n, old, _f)| n == name && old.params == sig.params) {
+        if self.functions.values().any(|(n, old, _f, _dry)| n == name && old.params == sig.params) {
             if self.compatibility_registration && self.std_signatures.contains(&canonical) { return Ok(self); }
             return load_err("LOAD_UNBOUND", format!("registry: function '{}{}' is registered twice", name, sig.text()));
         }
-        self.functions.insert(canonical, (name.to_string(), sig, Box::new(f)));
+        self.functions.insert(canonical, (name.to_string(), sig, f, dry));
         Ok(self)
     }
     pub fn method(&mut self, type_name: &str, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, ObjRef, &Args) -> Result<Value, Error> + 'static) -> Result<&mut Self, Error> {
+        self.register_method(type_name, name, params, returns, Box::new(f), None)
+    }
+    /// Register one method signature with an explicit dry callback slot.
+    pub fn method_with_dry<D: IntoDryMethodSlot>(&mut self, type_name: &str, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, ObjRef, &Args) -> Result<Value, Error> + 'static, dry: D) -> Result<&mut Self, Error> {
+        self.register_method(type_name, name, params, returns, Box::new(f), Some(dry.into_dry_method_slot()))
+    }
+    pub(crate) fn pure_method(&mut self, type_name: &str, name: &str, params: &[&str], returns: &str, f: impl Fn(&mut Context, ObjRef, &Args) -> Result<Value, Error> + 'static) -> Result<&mut Self, Error> {
+        self.method_with_dry(type_name, name, params, returns, f, crate::dry(crate::real))
+    }
+    fn register_method(&mut self, type_name: &str, name: &str, params: &[&str], returns: &str, f: Method, dry: Option<DryMethodSlot>) -> Result<&mut Self, Error> {
         let sig = Signature { params: params.iter().map(|p| p.to_string()).collect(), returns: returns.to_string() };
         let canonical = format!("method {}.{}{}", type_name, name, sig.text());
-        if self.methods.values().any(|(t, n, old, _f)| t == type_name && n == name && old.params == sig.params) {
+        if self.methods.values().any(|(t, n, old, _f, _dry)| t == type_name && n == name && old.params == sig.params) {
             if self.compatibility_registration && self.std_signatures.contains(&canonical) { return Ok(self); }
             return load_err("LOAD_UNBOUND", format!("registry: method '{}.{}{}' is registered twice", type_name, name, sig.text()));
         }
-        self.methods.insert(canonical, (type_name.to_string(), name.to_string(), sig, Box::new(f)));
+        self.methods.insert(canonical, (type_name.to_string(), name.to_string(), sig, f, dry));
         Ok(self)
     }
     /// Declares a context variable and its schema type; `Context::set` provides the object per run.
@@ -291,19 +362,19 @@ impl Registry {
     pub fn context_type(&self, name: &str) -> Option<&str> { self.contexts.get(name).map(String::as_str) }
     pub(crate) fn begin_compatibility_registration(&mut self) { self.compatibility_registration = true; }
     pub(crate) fn end_compatibility_registration(&mut self) { self.compatibility_registration = false; }
-    fn function_by_signature(&self, canonical: &str) -> Option<&(String, Signature, Function)> { self.functions.get(canonical) }
-    fn method_by_signature(&self, canonical: &str) -> Option<&(String, String, Signature, Method)> { self.methods.get(canonical) }
+    fn function_by_signature(&self, canonical: &str) -> Option<&(String, Signature, Function, Option<DryFunctionSlot>)> { self.functions.get(canonical) }
+    fn method_by_signature(&self, canonical: &str) -> Option<&(String, String, Signature, Method, Option<DryMethodSlot>)> { self.methods.get(canonical) }
     /// "fn x(float) -> int" as the host declares the name an import asks for, or "" when the name is unknown.
     fn declared_for(&self, canonical: &str) -> String {
         let (Some(sp), Some(par)) = (canonical.find(' '), canonical.find('(')) else { return String::new() };
         if par < sp { return String::new(); }
         let name = &canonical[sp + 1..par];
         if let Some(_rest) = canonical.strip_prefix("fn ") {
-            let mut have: Vec<String> = self.functions.values().filter(|(n, _s, _f)| n == name).map(|(_, s, _)| format!("fn {}{}", name, s.text())).collect();
+            let mut have: Vec<String> = self.functions.values().filter(|(n, _s, _f, _dry)| n == name).map(|(_, s, _, _)| format!("fn {}{}", name, s.text())).collect();
             have.sort(); return have.join(", ");
         }
         let Some((t, n)) = name.split_once('.') else { return String::new() };
-        let mut have: Vec<String> = self.methods.values().filter(|(ty, method, _s, _f)| ty == t && method == n).map(|(_, _, s, _)| format!("method {}{}", name, s.text())).collect();
+        let mut have: Vec<String> = self.methods.values().filter(|(ty, method, _s, _f, _dry)| ty == t && method == n).map(|(_, _, s, _, _)| format!("method {}{}", name, s.text())).collect();
         have.sort(); have.join(", ")
     }
     /// Sorted canonical strings: `context NAME: Type`, `fn NAME(T, ...) -> R`, `method Type.name(T, ...) -> R`.
@@ -399,6 +470,32 @@ struct Region { locals: Vec<Local>, max_stack: u16, code: Vec<u8>, lines: Vec<Li
 /// Host-visible rule metadata. Parameters are the schema types in host argument order.
 #[derive(Debug, Clone)]
 pub struct Entry { pub name: String, pub annotation: String, pub iface: String, pub params: Vec<String>, pub returns: String, region: Region }
+
+fn normalized_type(declared: &str) -> &str {
+    match declared {
+        "integer" | "int64" => "int",
+        "double" | "number" => "float",
+        other => other,
+    }
+}
+
+fn validate_dry_result(ctx: &Context, value: &Value, declared: &str) -> Result<(), Error> {
+    if value.dry_null_type() == Some(declared) { return Ok(()); }
+    let kind = normalized_type(declared);
+    let matches = match kind {
+        "void" => matches!(value, Value::None),
+        "null" => false,
+        "bool" => matches!(value, Value::Bool(_)),
+        "int" => matches!(value, Value::Int(_)),
+        "float" => matches!(value, Value::Float(_)),
+        "string" => matches!(value, Value::Str(_)),
+        _ => match value {
+            Value::Obj { type_name, obj } => type_name == declared && ctx.object_type(*obj) == Some(declared),
+            _ => false,
+        },
+    };
+    if matches { Ok(()) } else { Err(Error::host(format!("dry callback for {} returned {}", declared, value.kind_name()))) }
+}
 
 fn interface_signature(text: &str) -> Option<(Vec<String>, String)> {
     fn ident(s: &str) -> bool { let mut b=s.bytes(); matches!(b.next(),Some(b'a'..=b'z'|b'A'..=b'Z'|b'_')) && b.all(|c| c.is_ascii_alphanumeric() || c==b'_') }
@@ -528,7 +625,7 @@ impl Program {
     pub fn entries(&self) -> &[Entry] { &self.entries }
 
     fn import_sig<'a>(&self, reg: &'a Registry, i: usize) -> Option<&'a Signature> {
-        match &self.imports[i] { Import::Function(canonical) => reg.functions.get(canonical).map(|(_, s, _)| s), Import::Method(canonical, _, _) => reg.methods.get(canonical).map(|(_, _, s, _)| s) }
+        match &self.imports[i] { Import::Function(canonical) => reg.functions.get(canonical).map(|(_, s, _, _)| s), Import::Method(canonical, _, _) => reg.methods.get(canonical).map(|(_, _, s, _, _)| s) }
     }
 
     /// Static verification: every instruction decodes, every index is in range, and ordinary jumps land on instruction
@@ -726,8 +823,8 @@ impl Program {
             match op {
                 PUSH_INT | PUSH_FLOAT | PUSH_STR | PUSH_BOOL | LOAD_LOCAL | LOAD_CTX => push = 1,
                 STORE_LOCAL | POP => pop = 1,
-                CALL_FN => { let i = r.u16()? as usize; let argc = r.u8()? as i64; pop = argc; let returns = match &self.imports[i] { Import::Function(c) => reg.functions.get(c).map(|(_, s, _)| s.returns.as_str()), _ => None }; push = if returns == Some("void") { 0 } else { 1 }; },
-                CALL_METHOD => { let i = r.u16()? as usize; let argc = r.u8()? as i64; pop = argc + 1; let returns = match &self.imports[i] { Import::Method(c, _, _) => reg.methods.get(c).map(|(_, _, s, _)| s.returns.as_str()), _ => None }; push = if returns == Some("void") { 0 } else { 1 }; },
+                CALL_FN => { let i = r.u16()? as usize; let argc = r.u8()? as i64; pop = argc; let returns = match &self.imports[i] { Import::Function(c) => reg.functions.get(c).map(|(_, s, _, _)| s.returns.as_str()), _ => None }; push = if returns == Some("void") { 0 } else { 1 }; },
+                CALL_METHOD => { let i = r.u16()? as usize; let argc = r.u8()? as i64; pop = argc + 1; let returns = match &self.imports[i] { Import::Method(c, _, _) => reg.methods.get(c).map(|(_, _, s, _, _)| s.returns.as_str()), _ => None }; push = if returns == Some("void") { 0 } else { 1 }; },
                 EQ | NE | ADD_I | SUB_I | MUL_I | DIV_I | MOD_I | ADD_F | SUB_F | MUL_F | DIV_F | LT_I | LE_I | GT_I | GE_I | LT_F | LE_F | GT_F | GE_F | CONCAT => { pop = 2; push = 1; },
                 NOT | NEG_I | NEG_F | I2F | I2S | F2S | B2S => { pop = 1; push = 1; },
                 MATH => { pop = math_arity(r.u8()?)?; push = 1; }, DUP => { pop = 1; push = 2; },
@@ -763,6 +860,7 @@ impl Program {
     pub fn call(&self, entry: usize, ctx: &mut Context, reg: &Registry, args: Vec<Value>) -> Result<Value, Error> {
         let e=self.entries.get(entry).ok_or_else(|| Error::host(format!("call entry index {} out of range ({} entries)",entry,self.entries.len())))?;
         if args.len()!=e.params.len() {return Err(Error::host(format!("call entry '{}' expects {} argument(s); found {}",e.name,e.params.len(),args.len())));}
+        if args.iter().any(Value::is_dry_null) { return Err(Error::host("invalid dry null provenance in entry arguments")); }
         self.execute(&e.region,ctx,reg,args,e.returns!="void")
     }
 
@@ -809,8 +907,16 @@ impl Program {
                     let i = r.u16()? as usize; let argc = r.u8()? as usize;
                     let mut args = vec![Value::None; argc]; for k in (0..argc).rev() { args[k] = pop(&mut stack)?; }
                     let Import::Function(canonical) = &self.imports[i] else { return err("CALL_FN names a method import") };
-                    let (_, _, f) = reg.functions.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("host function '{}' is not bound", canonical)))?;
-                    let result = f(ctx, &args)?;
+                    let (_, signature, real_fn, dry_slot) = reg.functions.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("host function '{}' is not bound", canonical)))?;
+                    if args.iter().any(Value::is_dry_null) { return Err(Error::host("dry null cannot be passed to a host callback")); }
+                    let result = if ctx.dry() {
+                        match dry_slot {
+                            None => stdlib::dry_dummy(ctx, &signature.returns)?,
+                            Some(DryFunctionSlot::Real) => real_fn(ctx, &args)?,
+                            Some(DryFunctionSlot::Callback(callback)) => callback(ctx, &args)?,
+                        }
+                    } else { real_fn(ctx, &args)? };
+                    if ctx.dry() { validate_dry_result(ctx, &result, &signature.returns)?; }
                     if result != Value::None { push(&mut stack, result); }
                 }
                 CALL_METHOD => {
@@ -818,20 +924,34 @@ impl Program {
                     let mut args = vec![Value::None; argc]; for k in (0..argc).rev() { args[k] = pop(&mut stack)?; }
                     let Import::Method(canonical, type_name, name) = &self.imports[i] else { return err("CALL_METHOD names a function import") };
                     let this = pop(&mut stack)?;
-                    let obj = match &this {
-                        Value::Obj { type_name: t, obj } if t == type_name => *obj,
-                        Value::Obj { type_name: t, .. } => return err(format!("method {}.{} called on a {}", type_name, name, t)),
-                        other => return err(format!("method {}.{} called on a {}", type_name, name, other.kind_name())),
+                    let (_, _, signature, real_fn, dry_slot) = reg.methods.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("method '{}.{}' is not bound", type_name, name)))?;
+                    if this.is_dry_null() && (!ctx.dry() || this.dry_null_type().is_none()) { return Err(Error::host("invalid dry null provenance in method receiver")); }
+                    if args.iter().any(Value::is_dry_null) { return Err(Error::host("dry null cannot be passed to a host callback")); }
+                    let result = if ctx.dry() && dry_slot.is_none() {
+                        // A method with no preview is skipped without dereferencing its receiver.
+                        stdlib::dry_dummy(ctx, &signature.returns)?
+                    } else {
+                        let obj = match &this {
+                            Value::DryNull(_) => return Err(Error::host(format!("method {}.{} requires a concrete receiver after dry null", type_name, name))),
+                            Value::Obj { type_name: t, obj } if t == type_name => *obj,
+                            Value::Obj { type_name: t, .. } => return err(format!("method {}.{} called on a {}", type_name, name, t)),
+                            other => return err(format!("method {}.{} called on a {}", type_name, name, other.kind_name())),
+                        };
+                        if ctx.dry() {
+                            match dry_slot.as_ref().unwrap() {
+                                DryMethodSlot::Real => real_fn(ctx, obj, &args)?,
+                                DryMethodSlot::Callback(callback) => callback(ctx, obj, &args)?,
+                            }
+                        } else { real_fn(ctx, obj, &args)? }
                     };
-                    let (_, _, _, m) = reg.methods.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("method '{}.{}' is not bound", type_name, name)))?;
-                    let result = m(ctx, obj, &args)?;
+                    if ctx.dry() { validate_dry_result(ctx, &result, &signature.returns)?; }
                     if result != Value::None { push(&mut stack, result); }
                 }
                 EQ | NE => {
                     let b = pop(&mut stack)?; let a = pop(&mut stack)?;
                     let eq = match (&a, &b) {
                         (Value::Int(x), Value::Int(y)) => x == y, (Value::Float(x), Value::Float(y)) => x == y, (Value::Str(x), Value::Str(y)) => x == y,
-                        (Value::Bool(x), Value::Bool(y)) => x == y, (Value::Obj { obj: x, .. }, Value::Obj { obj: y, .. }) => x == y,
+                        (Value::Bool(x), Value::Bool(y)) => x == y, (Value::DryNull(x), Value::DryNull(y)) => x.type_name == y.type_name, (Value::Obj { obj: x, .. }, Value::Obj { obj: y, .. }) => x == y,
                         _ => return err(format!("cannot compare {} with {}", a.kind_name(), b.kind_name())),
                     };
                     push(&mut stack, Value::Bool(if op == EQ { eq } else { !eq }))
@@ -990,6 +1110,29 @@ mod format_tests {
         for (x, want) in [(0.1 + 0.2, "0.3"), (1.0, "1"), (123456789.125, "123456789.125"), (1.0 / 3.0, "0.333333333333333"), (-0.0, "-0"), (f64::INFINITY, "inf"),
             (2.5, "2.5"), (-0.5, "-0.5"), (1e21, "1e+21"), (1.5e-7, "1.5e-07"), (123456789012345680.0, "1.23456789012346e+17"), (0.0001, "0.0001"), (0.00001, "1e-05"), (6.32455532033676, "6.32455532033676")] {
             assert_eq!(format_g15(x), want, "{}", x);
+        }
+    }
+}
+
+#[cfg(test)]
+mod dry_policy_tests {
+    use super::*;
+
+    #[test]
+    fn every_builtin_callback_has_an_explicit_dry_policy() {
+        let registry = Registry::new();
+        let signatures = registry.std_signatures();
+        assert!(!signatures.is_empty());
+        for signature in signatures {
+            if let Some(entry) = registry.functions.get(&signature) {
+                let skip_write = signature == "fn file_write(string, string) -> void"
+                    || signature == "fn file_append(string, string) -> void";
+                assert_eq!(entry.3.is_none(), skip_write, "{signature}");
+            } else if let Some(entry) = registry.methods.get(&signature) {
+                assert!(entry.4.is_some(), "missing dry callback policy: {signature}");
+            } else {
+                panic!("standard signature has no registry entry: {signature}");
+            }
         }
     }
 }

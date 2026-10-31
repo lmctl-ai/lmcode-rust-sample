@@ -23,11 +23,11 @@ pub fn testing_assert_close(a: f64, b: f64, tolerance: f64) -> Result<(), Error>
 /// Register `print(string)` and `assert_close(float,float,float)`. `None` writes to stdout.
 pub fn register_testing(registry: &mut Registry, sink: Option<Sink>) -> Result<&mut Registry, Error> {
     let sink = sink.unwrap_or_else(|| Rc::new(RefCell::new(io::stdout())));
-    registry.function("print", &["string"], "void", move |_, args| {
+    registry.pure_function("print", &["string"], "void", move |_, args| {
         print_bytes(&sink, args[0].as_bytes()?)?;
         Ok(Value::None)
     })?;
-    registry.function("assert_close", &["float", "float", "float"], "void", |_, args| {
+    registry.pure_function("assert_close", &["float", "float", "float"], "void", |_, args| {
         testing_assert_close(args[0].as_float()?, args[1].as_float()?, args[2].as_float()?)?;
         Ok(Value::None)
     })?;

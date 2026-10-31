@@ -22,7 +22,7 @@ fn print_writes_raw_bytes_and_newline() {
     let output: Sink = bytes.clone();
     let mut registry = Registry::without_std();
     register_testing(&mut registry, Some(output.clone())).unwrap();
-    let (_, _, print) = registry.functions.get("fn print(string) -> void").unwrap();
+    let (_, _, print, _) = registry.functions.get("fn print(string) -> void").unwrap();
     let args = [Value::string(b"a\0b".as_slice())];
     print(&mut crate::Context::new(), &args).unwrap();
     assert_eq!(&*bytes.borrow(), b"a\0b\n");

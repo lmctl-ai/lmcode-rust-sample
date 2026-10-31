@@ -109,16 +109,16 @@ pub fn str_hex_decode(input: impl AsRef<[u8]>) -> Result<Vec<u8>, Error> {
 /// Install all four codecs, including compatibility use with an opted-out registry.
 pub fn register_encoding(r: &mut Registry) -> Result<&mut Registry, Error> {
     r.begin_compatibility_registration();
-    r.function("str_base64_encode", &["string"], "string", |_, a| {
+    r.pure_function("str_base64_encode", &["string"], "string", |_, a| {
         Ok(Value::string(str_base64_encode(a[0].as_bytes()?)?))
     })?;
-    r.function("str_base64_decode", &["string"], "string", |_, a| {
+    r.pure_function("str_base64_decode", &["string"], "string", |_, a| {
         Ok(Value::string(str_base64_decode(a[0].as_bytes()?)?))
     })?;
-    r.function("str_hex_encode", &["string"], "string", |_, a| {
+    r.pure_function("str_hex_encode", &["string"], "string", |_, a| {
         Ok(Value::string(str_hex_encode(a[0].as_bytes()?)?))
     })?;
-    r.function("str_hex_decode", &["string"], "string", |_, a| {
+    r.pure_function("str_hex_decode", &["string"], "string", |_, a| {
         Ok(Value::string(str_hex_decode(a[0].as_bytes()?)?))
     })?;
     r.end_compatibility_registration();
