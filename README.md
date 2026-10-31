@@ -151,6 +151,13 @@ remains a tagged `host_summary` diagnostic before the frame; entry traces and
 application validation keep their existing behavior. The SDK's invocation
 collector owns one result sink per program across body and selected entry calls.
 
+The adapter reads the invocation manifest before constructing host state. In
+dry mode it does not seed live shop inventory; SDK defaults skip effectful
+callbacks, while `sample_tmp()` and regular-file reads opt into their safe
+read behavior. Dry frames carry the SDK's `dry:true` marker. Host setup remains
+trusted code; dry mode does not sandbox arbitrary effects or add simulation
+features to other host functions.
+
 Public scripts construct and execute programs through `run_lmcode`; they do not
 name bytecode files. The rule and text-template examples use this path. The real
 integration control also checks repeated builder runs, two programs sharing one
