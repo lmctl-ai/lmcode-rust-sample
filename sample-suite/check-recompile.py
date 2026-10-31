@@ -24,7 +24,7 @@ for case in flagged:
         with tempfile.TemporaryDirectory(prefix='compiler-capability-') as probe_dir:
             schema = Path(probe_dir) / 'empty.json'
             schema.write_text('{"dsl.schema":2,"name":"probe"}')
-            surface = subprocess.run([compiler, '--dsl-signatures', str(schema)], capture_output=True)
+            surface = subprocess.run([compiler, '--lmcode-signatures', str(schema)], capture_output=True)
         legacy = surface.returncode == 0 and hashlib.sha256(surface.stdout.replace(b'\r\n', b'\n')).hexdigest() == "ad2341a497c8ece5e09ca17dc04c8b8ad28c04abe18d1e48769f3e04e8b90c2f"
         if (legacy and features == {'lmcode-literals-v1'}
                 and os.environ.get('LMCODE_REQUIRE_LITERAL_COMPILER') != '1'):

@@ -11,12 +11,12 @@ fn compiler_signatures(fragment: &str, name: &str, without_std: bool) -> Option<
     let schema = format!(r#"{{"dsl.schema":2,"name":"{}","context":{}, {}}}"#, name, "{}", fragment.trim().trim_start_matches('{').trim_end_matches('}'));
     fs::write(&path, schema).unwrap();
     let mut cmd = Command::new(bin);
-    cmd.arg("--dsl-signatures");
+    cmd.arg("--lmcode-signatures");
     if without_std { cmd.arg("--without-std"); }
     let result = cmd.arg(&path).output();
     let _ = fs::remove_file(&path);
     let output = result.ok()?;
-    if !output.status.success() { panic!("lmscript --dsl-signatures failed: {}", String::from_utf8_lossy(&output.stderr)); }
+    if !output.status.success() { panic!("lmscript --lmcode-signatures failed: {}", String::from_utf8_lossy(&output.stderr)); }
     Some(String::from_utf8(output.stdout).unwrap().lines().map(str::to_owned).collect())
 }
 
@@ -92,7 +92,7 @@ fn canonical_std_schema_is_pinned_and_matches_default_registry() {
     assert_eq!(dslvm::hex(&dslvm::sha256(&schema)), want);
     let bin = std::env::var("LMSCRIPT_BIN").unwrap_or_else(|_| "lmscript".into());
     let configured = std::env::var_os("LMSCRIPT_BIN").is_some();
-    let output = Command::new(bin).arg("--dsl-signatures").arg(root.join("std/lmcode-std.schema.json")).output();
+    let output = Command::new(bin).arg("--lmcode-signatures").arg(root.join("std/lmcode-std.schema.json")).output();
     let output = match output {
         Ok(output) => output,
         Err(_error) if !configured => { eprintln!("lmscript not found; canonical std parity skipped"); return; }
@@ -122,7 +122,7 @@ fn current_compiler_injects_the_catalog_without_host_declarations() {
     };
     let path = std::env::temp_dir().join(format!("rust-std-injection-{}.json", std::process::id()));
     fs::write(&path, br#"{"dsl.schema":2,"name":"rust_std_injection","context":{}}"#).unwrap();
-    let output = Command::new(bin).arg("--dsl-signatures").arg(&path).output().expect("configured std compiler must launch");
+    let output = Command::new(bin).arg("--lmcode-signatures").arg(&path).output().expect("configured std compiler must launch");
     let _ = fs::remove_file(path);
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let compiler: Vec<String> = String::from_utf8(output.stdout).unwrap().lines().map(str::to_owned).collect();

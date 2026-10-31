@@ -20,7 +20,7 @@ step(concat(compiler_command(), ["--no-preflight", "sample-suite/run-suite.lms",
 step(concat(compiler_command(), ["--no-preflight", "sample-suite/check-recompile.lms"]));
 step(concat(compiler_command(), ["--no-preflight", "sample-suite/test-runner.lms"]));
 step(concat(compiler_command(), ["--no-preflight", "examples/rule-entries.lms", path_join(Directory, "target/rule-entries.dslb")]));
-result = invoke(root, [host], ["--dsl", path_join(Directory, "target/rule-entries.dslb")], {}, 30000);
+result = invoke(root, [host], ["--lmcode", path_join(Directory, "target/rule-entries.dslb")], {}, 30000);
 expected = binary(root, {op:"hex", path:path_join(root, "expected/068-rule-entries.out")});
 assert(result.code == 0 && result.hex == expected && result.stderr_hex == "", "annotated interface example differs");
 println("PASS annotated interface example");
@@ -29,6 +29,6 @@ println("PASS annotated interface example");
 mkdir("build");
 template_bytecode = path_join(Directory,"build/text-template.dslb");
 step(concat(compiler_command(),["--no-preflight","examples/text-template.lms",template_bytecode]));
-template_result = invoke(root,[host],["--dsl",template_bytecode],{},30000);
+template_result = invoke(root,[host],["--lmcode",template_bytecode],{},30000);
 assert(template_result.code == 0 && template_result.stderr_hex == "" && template_result.stdout == "Hello, Sam!\nItems: 0: apple, 1: pear\n{\"ok\": true, \"result\": {\"balance\": 0, \"entries\": 0, \"note\": \"\", \"entries_called\": 0}}\nLMCODE_RETURN_BEGIN\nnull\nLMCODE_RETURN_END\n","text template example differs");
 println("PASS text template example");

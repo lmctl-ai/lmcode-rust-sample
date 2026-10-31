@@ -74,19 +74,28 @@ fn protocol(root, command) {
   r = invoke(root, command, ["--version"], {}, 30000);
   assert(r.code == 0 && r.stderr_hex == "" && regex_test(r.stdout, "^lmcode-[a-z]+-sample [0-9]+\\.[0-9]+\\.[0-9]+\\n$"), "invalid --version protocol");
   expected = binary(root, {op:"hex", path:path_join(root, "sample.dsl.json")});
-  for (args in [["--dsl-schema"], ["--dsl-schema", "--json"]]) {
+  for (args in [["--lmcode-schema"], ["--lmcode-schema", "--json"]]) {
     r = invoke(root, command, args, {}, 30000);
     assert(r.code == 0 && r.stderr_hex == "" && r.hex == expected, "schema discovery bytes differ");
   }
-  r = invoke(root, command, ["--dsl-signatures"], {}, 30000);
+  r = invoke(root, command, ["--lmcode-signatures"], {}, 30000);
   expected_signatures = join(signatures(read_json(path_join(root, "sample.dsl.json")), true), "\n") + "\n";
   assert(r.code == 0 && r.stderr_hex == "" && r.stdout == expected_signatures, "schema/registry signature mismatch");
-  for (args in [[], ["--unknown"], ["--dsl"], ["--dsl-schema", "--bad"]]) {
+  # Construct retired spellings so source scans flag only live protocol literals.
+  retired = "--" + "dsl";
+  for (suffix in ["", "-schema", "-signatures"]) {
+    args = [retired + suffix];
+    if (suffix == "") { args = [retired, path_join(root, "does-not-exist.dslb")]; }
+    r = invoke(root, command, args, {}, 30000);
+    value = json_parse(r.stdout);
+    assert(r.code == 2 && r.stderr_hex == "" && value.code == "CLI_USAGE", "retired flag must be refused before file access");
+  }
+  for (args in [[], ["--unknown"], ["--lmcode"], ["--lmcode-schema", "--bad"]]) {
     r = invoke(root, command, args, {}, 30000);
     value = json_parse(r.stdout);
     assert(r.code == 2 && r.stderr_hex == "" && value.code == "CLI_USAGE" && value.phase == "cli" && value.ok == false, "invalid CLI_USAGE protocol");
   }
-  r = invoke(root, command, ["--dsl", path_join(root, "does-not-exist.dslb")], {}, 30000);
+  r = invoke(root, command, ["--lmcode", path_join(root, "does-not-exist.dslb")], {}, 30000);
   assert(r.code == 4 && r.stderr_hex == "" && json_parse(r.stdout).code == "APP_FAIL", "invalid APP_FAIL protocol");
   println("PASS host CLI protocol (0/2/3/4; schema/signatures/discovery)");
 }

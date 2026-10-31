@@ -217,7 +217,7 @@ impl Signature { fn text(&self) -> String { format!("({}) -> {}", self.params.jo
 
 /// The implementation of the schema the bytecode was compiled against, declared with the schema's types. The loader binds
 /// by its complete canonical signature; distinct parameter tuples under one name are overloads. `signatures()` lists the canonical
-/// strings `lmscript --dsl-signatures SCHEMA` prints so a host test can diff the two sources of truth (runtime result protocol).. Per
+/// strings `lmscript --lmcode-signatures SCHEMA` prints so a host test can diff the two sources of truth (runtime result protocol).. Per
 /// / the VM performs no call-time checks. Registering a parameter tuple twice is an error (`LOAD_UNBOUND`).
 pub struct Registry {
     // Keys include the complete canonical signature. This permits overloads while keeping
@@ -322,7 +322,7 @@ impl Registry {
         out.extend(self.methods.keys().cloned());
         out.sort(); out
     }
-    /// The human schema summary every DSL host prints for `HOST --dsl-schema` (host flag standard, lmscript R42): the
+    /// The human schema summary every DSL host prints for `HOST --lmcode-schema` (host flag standard, lmscript R42): the
     /// `context ...` and `fn ...` signature lines, then per owner type `Owner:` followed by `  Owner.method(...) -> R`
     /// lines, all in `signatures()` order, each line newline-terminated. Same format as the C++ hosts' summary.
     pub fn schema_summary(&self) -> String {

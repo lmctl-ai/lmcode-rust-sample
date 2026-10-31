@@ -98,7 +98,7 @@ def run_case(command, bytecode, expected_out, expected_exit, scratch, env, timeo
     started = time.monotonic()
     child_env = dict(env, SAMPLE_TMP=str(scratch))
     try:
-        result = subprocess.run([*command, "--dsl", str(bytecode)], env=child_env, cwd=cwd,
+        result = subprocess.run([*command, "--lmcode", str(bytecode)], env=child_env, cwd=cwd,
                                 capture_output=True, timeout=timeout)
     except subprocess.TimeoutExpired as error:
         return {"exit": 124, "stdout": error.stdout or b"", "stderr": b"timeout", "seconds": round(time.monotonic()-started, 4),
@@ -222,7 +222,7 @@ def main():
         try:
             command = command_for(env, lang, repo)
             if pinned_digest is None and legacy_std and target_std - legacy_std:
-                probe = subprocess.run([*command, "--dsl-signatures"], env=env, cwd=repo, capture_output=True, text=True, timeout=30)
+                probe = subprocess.run([*command, "--lmcode-signatures"], env=env, cwd=repo, capture_output=True, text=True, timeout=30)
                 observed = set(probe.stdout.splitlines())
                 if probe.returncode == 0 and legacy_std <= observed and not ((target_std - legacy_std) & observed):
                     pending_port(lang, entry)

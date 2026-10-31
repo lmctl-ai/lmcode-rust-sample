@@ -43,7 +43,7 @@ def run(command, bytecode, timeout=30):
     with tempfile.TemporaryDirectory(prefix='lmcode-sample-') as scratch:
         prepare_tmp(scratch)
         env = dict(os.environ, SAMPLE_TMP=str(Path(scratch).resolve()))
-        return subprocess.run([*command, '--dsl', str(bytecode.resolve())], env=env, capture_output=True, timeout=timeout)
+        return subprocess.run([*command, '--lmcode', str(bytecode.resolve())], env=env, capture_output=True, timeout=timeout)
 
 
 def main():

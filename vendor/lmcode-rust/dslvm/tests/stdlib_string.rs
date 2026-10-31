@@ -333,7 +333,7 @@ fn compiler_signatures_match_registry_when_lmscript_is_available() {
     // subset here; stdlib_catalogs checks exact full canonical v2 parity.
     let schema = root().join("dslvm/tests/fixtures/string.schema.json");
     let Ok(out) = Command::new(std::env::var("LMSCRIPT_BIN").unwrap_or_else(|_| "lmscript".into()))
-        .arg("--dsl-signatures")
+        .arg("--lmcode-signatures")
         .arg(&schema)
         .output()
     else {
@@ -342,7 +342,7 @@ fn compiler_signatures_match_registry_when_lmscript_is_available() {
     };
     assert!(
         out.status.success(),
-        "lmscript --dsl-signatures failed: {}",
+        "lmscript --lmcode-signatures failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
     let compiler: Vec<String> = String::from_utf8(out.stdout)

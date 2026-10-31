@@ -25,7 +25,7 @@ sys.stdout.reconfigure(newline="\n")
 root = Path(os.environ["FAKE_SUITE"])
 mode = os.environ.get("FAKE_MODE", "ok")
 args = sys.argv[1:]
-if os.environ.get("EXEC_MARKER") and args[:1] == ["--dsl"] and len(args) == 2 and Path(args[1]).exists():
+if os.environ.get("EXEC_MARKER") and args[:1] == ["--lmcode"] and len(args) == 2 and Path(args[1]).exists():
     Path(os.environ["EXEC_MARKER"]).write_text("ran")
 
 if args == ["--version"]:
@@ -34,20 +34,20 @@ if args == ["--version"]:
         raise SystemExit(1)
     print("lmcode-fake-sample 0.1.0")
     raise SystemExit(0)
-if args[:1] == ["--dsl-schema"]:
+if args[:1] == ["--lmcode-schema"]:
     if len(args) > 2 or (len(args) == 2 and args[1] != "--json"):
-        print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE"}))
+        print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
         raise SystemExit(2)
     print((root / "sample.dsl.json").read_text(), end="")
     raise SystemExit(0)
-if args == ["--dsl-signatures"]:
+if args == ["--lmcode-signatures"]:
     fn = runpy.run_path(str(root / "protocol.py"))["declared_signatures"]
     sys.stdout.buffer.write(fn(json.loads((root / "sample.dsl.json").read_text())))
     raise SystemExit(0)
-if not args or args[0] == "--unknown" or (args[0] == "--dsl" and len(args) != 2):
-    print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE"}))
+if not args or args[0] == "--unknown" or (args[0] == "--lmcode" and len(args) != 2):
+    print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
     raise SystemExit(2)
-if args[0] == "--dsl" and len(args) == 2:
+if args[0] == "--lmcode" and len(args) == 2:
     path = Path(args[1])
     if not path.exists():
         print(json.dumps({"ok": False, "phase": "app", "code": "APP_FAIL", "message": "invalid sample bytecode"}))
@@ -64,7 +64,7 @@ if args[0] == "--dsl" and len(args) == 2:
     if mode == "stderr":
         sys.stderr.write("unexpected host stderr\n")
     raise SystemExit(code + 1 if mode == "wrong-exit" else code)
-print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE"}))
+print(json.dumps({"ok": False, "phase": "cli", "code": "CLI_USAGE", "message": "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE"}))
 raise SystemExit(2)
 '''
 

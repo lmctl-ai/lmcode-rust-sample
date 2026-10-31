@@ -38,9 +38,9 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
   LOAD_SCHEMA_MISMATCH -> `sample schema mismatch`; LOAD_UNBOUND -> `sample import mismatch`.
   Host/VM run messages retain the SDK's message (including `dsl line N:C: `).
 - CLI: --version => `lmcode-cpp-sample 0.2.0` (other ports use their own binary name);
-  `--dsl-schema [--json]` => exact schema bytes; `--dsl-signatures` => sorted canonical signatures + LF;
-  `--dsl FILE` => run, exit 0/3/4; usage/unknown option => exit 2 and JSON phase cli,
-  code CLI_USAGE, message `usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE`.
+  `--lmcode-schema [--json]` => exact schema bytes; `--lmcode-signatures` => sorted canonical signatures + LF;
+  `--lmcode FILE` => run, exit 0/3/4; usage/unknown option => exit 2 and JSON phase cli,
+  code CLI_USAGE, message `usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE`.
   Other command/IO setup errors become APP_FAIL, without machine-specific paths.
 
 ## Native conversion probes (shared by all ports)

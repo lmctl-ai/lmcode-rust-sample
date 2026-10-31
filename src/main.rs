@@ -6,7 +6,7 @@ use std::io::{self, Write};
 
 // Include exact bytes, including whitespace: the schema hash binds every program.
 const SCHEMA: &[u8] = include_bytes!("../sample-suite/sample.dsl.json");
-const USAGE: &str = "usage: --version | --dsl-schema [--json] | --dsl-signatures | --dsl FILE";
+const USAGE: &str = "usage: --version | --lmcode-schema [--json] | --lmcode-signatures | --lmcode FILE";
 
 fn main() {
     std::process::exit(match run() {
@@ -22,17 +22,17 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
         println!("lmcode-rust-sample {}", env!("SAMPLE_BUILD_VERSION"));
         return Ok(0);
     }
-    if (args.len() == 1 || (args.len() == 2 && args[1] == "--json")) && args[0] == "--dsl-schema" {
+    if (args.len() == 1 || (args.len() == 2 && args[1] == "--json")) && args[0] == "--lmcode-schema" {
         io::stdout().lock().write_all(SCHEMA)?;
         return Ok(0);
     }
-    if args.len() == 1 && args[0] == "--dsl-signatures" {
+    if args.len() == 1 && args[0] == "--lmcode-signatures" {
         for signature in host.registry.signatures() {
             println!("{signature}");
         }
         return Ok(0);
     }
-    if args.len() != 2 || args[0] != "--dsl" {
+    if args.len() != 2 || args[0] != "--lmcode" {
         println!("{}", error_json("cli", &Error::new("CLI_USAGE", USAGE)));
         return Ok(2);
     }

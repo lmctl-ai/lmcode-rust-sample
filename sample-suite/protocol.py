@@ -30,19 +30,25 @@ def check(command):
     version = call('--version')
     if version.returncode or not re.fullmatch(rb'lmcode-[a-z]+-sample [0-9]+\.[0-9]+\.[0-9]+\n', version.stdout):
         raise ValueError('invalid --version protocol')
-    for args in [('--dsl-schema',), ('--dsl-schema', '--json')]:
+    for args in [('--lmcode-schema',), ('--lmcode-schema', '--json')]:
         result = call(*args)
         if result.returncode or result.stdout != (ROOT / 'sample.dsl.json').read_bytes():
             raise ValueError('schema discovery bytes differ')
-    result = call('--dsl-signatures')
+    result = call('--lmcode-signatures')
     if result.returncode or result.stdout != declared_signatures(json.loads((ROOT / 'sample.dsl.json').read_text())):
         raise ValueError('schema/registry signature mismatch')
-    for args in [(), ('--unknown',), ('--dsl',), ('--dsl-schema', '--bad')]:
+    retired = '--' + 'dsl'
+    for suffix in ['', '-schema', '-signatures']:
+        result = call(*([retired, str(ROOT / 'does-not-exist.dslb')] if not suffix else [retired + suffix]))
+        value = json.loads(result.stdout)
+        if result.returncode != 2 or value.get('code') != 'CLI_USAGE':
+            raise ValueError('retired option must be rejected before opening input')
+    for args in [(), ('--unknown',), ('--lmcode',), ('--lmcode-schema', '--bad')]:
         result = call(*args)
         value = json.loads(result.stdout)
         if result.returncode != 2 or value.get('code') != 'CLI_USAGE' or value.get('phase') != 'cli' or value.get('ok') is not False:
             raise ValueError('usage must produce one JSON CLI_USAGE and exit 2')
-    result = call('--dsl', str(ROOT / 'does-not-exist.dslb'))
+    result = call('--lmcode', str(ROOT / 'does-not-exist.dslb'))
     value = json.loads(result.stdout)
     if result.returncode != 4 or value.get('code') != 'APP_FAIL':
         raise ValueError('unreadable input must produce APP_FAIL and exit 4')
