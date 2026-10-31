@@ -174,6 +174,8 @@ per-entry sink reset must fail independent canonical expectations; compilation
 failure or a changed process exit is not counted as a caught fault.
 See [durable notes](durable-memory/index.md) for pins and ownership boundaries.
 
+The host loads lmcode bytecode (DSLB v6).
+
 ## Historical literal names
 
 The documentation calls the language lmcode. `--dsl`, `--dsl-schema` and `--dsl-signatures` are current host flag literals; `DSLB` is the bytecode magic and `DSLB v6` is the current format name; `.dslb` is the current bytecode filename extension. Other code-formatted API names, paths, manifest names and diagnostic text retain their current literal spellings.
