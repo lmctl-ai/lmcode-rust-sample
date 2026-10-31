@@ -55,6 +55,11 @@ jobs:
           test -n "$version"
           npm install --prefix "$RUNNER_TEMP/lmctl" "@lmctl-ai/lmctl@$version"
           echo "$RUNNER_TEMP/lmctl/node_modules/.bin" >> "$GITHUB_PATH"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo "LMSCRIPT_BIN=$RUNNER_TEMP/lmctl/node_modules/.bin/lmscript.cmd" >> "$GITHUB_ENV"
+          else
+            echo "LMSCRIPT_BIN=$RUNNER_TEMP/lmctl/node_modules/.bin/lmscript" >> "$GITHUB_ENV"
+          fi
           echo "Using @lmctl-ai/lmctl@$version"
       - name: Run the complete sample suite
         run: ./test.sh
