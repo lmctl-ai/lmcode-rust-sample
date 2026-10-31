@@ -2,7 +2,7 @@
 
 This is the source of truth for all eight `lmcode-*-sample` hosts.
 See [CONTRACT.md](CONTRACT.md) for object semantics and the exact result protocol.
-The full schema is [sample.dsl.json](sample.dsl.json); [host.schema.json](host.schema.json)
+The full schema is [`sample.dsl.json`](sample.dsl.json); [host.schema.json](host.schema.json)
 contains only the small shop/ledger domain. Every process starts with fresh state.
 
 ```sh

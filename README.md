@@ -24,7 +24,7 @@ CI runs the same test on Linux x64/arm64, macOS x64/arm64, and Windows x64.
    `Items`, `Shop` and `Ledger`; a fresh shop contains 125, 250 and 375 cents.
 2. **Declare the API.** [host.schema.json](sample-suite/host.schema.json) declares
    contexts, overloads, operators, conversions, enum values, void and fluent methods.
-   [sample.dsl.json](sample-suite/sample.dsl.json) merges those declarations with std.
+   [`sample.dsl.json`](sample-suite/sample.dsl.json) merges those declarations with std.
 3. **Pin every dependency byte.** [sdk.lock](sdk.lock) and [suite.lock](suite.lock)
    record commit IDs and SHA-256s; [sync.py](scripts/sync.py) checks drift or archives
    reviewed Git commits. Build and verification use the checked-in copies.
