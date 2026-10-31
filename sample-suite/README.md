@@ -188,8 +188,7 @@ are supported by the published compiler (`@lmctl-ai/lmctl` 0.2.442 and later);
 set `LMSCRIPT_BIN` to a development lmscript build only when testing unreleased
 compiler work.
 Their manifest entries declare `compiler_features: ["lmcode-literals-v1"]`;
-source reproduction must report an unsupported compiler explicitly. `compile.py --output DIR
---exclude-feature lmcode-literals-v1` is a partial reproduction check and never rewrites the canonical manifest; it is not a complete compiler validation.
+source reproduction must report an unsupported compiler explicitly. `compile.py --output DIR --exclude-feature lmcode-literals-v1` requires a source build that exports its compiler library; the public npm package does not provide that private module. It is not part of CI.
 
 ## Compiler rule-method cases
 
@@ -210,20 +209,20 @@ DSLB v6 (version 6 is the only bytecode any current runtime accepts), first
 published as `@lmctl-ai/lmctl` 0.2.444, which reproduces every pinned `.dslb`
 byte-for-byte; 0.2.442/0.2.443 accept the rule syntax but still write v5. The
 manifest entries declare `compiler_features: ["lmcode-rule-entries-v1"]`. `compile.py --output DIR --exclude-feature lmcode-rule-methods-v1` or
-`--exclude-feature lmcode-rule-entries-v1` is a partial reproduction check and
-never rewrites the canonical manifest.
+`--exclude-feature lmcode-rule-entries-v1` remains a source-build-only partial
+reproduction check and never rewrites the canonical manifest.
 
 `run-all-samples.sh --ports cpp,c,rust,go,csharp` selects an explicit subset when
 other owners' repositories must not be accessed. Excluded ports are listed in
 the report and are never counted as passes; `--all` retains the full matrix.
 
-`check-recompile.py` checks source/bytecode hashes before reproducing the corpus.
+`check-recompile.lms` type-checks the source fixtures with the public compiler and verifies four bytecode mutation controls. The checked-in bytecode hashes and runtime suite remain the bytecode oracle; the public npm package does not expose a bytecode export API.
 A verified 72-signature v1 compiler reports literal-feature cases as SKIP while
 reproducing all compatible cases. A v2 or otherwise unknown compiler failure is
 an error; `LMCODE_REQUIRE_LITERAL_COMPILER=1` also makes v1 gaps fatal. Runtime
 execution always covers the entire corpus, regardless of compiler capabilities.
 
-Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The corpus has 108 cases, including text-template success/error coverage, and runs across C++, C, Go, Java, Kotlin, Scala, Rust and C#.
+Std v3 adds programs 301–305: strict byte codecs, all six map snapshots, independent mutation and exact decoder errors. The corpus has 123 cases, including text-template success/error coverage, and runs across C++, C, Go, Java, Kotlin, Scala, Rust and C#.
 
 Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidirectional snapshot mutation and the exact noncanonical Base64 trap.
 

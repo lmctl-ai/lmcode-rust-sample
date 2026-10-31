@@ -59,14 +59,12 @@ fn signatures(schema, contexts) {
 fn compiler_command() { return [env("LMSCRIPT_BIN") || "lmscript"]; }
 fn check_compiler(root) {
   cases = read_json(path_join(root, "compile-errors/manifest.json")).cases;
-  scratch = binary(root, {op:"temp"});
   failed = [];
   for (case in cases) {
-    output = path_join(scratch, "must-not-exist.dslb");
-    r = invoke(root, [], ["node", path_join(root,"compile-fixture.mjs"), path_join(root, "compile-errors", case.source), output], {}, 30000);
-    if (r.code != case.exit || !contains(r.stderr, case.diagnostic) || file_exists(output) || r.error != "") { push(failed, case.source + ": " + r.stderr + r.error); }
+    source = path_join(root, "compile-errors", case.source);
+    r = invoke(root, compiler_command(), ["--check", source], {}, 30000);
+    if (r.code != case.exit || !contains(r.stderr, case.diagnostic) || r.error != "") { push(failed, case.source + ": " + r.stderr + r.error); }
   }
-  rmdir(scratch, true);
   assert(len(failed) == 0, "compiler rejection mismatch: " + join(failed, "\n"));
   println("PASS " + str(len(cases)) + " compiler rejection cases");
 }
