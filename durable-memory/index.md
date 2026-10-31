@@ -2,8 +2,9 @@
 
 ## Pins
 
-Suite: lmcode-cpp 46ede7f716d72a535d5f6fc63df8297d8079ba11 (123 cases). Source, bytecode and
-oracle bytes match the full-gate 6ee3d62 pin; terminology docs are canonical.
+Suite: suite.lock is authoritative for the reviewed canonical commit and file
+hashes (123 cases). Source, bytecode and oracle bytes retain the full-gate
+qualification; documentation-only upstream updates are recorded by the lock.
 SDK: lmcode-rust ce8584fcf42575db133f53805974898dde8c4832.
 Compiler qualification: private mono main build 177e38ca; npm 0.2.448 is too old.
 Exact vendored hashes live in suite.lock and sdk.lock. Sync using scripts/sync.py;
