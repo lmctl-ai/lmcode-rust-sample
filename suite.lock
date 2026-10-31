@@ -1,6 +1,6 @@
 {
   "repo": "lmctl-ai/lmcode-cpp",
-  "commit": "d231917884f5b4bd9d693fbc3c625d06ccfb9798",
+  "commit": "9525cac86376d4dc7bcc3268fac695a7bfbde2ac",
   "sha256": {
     "CONTRACT.md": "c5ac93ed300aa3aadbe0f4e4cccd7f17695699d20ade161f6e9407625525ccdb",
     "README.md": "0f1442fc72cb1e1b3799bc430f6db5791b0cf189365f2fb79f89e4ae6e362848",
@@ -131,7 +131,7 @@
     "bytecode/368-return-unsafe-json.dslb": "e55445cd6802d6dadeb37de43920ce067ba786b38abd2774aa799be55d48c17b",
     "bytes.mjs": "c8e4e6eed42fad22beb2b622639ea28a9cffec7ee971851bca7a01f00b846489",
     "check-compile-errors.py": "b0fca6274e7e55d4bb119f2cec5ea05bc4e2c531b65a7ebf03d0586bc1ff69ec",
-    "check-invocations.py": "34f9c17aa7000e7de904ae3c9a626a8820963828c90742a4458db4c1c8cc6af9",
+    "check-invocations.py": "1ce67646533c381787f2f5484155c516e2e9f05a814b3a76102855893dfab345",
     "check-recompile.lms": "0e38fb6dd156fd92be61c1746a1b27541f0f11ea6a2ada4e693e22ee926a0008",
     "check-recompile.py": "885b80cf801e8b6214916d7420798aa151f90344ca53da7388c88aa0f4910900",
     "compile-errors/assignment-type.lms": "46764cce15784299f94a1aea3b5b51f07b9a5573489953e8bd3ead01a9c0299d",
