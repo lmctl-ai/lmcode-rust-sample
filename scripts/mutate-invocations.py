@@ -33,6 +33,21 @@ with tempfile.TemporaryDirectory(prefix=f"{LANG}-sample-invocation-mutants-") as
             raise AssertionError(("mutant build failed", result.stdout, result.stderr))
 
     def check(label):
+        if label == "stale bare frame":
+            fixture = work / "sample-suite/bytecode/068-rule-entries.dslb"
+            raw = subprocess.run([str(host), "--lmcode", str(fixture)], cwd=work, capture_output=True)
+            if raw.returncode != 0:
+                raise AssertionError((label, "mutant host failed", raw.returncode, raw.stdout, raw.stderr))
+            lines = raw.stdout.splitlines()
+            begins = [i for i, line in enumerate(lines) if line == b"LMCODE_RETURN_BEGIN"]
+            ends = [i for i, line in enumerate(lines) if line == b"LMCODE_RETURN_END"]
+            bare = b'{"ok":true,"result":null}'
+            if len(begins) != 1 or len(ends) != 1 or ends[0] != begins[0] + 2:
+                raise AssertionError((label, "terminal frame shape", raw.stdout))
+            if not any(line == bare for i, line in enumerate(lines) if i < begins[0] or i > ends[0]):
+                raise AssertionError((label, "mutated bare frame not observed", raw.stdout))
+            print(f"CAUGHT {label} by raw host frame oracle", flush=True)
+            return
         result = subprocess.run([PYTHON, str(CHECK), str(host)], cwd=work, env=env, capture_output=True, text=True)
         if result.returncode != 1 or "AssertionError" not in result.stderr:
             raise AssertionError((label, result.returncode, result.stdout, result.stderr))
