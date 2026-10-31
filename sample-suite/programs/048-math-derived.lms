@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 assert_close(sin(0.0), 0.0, 0.000000001);
 assert_close(cos(0.0), 1.0, 0.000000001);
 assert_close(sqrt(4.0), 2.0, 0.000000001);
@@ -17,4 +17,3 @@ print(str(abs(-7)) + ":" + str(min(3, 7)) + ":" + str(max(3, 7)) + ":" + str(cla
 print(str(float(2) + 0.5));
 print("intrinsic math passed");
 end _lmcode_
-savedsl(program, ARGV[0]);

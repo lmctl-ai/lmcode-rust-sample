@@ -2,11 +2,10 @@ let amount = 7;
 let rate = 1.25;
 let label = "shop";
 let enabled = true;
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let cents = ${amount};
 let factor = ${rate};
 let name = ${label};
 let active = ${enabled};
 print(str(cents) + ":" + str(factor) + ":" + name + ":" + str(active));
 end _lmcode_
-savedsl(program, ARGV[0]);

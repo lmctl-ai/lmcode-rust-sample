@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 print(str(qw().len()) + ":" + str(qi().len()) + ":" + str(qf().len()));
 let s = str_stack(); let q = int_queue(); let m = float_map();
 print(str(s.empty()) + ":" + str(q.empty()) + ":" + str(m.len()));
 end _lmcode_
-savedsl(program, ARGV[0]);

@@ -1,5 +1,4 @@
 let value = "π/雪";
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 print(${value});
 end _lmcode_
-savedsl(program, ARGV[0]);

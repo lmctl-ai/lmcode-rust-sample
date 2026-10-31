@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let name = shop.label();
 let balance = ledger.balance();
 print(name + ":" + str(balance.amount()));
 end _lmcode_
-savedsl(program, ARGV[0]);

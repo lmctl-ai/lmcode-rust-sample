@@ -4,7 +4,6 @@ context = {
  items: [{name:"apple"}, {name:"pear"}]
 };
 template = "Hello, <user.name>!\n<if(user.active)>Items: <items:{item|<index>: <item.name>}; separator=\", \"><else>Inactive<endif>";
-program = _lmcode_ schema="../sample-suite/sample.dsl.json";
+program = _lmcode_ schema="../sample-suite/sample.dsl.json" out=ARGV[0];
 print(template_render(${template}, json_parse(${json_stringify(context)})));
 end _lmcode_
-savedsl(program, ARGV[0]);

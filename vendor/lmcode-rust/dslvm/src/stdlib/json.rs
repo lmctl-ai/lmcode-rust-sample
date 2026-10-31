@@ -6,17 +6,17 @@ use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct JsonNode {
-    kind: Kind,
-    raw: Vec<u8>,
-    text: Vec<u8>,
-    integer: i64,
-    float: f64,
-    boolean: bool,
-    array: Vec<Rc<JsonNode>>,
-    object: Vec<(Vec<u8>, Vec<u8>, Rc<JsonNode>)>,
+    pub(super) kind: Kind,
+    pub(super) raw: Vec<u8>,
+    pub(super) text: Vec<u8>,
+    pub(super) integer: i64,
+    pub(super) float: f64,
+    pub(super) boolean: bool,
+    pub(super) array: Vec<Rc<JsonNode>>,
+    pub(super) object: Vec<(Vec<u8>, Vec<u8>, Rc<JsonNode>)>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Kind {
+pub(super) enum Kind {
     Null,
     Bool,
     Int,

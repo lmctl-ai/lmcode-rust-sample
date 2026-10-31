@@ -5,3 +5,6 @@ cleared=true:0
 pq=2:2:3:1
 pq-cleared=true:0
 {"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}
+LMCODE_RETURN_BEGIN
+null
+LMCODE_RETURN_END

@@ -10,7 +10,9 @@ fn step(command) {
 python = "python3";
 if (env("RUNNER_OS") == "Windows") { python = "python"; }
 step([python, "-B", "scripts/sync.py", "check"]);
-step(["cargo", "build", "--release", "--locked"]);
+step([python, "-B", "sample-suite/test_return_protocol.py"]);
+step([python, "-B", "scripts/test-return-controls.py"]);
+step(["cargo", "build", "--release", "--locked", "--offline"]);
 host = path_join(Directory, "target/release/lmcode-rust-sample");
 if (env("RUNNER_OS") == "Windows") { host = host + ".exe"; }
 step(concat(compiler_command(), ["--no-preflight", "sample-suite/audit.lms", "--std", "vendor/lmcode-rust/std/lmcode-std.schema.json"]));
@@ -28,5 +30,5 @@ mkdir("build");
 template_bytecode = path_join(Directory,"build/text-template.dslb");
 step(concat(compiler_command(),["--no-preflight","examples/text-template.lms",template_bytecode]));
 template_result = invoke(root,[host],["--dsl",template_bytecode],{},30000);
-assert(template_result.code == 0 && template_result.stderr_hex == "" && template_result.stdout == "Hello, Sam!\nItems: 0: apple, 1: pear\n{\"ok\": true, \"result\": {\"balance\": 0, \"entries\": 0, \"note\": \"\", \"entries_called\": 0}}\n","text template example differs");
+assert(template_result.code == 0 && template_result.stderr_hex == "" && template_result.stdout == "Hello, Sam!\nItems: 0: apple, 1: pear\n{\"ok\": true, \"result\": {\"balance\": 0, \"entries\": 0, \"note\": \"\", \"entries_called\": 0}}\nLMCODE_RETURN_BEGIN\nnull\nLMCODE_RETURN_END\n","text template example differs");
 println("PASS text template example");

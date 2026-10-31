@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let raw = file_read(sample_tmp() + "/invalid.bin");
 print(host_hex(host_bytes(raw)));
 print(str(str_len(host_bytes(raw))));
 end _lmcode_
-savedsl(program, ARGV[0]);

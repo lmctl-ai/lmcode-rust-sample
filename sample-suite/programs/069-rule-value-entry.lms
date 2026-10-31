@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 @item
 fn score_item(m: Money) -> int implements Score {
   return m.amount() / 100;
@@ -9,4 +9,3 @@ fn score_total(m: Money) -> int implements Score {
 }
 print("scoring");
 end _lmcode_
-savedsl(program, ARGV[0]);

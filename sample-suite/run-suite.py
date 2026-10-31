@@ -62,6 +62,7 @@ def main():
         if code != case['expected_exit']:
             raise ValueError(name + ': exit fixture contradicts manifest intent')
         result = run(command, ROOT / case['bytecode'], case.get('timeout_seconds', 30))
+        runpy.run_path(str(ROOT / 'return_protocol.py'))['validate'](result.stdout, result.returncode, case.get('expected_return'))
         good = result.returncode == code and result.stdout == expected and not result.stderr
         print(('PASS ' if good else 'FAIL ') + name)
         if not good:

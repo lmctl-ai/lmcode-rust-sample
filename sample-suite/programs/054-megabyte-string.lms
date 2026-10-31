@@ -1,8 +1,7 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let raw = str_repeat(file_read(sample_tmp() + "/chunk.bin"), 262144);
 let copied = host_bytes(raw);
 print(str(str_len(copied)));
 print(str(str_len(host_hex(copied))));
 print(host_hex(str_substr(copied, 1048568, 8)));
 end _lmcode_
-savedsl(program, ARGV[0]);

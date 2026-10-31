@@ -12,6 +12,7 @@ for (case in manifest.cases) {
   code = json_parse(trim(read_file(path_join(root, "expected", case.name + ".exit"))));
   assert(code == case.expected_exit, "exit fixture contradicts manifest: " + case.name);
   result = invoke(root, ARGV, ["--dsl", path_join(root, case.bytecode)], manifest.get("fixtures", {}), case.get("timeout_seconds", 30) * 1000);
+  binary(root, {op:"validate-return", hex:result.hex, code:result.code, expected:case.get("expected_return", null)});
   if (result.code == code && result.hex == expected && result.stderr_hex == "" && result.error == "") {
     println("PASS " + case.name);
   } else {

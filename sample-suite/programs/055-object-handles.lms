@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let first = money(7);
 for (i in range(0, 256)) { money(i); }
 let again = host_echo_money(first);
@@ -9,4 +9,3 @@ print(str(again.amount()));
 host_void();
 print(str(host_is_null(host_echo_money(host_null()))));
 end _lmcode_
-savedsl(program, ARGV[0]);

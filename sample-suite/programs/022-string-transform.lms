@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let a = str_len("abc");
 let b = str_lower("ABC");
 let c = str_repeat("ab", 2);
@@ -8,4 +8,3 @@ let f = str_trim(" a ");
 let g = str_upper("abc");
 print(str(a) + ":" + b + ":" + c + ":" + d + ":" + e + ":" + f + ":" + g);
 end _lmcode_
-savedsl(program, ARGV[0]);

@@ -4,3 +4,6 @@ a,n
 42:42
 {"\u0061":[1.25,"x",true],"n":42}
 {"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}
+LMCODE_RETURN_BEGIN
+null
+LMCODE_RETURN_END

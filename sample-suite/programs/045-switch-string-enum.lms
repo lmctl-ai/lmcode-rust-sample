@@ -1,7 +1,6 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let label = shop.label();
 switch (label) { case "sample shop": { print("known"); } default: { print("unknown"); } }
 let c = shop.currency();
 if (c == Currency.USD) { print("USD"); }
 end _lmcode_
-savedsl(program, ARGV[0]);

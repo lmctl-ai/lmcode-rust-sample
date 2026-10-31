@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let yes = (3 < 4) && (4 != 5);
 let no = !yes || false;
 print(str(yes) + ":" + str(no));
 end _lmcode_
-savedsl(program, ARGV[0]);

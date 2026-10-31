@@ -136,6 +136,8 @@ impl Value {
 /// The live objects of one run: an arena the host fills before `run` and empties (or drops) after it.
 #[derive(Default)]
 pub struct Context {
+    /// Explicit invocation result; never reset by collection-region teardown.
+    pub result_sink: Option<stdlib::result::ResultSink>,
     objects: Vec<Option<Box<dyn Any>>>,
     types: Vec<String>,
     names: HashMap<String, ObjRef>,
@@ -589,7 +591,7 @@ impl Program {
                 }
                 MATH => {
                     let fn_id = r.u8()?;
-                    if !matches!(fn_id, 0..=17) { return load_err("LOAD_BAD_BYTECODE", format!("MATH at offset {} has unknown function {}", at, fn_id)); }
+                    if !matches!(fn_id, 0..=17) { return load_err("LOAD_BAD_BYTECODE", format!("unknown MATH function {} at offset {}", fn_id, at)); }
                 }
                 EQ | NE | NOT | DUP | POP | ADD_I | SUB_I | MUL_I | DIV_I | MOD_I | ADD_F | SUB_F | MUL_F | DIV_F | NEG_I | NEG_F | LT_I | LE_I | GT_I | GE_I | LT_F | LE_F | GT_F | GE_F | I2F | CONCAT | I2S | F2S | B2S => {}
                 JUMP | JUMP_IF_FALSE | JUMP_IF_TRUE => {
@@ -605,12 +607,12 @@ impl Program {
                     let rel = r.i32()?;
                     index(counter, region.locals.len(), "FOR_RANGE counter local")?;
                     index(end, region.locals.len(), "FOR_RANGE end local")?;
-                    if counter == end { return load_err("LOAD_BAD_BYTECODE", format!("FOR_RANGE at offset {} reuses local {} for counter and end", at, counter)); }
+                    if counter == end { return load_err("LOAD_BAD_BYTECODE", "FOR_RANGE counter and end slots must be distinct"); }
                     for slot in [counter, end] {
                         if !region.locals[slot].hidden || region.locals[slot].type_name != "int" {
                             return load_err("LOAD_BAD_BYTECODE", format!("FOR_RANGE at offset {} requires hidden int local {}, got {}{}", at, slot, if region.locals[slot].hidden { "" } else { "visible " }, region.locals[slot].type_name));
                         }
-                        if loop_slots.contains(&slot) { return load_err("LOAD_BAD_BYTECODE", format!("FOR_RANGE at offset {} reuses loop local {}", at, slot)); }
+                        if loop_slots.contains(&slot) { return load_err("LOAD_BAD_BYTECODE", format!("FOR_RANGE slot {} is already owned by another range loop", slot)); }
                         loop_slots.push(slot);
                     }
                     let target = r.pos as i64 + rel as i64;
@@ -625,9 +627,9 @@ impl Program {
                     let end = r.u16()? as usize;
                     let rel = r.i32()?;
                     let Some(frame) = loops.pop() else { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} has no matching FOR_RANGE", at)); };
-                    if end != frame.end { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} closes the wrong range loop (end local {}, expected {})", at, end, frame.end)); }
+                    if end != frame.end { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} names end slot {}, expected {}", at, end, frame.end)); }
                     let target = r.pos as i64 + rel as i64;
-                    if target != frame.body as i64 { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} must jump to its FOR_RANGE body start {}", at, frame.body)); }
+                    if target != frame.body as i64 { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} must return to its FOR_RANGE body", at)); }
                     if rel >= 0 { return load_err("LOAD_BAD_BYTECODE", format!("FOR_NEXT at offset {} must jump backwards", at)); }
                     jumps.push(Jump { at, target: frame.body, ordinary: false });
                     loop_pairs.insert(at, (frame.counter, frame.end));
@@ -655,7 +657,7 @@ impl Program {
                     all_loops.push(LoopFrame { exit: frame.exit, ..frame });
                 }
                 HALT => {
-                    if !loops.is_empty() { return load_err("LOAD_BAD_BYTECODE", format!("HALT at offset {} is inside loop", at)); }
+                    if !loops.is_empty() { return load_err("LOAD_BAD_BYTECODE", "HALT inside loop"); }
                     halted = true;
                 }
             }

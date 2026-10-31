@@ -7,6 +7,7 @@ import sys
 import runpy
 ROOT = Path(__file__).resolve().parent
 runner = runpy.run_path(str(ROOT / 'run-suite.py'))
+validate = runpy.run_path(str(ROOT / 'return_protocol.py'))['validate']
 command = sys.argv[1:]
 if not command or not subprocess.check_output([*command, '--version']).startswith(b'lmcode-cpp-sample '):
     sys.exit('record.py requires the C++ reference executable')
@@ -17,7 +18,8 @@ for case in manifest['cases']:
     if result.stderr or result.returncode != case['expected_exit']:
         sys.exit(f'{case["name"]}: reference crashed or wrote stderr: {result.stderr!r}')
     lines = result.stdout.splitlines()
-    result_line = json.loads(lines[-1])
+    validate(result.stdout, result.returncode, case.get('expected_return'))
+    result_line = json.loads(lines[-4] if result.returncode == 0 else lines[-1])
     if result_line.get('ok') != (result.returncode == 0):
         sys.exit(case['name'] + ': inconsistent JSON/exit')
     (ROOT / 'expected' / (case['name'] + '.out')).write_bytes(result.stdout)

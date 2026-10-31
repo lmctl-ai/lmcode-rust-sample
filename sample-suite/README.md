@@ -6,7 +6,8 @@ The full schema is [sample.dsl.json](sample.dsl.json); [host.schema.json](host.s
 contains only the small shop/ledger domain. Every process starts with fresh state.
 
 ```sh
-npm install -g @lmctl-ai/lmctl
+# Use a private mono main build at 0bc80277 or later.
+export LMSCRIPT_BIN=/absolute/path/to/mono/lmscript/bin/lmscript
 lmctl sample-suite/run-suite.lms /path/to/lmcode-cpp-sample
 ./sample-suite/run-suite.sh /path/to/lmcode-cpp-sample
 ./sample-suite/run-suite.sh dotnet /path/to/sample.dll
@@ -17,7 +18,7 @@ lmctl sample-suite/test-runner.lms
 
 `run-suite.sh` checks the discovery/usage protocol, then executes each pinned
 `.dslb` in a separate process with a fresh directory in `SAMPLE_TMP`. It compares
-stdout bytes (including the JSON result and LF) and exit code; stderr must be empty.
+stdout bytes (including the unchanged shop diagnostic and the terminal return frame) and exit code; stderr must be empty.
 No timestamps, absolute paths, OS error text, or libm decimal approximations are
 part of expected output. `assert_close` checks approximate math without unstable
 traces. Call arguments are an argv array, not a shell string. Each case has a
@@ -35,8 +36,9 @@ negative control suite, separate from runtime bytecode cases.
    `python3 scripts/merge-std.py sample-suite/host.schema.json sample-suite/sample.dsl.json`.
 3. Rebuild the C++ sample **against this schema and SDK**, then run `compile.py`.
 4. Run `record.py /path/to/lmcode-cpp-sample` explicitly; review its expected-output diff.
-   The manifest independently declares expected exits: recording cannot bless an
-   unexpected crash/error as success. Normal tests never regenerate expectations.
+   The manifest independently declares expected exits and return payloads: recording cannot
+   bless an unexpected crash/error or a missing/reset result as success. `record.py` validates
+   the terminal protocol and those independent values before writing expectations. Normal tests never regenerate expectations.
 5. Run the corpus on at least one other SDK before accepting the oracle.
    Initial validation: C++ and Go matched all 77 cases exactly.
 6. Commit sources, bytecode, manifest and expectations together. Sync the pinned
@@ -232,7 +234,8 @@ own test orchestration and assertions. Run them with either `lmctl FILE.lms`
 or `lmscript FILE.lms` from the repository root. Set `LMCODE_SUITE` to an
 absolute corpus directory when using another working directory. CI passes
 `--no-preflight` to execute once. Both commands are installed by
-`npm install -g @lmctl-ai/lmctl`; `lmctl` also runs URLs ending in `.lms`,
+`# Use a private mono main build at 0bc80277 or later.
+export LMSCRIPT_BIN=/absolute/path/to/mono/lmscript/bin/lmscript`; `lmctl` also runs URLs ending in `.lms`,
 but these tests need their checkout and local native executables.
 
 `bytes.mjs` supplies binary hashing, import decoding, binary mutation and
@@ -241,3 +244,18 @@ exact subprocess capture through Node (already required by lmscript). The
 fresh fixtures and a timeout; the adapter removes its temporary files even
 on failure. Python corpus authoring tools and the separate cross-port matrix
 remain available; sample release CI no longer uses Python test drivers.
+
+## Invocation return cases (slice 6)
+
+The `360-*` through `368-*` names are reserved for this return-protocol family,
+kept distinct from concurrent suite extensions. They cover scalar (including
+`0.1 + 0.2`), all supported map/list overloads, nested Json and primitive/null
+fields, copies after mutation, body plus repeated entries, preserved int entry
+HALT results, partial-entry failure, application failure and invalid root/value
+writes. `coverage.json` supplies independent expected payloads; an unset success
+has null. All 24 return imports are reached by compiled programs.
+
+Corpus source wrappers use `_lmcode_ ... out=ARGV[0]`; they do not execute a host
+or use retired `savedsl`. Regenerate with the mono build named above, rebuild the
+reference C++ sample, run `record.py` once, review that old diagnostics are
+unchanged except for null frames, then sync the exact committed suite into ports.

@@ -1,8 +1,7 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let a = (7 + 3) * 2;
 let b = a / 4;
 let c = a % 3;
 print(str(a) + ":" + str(b) + ":" + str(c));
 print("with fee=" + str(fee(c)));
 end _lmcode_
-savedsl(program, ARGV[0]);

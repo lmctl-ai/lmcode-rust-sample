@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let converted = money(5) + 5;
 let twice = converted.times(2);
 print("conversion");
 end _lmcode_
-savedsl(program, ARGV[0]);

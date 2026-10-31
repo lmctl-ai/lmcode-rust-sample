@@ -3,6 +3,8 @@
 //! once per registry. Every operation uses bytes; UTF-8 is never decoded. Repeat and replace
 //! cap results at 64 MiB, and glob matching caps work at 2^27 units. These are host policies,
 //! independent of the VM, which imposes no string or execution limits.
+pub mod result;
+pub use result::{ResultSink, register_result};
 pub mod collections;
 pub mod encoding;
 pub use encoding::*;
@@ -33,6 +35,7 @@ pub fn register_std(registry: &mut Registry) -> Result<&mut Registry, Error> {
     register_file(registry)?;
     register_containers(registry)?;
     register_json(registry)?;
+    register_result(registry)?;
     registry.mark_std_since(&before);
     Ok(registry)
 }

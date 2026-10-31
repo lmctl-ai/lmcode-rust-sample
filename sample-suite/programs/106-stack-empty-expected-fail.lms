@@ -1,4 +1,3 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let stack = int_stack(); stack.pop();
 end _lmcode_
-savedsl(program, ARGV[0]);

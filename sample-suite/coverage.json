@@ -495,6 +495,42 @@
     "075-empty-collections.lms": [
       "empty typed literals",
       "empty stack queue map"
+    ],
+    "360-return-scalar.lms": [
+      "lmcode-return-v1",
+      "return-scalar"
+    ],
+    "361-return-maps.lms": [
+      "lmcode-return-v1",
+      "return-maps"
+    ],
+    "362-return-lists.lms": [
+      "lmcode-return-v1",
+      "return-lists"
+    ],
+    "363-return-json-fields.lms": [
+      "lmcode-return-v1",
+      "return-json-fields"
+    ],
+    "364-return-entry-lifetime.lms": [
+      "lmcode-return-v1",
+      "return-entry-lifetime"
+    ],
+    "365-return-entry-error.lms": [
+      "lmcode-return-v1",
+      "return-entry-error"
+    ],
+    "366-return-app-error.lms": [
+      "lmcode-return-v1",
+      "return-app-error"
+    ],
+    "367-return-shape-error.lms": [
+      "lmcode-return-v1",
+      "return-shape-error"
+    ],
+    "368-return-unsafe-json.lms": [
+      "lmcode-return-v1",
+      "return-unsafe-json"
     ]
   },
   "canonical_signatures": [
@@ -758,10 +794,15 @@
     "330-template-unexpected-else-expected-fail.lms",
     "331-template-invalid-separator-expected-fail.lms",
     "332-template-index-reserved-expected-fail.lms",
-    "333-template-validate-empty-body-syntax-expected-fail.lms"
+    "333-template-validate-empty-body-syntax-expected-fail.lms",
+    "365-return-entry-error.lms",
+    "366-return-app-error.lms",
+    "367-return-shape-error.lms",
+    "368-return-unsafe-json.lms"
   ],
   "exit_codes": {
-    "030-negative-balance-expected-fail.lms": 4
+    "030-negative-balance-expected-fail.lms": 4,
+    "366-return-app-error.lms": 4
   },
   "timeouts": {
     "058-million-loop.lms": 5
@@ -791,5 +832,57 @@
     "069-rule-value-entry.lms": [
       "lmcode-rule-entries-v1"
     ]
+  },
+  "return_values": {
+    "360-return-scalar.lms": 0.30000000000000004,
+    "361-return-maps.lms": {
+      "strings": {
+        "key": "value"
+      },
+      "ints": {
+        "count": 7
+      },
+      "floats": {
+        "fraction": 1.25
+      }
+    },
+    "362-return-lists.lms": {
+      "strings": [
+        "owned"
+      ],
+      "ints": [
+        7
+      ],
+      "floats": [
+        1.25
+      ]
+    },
+    "363-return-json-fields.lms": {
+      "tree": {
+        "nested": {
+          "items": [
+            1,
+            true,
+            null,
+            "text"
+          ]
+        }
+      },
+      "missing": null,
+      "flag": true,
+      "text": "LMCODE_RETURN_BEGIN\nquoted 水",
+      "integer": 7,
+      "fraction": 1.25
+    },
+    "364-return-entry-lifetime.lms": {
+      "body": "retained",
+      "captured": [
+        "owned"
+      ],
+      "item125": 125,
+      "item250": 250,
+      "item375": 375,
+      "total": 750
+    }
   }
 }

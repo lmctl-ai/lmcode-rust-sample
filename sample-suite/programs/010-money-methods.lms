@@ -1,8 +1,7 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let m = money(250);
 let amount = m.amount();
 let currency = m.currency();
 let same = m.set(300);
 print(str(amount) + ":" + str(currency));
 end _lmcode_
-savedsl(program, ARGV[0]);

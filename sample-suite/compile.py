@@ -45,6 +45,8 @@ def main():
                                          3 if source.name in coverage['expected_failures'] else 0),
                           timeout_seconds=coverage.get('timeouts', {}).get(source.name, 30),
                           features=coverage['programs'][source.name]))
+        if cases[-1]['expected_exit'] == 0:
+            cases[-1]['expected_return'] = coverage.get('return_values', {}).get(source.name)
         if source.name in coverage.get('compiler_features', {}):
             cases[-1]['compiler_features'] = coverage['compiler_features'][source.name]
     original = (args.output / (cases[0]['name'] + '.dslb')).read_bytes()
@@ -85,7 +87,7 @@ def main():
     if args.output.resolve() == (ROOT / 'bytecode').resolve():
         manifest = dict(format=1, schema='sample.dsl.json', bytecode_version=6,
                         schema_sha256=hashlib.sha256((ROOT / 'sample.dsl.json').read_bytes()).hexdigest(),
-                        compiler_minimum='0.2.420', cases=cases)
+                        compiler_minimum='mono-main-0bc80277', cases=cases)
         manifest['fixtures'] = {'invalid.bin': 'ff00c328800a', 'zero-bytes.bin': '610062', 'chunk.bin': '7800c3a9'}
         (ROOT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', newline='\n')
     print(f'Compiled {len(cases)} sample cases')

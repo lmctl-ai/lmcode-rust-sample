@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 fn key(n: int) -> string { print("key=" + str(n)); return "k" + str(n); }
 fn value(n: int) -> int { print("value=" + str(n)); return n; }
 let ordered = %((key(1)) => value(2), (key(3)) => value(4));
@@ -10,4 +10,3 @@ print(str(rates.get("low")) + ":" + str(rates.get("high")));
 print("empty=" + str(%().len()));
 print("modulo=" + str(5%(2)));
 end _lmcode_
-savedsl(program, ARGV[0]);

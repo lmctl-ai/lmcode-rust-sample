@@ -120,7 +120,7 @@ fn range_file(start: i64, end: i64, locals: usize, body: &[u8]) -> Vec<u8> {
 }
 #[test] fn math_opcode_rejects_unknown_function_at_load() {
     let a = t().push_float(1.0).u8(0x32).u8(99).halt();
-    assert!(load_err(&a.file()).contains("MATH at offset 12 has unknown function 99"));
+    assert!(load_err(&a.file()).contains("unknown MATH function 99 at offset 12"));
 }
 #[test] fn math_nan_and_signed_zero_contract() {
     let a = t()
@@ -291,7 +291,7 @@ fn host_byte_string_helpers_validate_or_convert_lossily() {
     // FOR_NEXT's encoded end slot no longer matches its FOR_RANGE.
     let next_end = bad.windows(2).rposition(|w| w == [0x00, 0x01]).unwrap();
     bad[next_end + 1] = 0;
-    assert!(load_err(&bad).contains("closes the wrong range loop"));
+    assert!(load_err(&bad).contains("names end slot"));
 
     // The exit is required to be the instruction immediately following the paired FOR_NEXT.
     let wrong_exit = t().local("int", 1).local("int", 1)

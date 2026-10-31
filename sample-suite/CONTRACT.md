@@ -24,7 +24,12 @@ Schema bytes: `sample.dsl.json` (schema 2, merged default std); domain-only decl
   are never called. A non-void entry result is printed as `entry NAME = VALUE` in call order (VALUE uses
   the same text as `str()`). Entry-call failures are run-phase errors. The result object gains
   `"entries_called": N`, the number of entry calls the host made (0 for programs without rules).
-- Every execution prints trace lines via print, then one JSON result line and LF.
+- Every execution prints trace lines via print, then the existing JSON diagnostic line and LF.
+  On success only, append exactly `LMCODE_RETURN_BEGIN\n<compact JSON>\nLMCODE_RETURN_END\n`.
+  This terminal frame is mandatory (unset result is null), LF-only, and follows all entry traces
+  and application validation. One host-owned ResultSink spans the body and all selected entries;
+  never reset it between item/total calls or store it in a region arena. Entry/HALT values and
+  shop diagnostics stay independent of `$return`. Failed invocations emit no frame.
   Success result fields/order/spacing: `{"ok": true, "result": {"balance": 0, "entries": 0, "note": "", "entries_called": 0}}`.
   Negative final ledger balance is application failure (after VM success), exit 4:
   `{"ok": false, "phase": "app", "code": "APP_FAIL", "message": "ledger: negative balance"}`.

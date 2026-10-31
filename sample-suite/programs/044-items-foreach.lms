@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let total = 0;
 for (item in shop.items()) { total = total + item.amount(); }
 print(str(total));
 end _lmcode_
-savedsl(program, ARGV[0]);

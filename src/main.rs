@@ -1,5 +1,6 @@
 //! lmscript compiles source. This executable only loads verified bytecode and runs it.
 mod shop;
+use dslvm::stdlib::ResultSink;
 use dslvm::{error_json, report_app_failure, report_error, Error, Program, Value};
 use std::io::{self, Write};
 
@@ -48,6 +49,8 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
             return Ok(report_error("load", &Error::new(&error.code, message)));
         }
     };
+    // One logical invocation owns the result across body and entry arenas.
+    host.context.result_sink = Some(ResultSink::default());
     if let Err(error) = program.run(&mut host.context, &host.registry) {
         return Ok(report_error("run", &error));
     }
@@ -108,5 +111,13 @@ fn run() -> Result<i32, Box<dyn std::error::Error>> {
         }
     }
     writeln!(out, "\", \"entries_called\": {entries_called}}}}}")?;
+    // Only successful dispatch and application validation may emit a frame.
+    let frame = host
+        .context
+        .result_sink
+        .as_ref()
+        .expect("invocation result sink")
+        .frame();
+    out.write_all(frame.as_bytes())?;
     Ok(0)
 }

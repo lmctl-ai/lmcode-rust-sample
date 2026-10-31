@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let zero = 0;
 let n = 1 / zero;
 print("unreachable divzero");
 end _lmcode_
-savedsl(program, ARGV[0]);

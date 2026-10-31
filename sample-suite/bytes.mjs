@@ -1,5 +1,6 @@
 // Binary/process adapter only. Test selection and assertions live in .lms files.
 import fs from 'node:fs';
+import {validateReturn} from './return_protocol.mjs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -7,7 +8,8 @@ import {spawnSync} from 'node:child_process';
 const q = JSON.parse(fs.readFileSync(0, 'utf8'));
 const hash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 let value;
-if (q.op === 'hashes') value = q.paths.map(hash);
+if (q.op === 'validate-return') value = validateReturn(q.hex, q.code, q.expected);
+else if (q.op === 'hashes') value = q.paths.map(hash);
 else if (q.op === 'hex') value = fs.readFileSync(q.path).toString('hex');
 else if (q.op === 'temp') value = fs.mkdtempSync(path.join(os.tmpdir(), 'lmcode-suite-'));
 else if (q.op === 'copy') { fs.cpSync(q.from, q.to, {recursive:true}); value = true; }

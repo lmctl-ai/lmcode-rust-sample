@@ -1,6 +1,5 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 fn inner(value: int) -> void { ledger.reject("nested callback failure"); }
 fn outer(value: int) -> void { inner(value); }
 outer(3);
 end _lmcode_
-savedsl(program, ARGV[0]);

@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 let hi = 9007199254740991 * 1024 + 1023;
 let lo = hi + 1;
 print(str(host_int(hi)));
@@ -7,4 +7,3 @@ print(str(host_int(hi) + 1));
 print(str(host_int(lo) / -1));
 print(str(host_int(lo) % -1));
 end _lmcode_
-savedsl(program, ARGV[0]);

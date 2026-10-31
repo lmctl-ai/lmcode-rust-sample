@@ -1,6 +1,6 @@
 # The host dispatches @item for each Money and @total for the total.
 # Adjuster is declared by the schema as (Money) -> void.
-program = _lmcode_ schema="../sample-suite/sample.dsl.json";
+program = _lmcode_ schema="../sample-suite/sample.dsl.json" out=ARGV[0];
 @item
 fn item_tag(m: Money) -> void implements Adjuster {
   print("item rule " + str(m.amount()));
@@ -19,4 +19,3 @@ fn never_called(m: Money) -> void implements Adjuster {
 }
 print("body done");
 end _lmcode_
-savedsl(program, ARGV[0]);

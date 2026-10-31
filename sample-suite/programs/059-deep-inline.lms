@@ -1,4 +1,4 @@
-program = _lmcode_ schema="../sample.dsl.json";
+program = _lmcode_ schema="../sample.dsl.json" out=ARGV[0];
 fn f00(x: int) -> int { return x + 1; }
 fn f01(x: int) -> int { return f00(x) + 1; }
 fn f02(x: int) -> int { return f01(x) + 1; }
@@ -33,4 +33,3 @@ fn f30(x: int) -> int { return f29(x) + 1; }
 fn f31(x: int) -> int { return f30(x) + 1; }
 print(str(f31(0)));
 end _lmcode_
-savedsl(program, ARGV[0]);
