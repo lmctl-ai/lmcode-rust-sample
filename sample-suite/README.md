@@ -231,10 +231,10 @@ Reviewer cases 311–313 extend v3 coverage with binary padding boundaries, bidi
 `run-suite.lms`, `audit.lms`, `check-recompile.lms`, and `test-runner.lms`
 own test orchestration and assertions. Run them with either `lmctl FILE.lms`
 or `lmscript FILE.lms` from the repository root. Set `LMCODE_SUITE` to an
-absolute corpus directory when using another working directory. CI passes
-`--no-preflight` to execute once. Both commands are installed by
-`# Use a private mono main build at 0bc80277 or later.
-export LMSCRIPT_BIN=/absolute/path/to/mono/lmscript/bin/lmscript`; `lmctl` also runs URLs ending in `.lms`,
+absolute corpus directory when using another working directory. Normal execution
+checks statically, then runs once. Use a private mono main build at 0bc80277 or
+later and set `LMSCRIPT_BIN=/absolute/path/to/mono/lmscript/bin/lmscript`.
+`lmctl` also runs URLs ending in `.lms`,
 but these tests need their checkout and local native executables.
 
 `bytes.mjs` supplies binary hashing, import decoding, binary mutation and

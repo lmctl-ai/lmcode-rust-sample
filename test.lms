@@ -15,13 +15,13 @@ step([python, "-B", "scripts/test-return-controls.py"]);
 step(["cargo", "build", "--release", "--locked", "--offline"]);
 host = path_join(Directory, "target/release/lmcode-rust-sample");
 if (env("RUNNER_OS") == "Windows") { host = host + ".exe"; }
-step(concat(compiler_command(), ["--no-preflight", "sample-suite/audit.lms", "--std", "vendor/lmcode-rust/std/lmcode-std.schema.json"]));
-step(concat(compiler_command(), ["--no-preflight", "sample-suite/run-suite.lms", host]));
-step(concat(compiler_command(), ["--no-preflight", "sample-suite/check-recompile.lms"]));
-step(concat(compiler_command(), ["--no-preflight", "sample-suite/test-runner.lms"]));
+step(concat(compiler_command(), ["sample-suite/audit.lms", "--std", "vendor/lmcode-rust/std/lmcode-std.schema.json"]));
+step(concat(compiler_command(), ["sample-suite/run-suite.lms", host]));
+step(concat(compiler_command(), ["sample-suite/check-recompile.lms"]));
+step(concat(compiler_command(), ["sample-suite/test-runner.lms"]));
 # Public examples construct opaque programs and execute them through this host.
-step(concat(compiler_command(), ["--no-preflight", "examples/rule-entries.lms", path_join(Directory, "target/release/lmcode-rust-sample") ]));
-step(concat(compiler_command(), ["--no-preflight", "examples/text-template.lms", path_join(Directory, "target/release/lmcode-rust-sample") ]));
+step(concat(compiler_command(), ["examples/rule-entries.lms", path_join(Directory, "target/release/lmcode-rust-sample") ]));
+step(concat(compiler_command(), ["examples/text-template.lms", path_join(Directory, "target/release/lmcode-rust-sample") ]));
 step([python, "sample-suite/check-invocations.py", path_join(Directory, "target/release/lmcode-rust-sample")]);
 step([python, "scripts/mutate-invocations.py", path_join(Directory, "target/release/lmcode-rust-sample")]);
 step([python, "scripts/test-dry-mode.py", path_join(Directory, "target/release/lmcode-rust-sample")]);

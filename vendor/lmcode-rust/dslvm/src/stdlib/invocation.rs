@@ -132,7 +132,7 @@ impl InvocationResults {
                 }
             })?;
             json_node(&root, "")?;
-            keys(&root, &["version", "mode", "dry", "parts"])?;
+            if root.kind != Kind::Object { return Err(metadata("object required")); }
             if member(&root, "version").and_then(node_integer) != Some(1) {
                 return Err(metadata("unsupported version"));
             }
@@ -149,6 +149,7 @@ impl InvocationResults {
                 .map(|n| n.boolean)
                 .ok_or_else(|| metadata("dry must be boolean"))?;
             mode_dry.set(Some(dry));
+            keys(&root, &["version", "mode", "dry", "parts"])?;
             let parts = member(&root, "parts")
                 .filter(|n| {
                     n.kind == Kind::Array && !n.array.is_empty() && (builder || n.array.len() == 1)

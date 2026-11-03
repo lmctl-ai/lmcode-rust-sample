@@ -67,7 +67,10 @@ fn register_list<T: Element>(registry: &mut Registry, type_name: &'static str) -
         Ok(T::put(list.items[i].clone()))
     })?;
     registry.pure_method(type_name, "add", &[T::TYPE], type_name, move |ctx, this, args| {
-        ctx.get_mut::<CollectionList<T>>(this)?.items.push(T::get(&args[0])?);
+        let item = T::get(&args[0])?;
+        let list = ctx.get_mut::<CollectionList<T>>(this)?;
+        list.items.try_reserve(1).map_err(|_| Error::host("collection allocation failed"))?;
+        list.items.push(item);
         Ok(Value::object(type_name, this))
     })?;
     registry.pure_method(type_name, "set", &["int", T::TYPE], type_name, move |ctx, this, args| {
@@ -188,13 +191,12 @@ mod tests {
     }
 
     #[test]
-    fn collection_quota_counts_only_collection_objects() {
+    fn collection_objects_above_old_quota_are_accepted() {
         let mut context = Context::new();
-        for _ in 0..65_536 { context.insert_collection("IntList", IntList::default()).unwrap(); }
+        for _ in 0..65_537 { context.insert_collection("IntList", IntList::default()).unwrap(); }
         context.insert("Helper", 1u8);
-        let error = context.insert_collection("StrMap", StrMap::default()).unwrap_err();
-        assert_eq!(error.code, "RUN_HOST");
-        assert_eq!(error.message, "StrMap object limit exceeded (65536)");
+        context.insert_collection("StrMap", StrMap::default()).unwrap();
+        assert_eq!(context.collection_objects, 65_538);
         let mut other = Context::new();
         other.insert_collection("StrList", StrList::default()).unwrap();
     }

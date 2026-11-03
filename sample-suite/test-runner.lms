@@ -24,11 +24,11 @@ for (mode in ["ok", "wrong-exit", "whitespace", "stderr", "bad-cli", "bytecode",
     manifest.cases = [];
     write_json(path_join(copied, "manifest.json"), manifest);
   }
-  command = concat(compiler_command(), ["--no-preflight", path_join(copied, "run-suite.lms"), "node", path_join(copied, "fake-host.mjs")]);
+  command = concat(compiler_command(), [path_join(copied, "run-suite.lms"), "node", path_join(copied, "fake-host.mjs")]);
   if (mode == "audit") {
     path = path_join(scratch, "mutated.json");
     write_json(path, {functions:{test_new_signature:[{params:[],returns:"void"}]},types:{}});
-    command = concat(compiler_command(), ["--no-preflight", path_join(copied, "audit.lms"), "--std", path]);
+    command = concat(compiler_command(), [path_join(copied, "audit.lms"), "--std", path]);
   }
   result = invoke(original, command, [], {}, 120000);
   good = result.code != 0 && result.code != null && result.error == "";

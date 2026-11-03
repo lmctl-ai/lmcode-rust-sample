@@ -1,8 +1,8 @@
 //! Optional host functions matching lmcode-cpp's string catalog. Copy the declarations from
 //! `stdlib/string.schema-fragment.json` into the host schema, then call [`register_string`]
-//! once per registry. Every operation uses bytes; UTF-8 is never decoded. Repeat and replace
-//! cap results at 64 MiB, and glob matching caps work at 2^27 units. These are host policies,
-//! independent of the VM, which imposes no string or execution limits.
+//! once per registry. Every operation uses bytes; UTF-8 is never decoded. Repeat, replace,
+//! and glob matching have no implicit size or work budgets. Checked result-size arithmetic
+//! and platform allocation/representability errors remain explicit.
 pub mod invocation;
 pub mod result_contract;
 pub use invocation::{InvocationResults, InvocationRegistration, failure_frame};
@@ -66,7 +66,6 @@ pub fn register_std(registry: &mut Registry) -> Result<&mut Registry, Error> {
     registry.mark_std_since(&before);
     Ok(registry)
 }
-const MAX_BYTES: usize = 64 * 1024 * 1024;
 /// Byte length, including embedded NULs.
 pub fn str_len<S: AsRef<[u8]>>(s: S) -> i64 {
     s.as_ref().len() as i64
@@ -130,20 +129,30 @@ pub fn str_trim<S: AsRef<[u8]>>(s: S) -> Vec<u8> {
     let b = s.iter().rposition(|&c| !ws(c)).map(|i| i + 1).unwrap_or(a);
     s[a..b].to_vec()
 }
-/// Repeat count times, rejecting negative counts and results over 64 MiB before allocation.
+/// Repeat count times without an implicit result-size budget.
 pub fn str_repeat<S: AsRef<[u8]>>(s: S, count: i64) -> Result<Vec<u8>, Error> {
     let s = s.as_ref();
-    if s.is_empty() && count >= 0 {
+    if count < 0 {
+        return Err(Error::host("str_repeat: count must be nonnegative"));
+    }
+    if s.is_empty() || count == 0 {
         return Ok(Vec::new());
     }
-    if count < 0 || (!s.is_empty() && (count as u64) > (MAX_BYTES / s.len()) as u64) {
-        return Err(Error::host(
-            "str_repeat: count must be nonnegative and result at most 67108864 bytes",
-        ));
+    let count = usize::try_from(count)
+        .map_err(|_| Error::host("str_repeat: count exceeds platform capacity"))?;
+    let size = s.len().checked_mul(count)
+        .ok_or_else(|| Error::host("str_repeat: result size exceeds platform capacity"))?;
+    let mut out = Vec::new();
+    out.try_reserve_exact(size)
+        .map_err(|_| Error::host("str_repeat: result size exceeds platform capacity"))?;
+    out.extend_from_slice(s);
+    while out.len() < size {
+        let chunk = out.len().min(size - out.len());
+        out.extend_from_within(..chunk);
     }
-    Ok(s.repeat(count as usize))
+    Ok(out)
 }
-/// Replace non-overlapping matches, preflighting the 64 MiB result cap even for no-op copies.
+/// Replace non-overlapping matches, checking result-size arithmetic before allocation.
 pub fn str_replace<S: AsRef<[u8]>, F: AsRef<[u8]>, T: AsRef<[u8]>>(
     s: S,
     from: F,
@@ -151,12 +160,11 @@ pub fn str_replace<S: AsRef<[u8]>, F: AsRef<[u8]>, T: AsRef<[u8]>>(
 ) -> Result<Vec<u8>, Error> {
     let (s, from, to) = (s.as_ref(), from.as_ref(), to.as_ref());
     if from.is_empty() {
-        if s.len() > MAX_BYTES {
-            return Err(Error::host(
-                "str_replace: result must be at most 67108864 bytes",
-            ));
-        }
-        return Ok(s.to_vec());
+        let mut out = Vec::new();
+        out.try_reserve_exact(s.len())
+            .map_err(|_| Error::host("str_replace: result size exceeds platform capacity"))?;
+        out.extend_from_slice(s);
+        return Ok(out);
     }
     let mut size = 0usize;
     let mut at = 0;
@@ -165,21 +173,14 @@ pub fn str_replace<S: AsRef<[u8]>, F: AsRef<[u8]>, T: AsRef<[u8]>>(
         size = size
             .checked_add(p - at)
             .and_then(|n| n.checked_add(to.len()))
-            .unwrap_or(MAX_BYTES + 1);
-        if size > MAX_BYTES {
-            return Err(Error::host(
-                "str_replace: result must be at most 67108864 bytes",
-            ));
-        }
+            .ok_or_else(|| Error::host("str_replace: result size exceeds platform capacity"))?;
         at = p + from.len()
     }
-    size = size.checked_add(s.len() - at).unwrap_or(MAX_BYTES + 1);
-    if size > MAX_BYTES {
-        return Err(Error::host(
-            "str_replace: result must be at most 67108864 bytes",
-        ));
-    }
-    let mut out = Vec::with_capacity(size);
+    size = size.checked_add(s.len() - at)
+        .ok_or_else(|| Error::host("str_replace: result size exceeds platform capacity"))?;
+    let mut out = Vec::new();
+    out.try_reserve_exact(size)
+        .map_err(|_| Error::host("str_replace: result size exceeds platform capacity"))?;
     at = 0;
     while let Some(i) = s[at..].windows(from.len()).position(|w| w == from) {
         let p = at + i;
@@ -265,27 +266,14 @@ fn parse_float(s: &[u8]) -> Option<f64> {
         Some(v)
     }
 }
-struct GlobWork(u64);
-impl GlobWork {
-    fn step(&mut self) -> Result<(), Error> {
-        if self.0 == 1 << 27 {
-            Err(Error::host(
-                "str_match: pattern exceeds the 2^27 work limit",
-            ))
-        } else {
-            self.0 += 1;
-            Ok(())
-        }
-    }
-}
-fn token(p: &[u8], i: usize, c: u8, next: &mut usize, w: &mut GlobWork) -> Result<bool, Error> {
+fn token(p: &[u8], i: usize, c: u8, next: &mut usize) -> bool {
     if p[i] == b'\\' && i + 1 < p.len() {
         *next = i + 2;
-        return Ok(p[i + 1] == c);
+        return p[i + 1] == c;
     }
     if p[i] == b'?' {
         *next = i + 1;
-        return Ok(true);
+        return true;
     }
     if p[i] == b'[' {
         let mut q = i + 1;
@@ -296,7 +284,6 @@ fn token(p: &[u8], i: usize, c: u8, next: &mut usize, w: &mut GlobWork) -> Resul
         let first = q;
         let mut hit = false;
         while q < p.len() && (p[q] != b']' || q == first) {
-            w.step()?;
             let lo = class_byte(p, &mut q);
             if q + 1 < p.len() && p[q] == b'-' && p[q + 1] != b']' {
                 q += 1;
@@ -310,11 +297,11 @@ fn token(p: &[u8], i: usize, c: u8, next: &mut usize, w: &mut GlobWork) -> Resul
         }
         if q < p.len() {
             *next = q + 1;
-            return Ok(hit != neg);
+            return hit != neg;
         }
     }
     *next = i + 1;
-    Ok(p[i] == c)
+    p[i] == c
 }
 
 fn class_byte(pattern: &[u8], cursor: &mut usize) -> u8 {
@@ -326,21 +313,19 @@ fn class_byte(pattern: &[u8], cursor: &mut usize) -> u8 {
     byte
 }
 /// Whole-string byte glob: *, ?, classes/ranges, [!class], and backslash escapes.
-/// Uses constant auxiliary memory and charges iterations, class entries and trailing stars
-/// to a per-call 2^27 work cap. Unterminated classes and trailing backslashes are literal.
+/// Uses constant auxiliary memory with no implicit work budget. Unterminated classes
+/// and trailing backslashes are literal.
 pub fn str_match<S: AsRef<[u8]>, P: AsRef<[u8]>>(text: S, pattern: P) -> Result<bool, Error> {
     let (t, p) = (text.as_ref(), pattern.as_ref());
-    let mut w = GlobWork(0);
     let (mut ti, mut pi) = (0, 0);
     let (mut star, mut star_t) = (None, 0);
     while ti < t.len() {
-        w.step()?;
         let mut next = 0;
         if pi < p.len() && p[pi] == b'*' {
             star = Some(pi);
             pi += 1;
             star_t = ti
-        } else if pi < p.len() && token(p, pi, t[ti], &mut next, &mut w)? {
+        } else if pi < p.len() && token(p, pi, t[ti], &mut next) {
             pi = next;
             ti += 1
         } else if let Some(sp) = star {
@@ -351,10 +336,7 @@ pub fn str_match<S: AsRef<[u8]>, P: AsRef<[u8]>>(text: S, pattern: P) -> Result<
             return Ok(false);
         }
     }
-    while pi < p.len() && p[pi] == b'*' {
-        w.step()?;
-        pi += 1
-    }
+    while pi < p.len() && p[pi] == b'*' { pi += 1 }
     Ok(pi == p.len())
 }
 /// Register all 16 optional string functions once, using their canonical schema signatures.

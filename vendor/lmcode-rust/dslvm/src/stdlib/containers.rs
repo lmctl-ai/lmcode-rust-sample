@@ -408,7 +408,7 @@ mod snapshot_tests {
     }
 
     #[test]
-    fn snapshots_share_the_arena_limit_and_report_the_returned_list_type() {
+    fn snapshots_work_above_the_old_arena_quota_and_report_the_returned_list_type() {
         let r = Registry::new();
         let mut ctx = Context::new();
         let s = ctx.insert_collection("StrMap", StrMap::default()).unwrap();
@@ -427,12 +427,9 @@ mod snapshot_tests {
         ] {
             for (method, result) in [("keys", "StrList"), ("values", list)] {
                 let sig = format!("method {t}.{method}() -> {result}");
-                let error = r.methods[&sig].3(&mut ctx, h, &[]).unwrap_err();
-                assert_eq!(error.code, "RUN_HOST");
-                assert_eq!(
-                    error.message,
-                    format!("{result} object limit exceeded (65536)")
-                );
+                let value = r.methods[&sig].3(&mut ctx, h, &[]).unwrap();
+                assert!(value.as_obj().is_ok(), "{sig} returned the wrong type for {result}");
+                assert!(ctx.collection_objects > 65_536);
             }
         }
     }

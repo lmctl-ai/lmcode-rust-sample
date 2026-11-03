@@ -13,7 +13,7 @@ def check(host):
   host=str(host_path.resolve())
   source=Path(tmp)/'real.lms'
   source.write_text((ROOT/'invocations.lms').read_text().replace('"__HOST__"',json.dumps(host)))
-  p=subprocess.run([os.environ.get('LMSCRIPT_BIN','lmscript'),'--no-preflight',str(source),str(host_path.resolve())],capture_output=True)
+  p=subprocess.run([os.environ.get('LMSCRIPT_BIN','lmscript'),str(source),str(host_path.resolve())],capture_output=True)
  if p.returncode!=0 or b'PASS real single/builder' not in p.stdout:raise AssertionError((p.returncode,p.stdout,p.stderr))
  if p.stdout.count(b'"host_summary":')!=8:raise AssertionError(('lost summary',p.stdout))
  direct=subprocess.run([host,'--lmcode',str(ROOT/'bytecode/068-rule-entries.dslb')],capture_output=True)

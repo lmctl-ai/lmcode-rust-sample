@@ -176,7 +176,7 @@ fn numeric_limits_and_rounding_match_cpp() {
 }
 
 #[test]
-fn glob_classes_escapes_and_work_limit_match_cpp() {
+fn glob_classes_escapes_and_large_work_match_cpp() {
     assert!(stdlib::str_match(b"?*[]\\", b"\\?\\*\\[\\]\\\\").unwrap());
     assert!(stdlib::str_match(b"]", b"[\\]]").unwrap());
     assert!(stdlib::str_match(b"-", b"[a\\-c]").unwrap());
@@ -191,21 +191,13 @@ fn glob_classes_escapes_and_work_limit_match_cpp() {
     assert!(!stdlib::str_match(b"x", b"").unwrap());
     let adversarial = vec![b'a'; 12_000];
     assert!(!stdlib::str_match(&adversarial, b"*aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab").unwrap());
-    for _ in 0..2 {
-        let malformed = vec![b'['; 20_000];
-        let error = stdlib::str_match(&malformed, &malformed).unwrap_err();
-        assert_eq!(error.code, "RUN_HOST");
-        assert_eq!(
-            error.message,
-            "str_match: pattern exceeds the 2^27 work limit"
-        );
-    }
+    assert!(!stdlib::str_match(vec![b'['; 135], vec![b'['; 1024 * 1024]).unwrap());
 }
 
 #[test]
-fn size_caps_are_checked_before_output_allocation() {
+fn strings_above_old_size_cap_are_accepted_and_unrepresentable_sizes_fail_clearly() {
     let mb = vec![b'x'; 1024 * 1024];
-    assert!(stdlib::str_replace(vec![b'x'; 65], b"x", &mb).is_err());
+    assert_eq!(stdlib::str_replace(vec![b'x'; 65], b"x", &mb).unwrap().len(), 65 * 1024 * 1024);
     assert_eq!(
         stdlib::str_replace(vec![b'x'; 64], b"x", &mb)
             .unwrap()
@@ -214,22 +206,32 @@ fn size_caps_are_checked_before_output_allocation() {
     );
     let repeat_error = stdlib::str_repeat(b"ab", i64::MAX).unwrap_err();
     assert_eq!(repeat_error.code, "RUN_HOST");
-    assert_eq!(
-        repeat_error.message,
-        "str_repeat: count must be nonnegative and result at most 67108864 bytes"
-    );
-    let no_match_error = stdlib::str_replace(vec![b'x'; 65 * 1024 * 1024], b"z", b"x").unwrap_err();
-    assert_eq!(no_match_error.code, "RUN_HOST");
-    assert_eq!(
-        no_match_error.message,
-        "str_replace: result must be at most 67108864 bytes"
-    );
-    let noop_error = stdlib::str_replace(vec![b'x'; 65 * 1024 * 1024], b"", b"x").unwrap_err();
-    assert_eq!(noop_error.code, "RUN_HOST");
-    assert_eq!(
-        noop_error.message,
-        "str_replace: result must be at most 67108864 bytes"
-    );
+    assert_eq!(repeat_error.message, "str_repeat: result size exceeds platform capacity");
+    assert_eq!(stdlib::str_replace(vec![b'x'; 65 * 1024 * 1024], b"z", b"x").unwrap().len(), 65 * 1024 * 1024);
+    assert_eq!(stdlib::str_replace(vec![b'x'; 65 * 1024 * 1024], b"", b"x").unwrap().len(), 65 * 1024 * 1024);
+}
+
+#[test]
+fn repeat_result_above_old_byte_cap_is_accepted() {
+    let result = stdlib::str_repeat(b"x", 64 * 1024 * 1024 + 1).unwrap();
+    assert_eq!(result.len(), 64 * 1024 * 1024 + 1);
+    assert_eq!(result.first(), Some(&b'x'));
+    assert_eq!(result.last(), Some(&b'x'));
+}
+
+#[test]
+fn replace_result_above_old_byte_cap_is_accepted() {
+    let result = stdlib::str_replace(vec![b'x'; 65], b"x", vec![b'y'; 1024 * 1024]).unwrap();
+    assert_eq!(result.len(), 65 * 1024 * 1024);
+    assert_eq!(result.first(), Some(&b'y'));
+    assert_eq!(result.last(), Some(&b'y'));
+}
+
+#[test]
+fn glob_work_above_old_limit_returns_the_match_result() {
+    let text = vec![b'['; 135];
+    let pattern = vec![b'['; 1024 * 1024];
+    assert!(!stdlib::str_match(&text, &pattern).unwrap());
 }
 
 fn upper_chunk(schema: &[u8], input: &[u8]) -> Vec<u8> {

@@ -167,29 +167,55 @@ impl Context {
         self.types.push(type_name.into());
         ObjRef(self.objects.len() - 1)
     }
-    /// Inserts a standard-library collection and enforces the per-context collection quota.
+    /// Inserts a standard-library collection, tracking live collection slots for teardown.
     pub fn insert_collection<T: Any>(&mut self, type_name: &str, object: T) -> Result<ObjRef, Error> {
-        if self.collection_objects >= 65_536 {
-            return Err(Error::host(format!("{} object limit exceeded (65536)", type_name)));
-        }
-        self.collection_objects += 1;
-        let handle = if let Some(index) = self.free_collection_slots.pop() {
-            self.objects[index] = Some(Box::new(object));
-            self.types[index] = type_name.to_string();
-            ObjRef(index)
-        } else { self.insert(type_name, object) };
-        self.collection_indices.push(handle.0);
+        let count = self.collection_objects.checked_add(1)
+            .ok_or_else(|| Error::host("collection object count exceeds platform capacity"))?;
+        let handle = self.try_insert_collection(type_name, object)?;
+        self.collection_objects = count;
         Ok(handle)
     }
-    /// A borrowed immutable std node shares its root's quota slot and run lifetime.
-    pub(crate) fn insert_borrowed_collection<T: Any>(&mut self, type_name: &str, object: T) -> ObjRef {
-        let handle = if let Some(index) = self.free_collection_slots.pop() {
-            self.objects[index] = Some(Box::new(object));
-            self.types[index] = type_name.to_string();
-            ObjRef(index)
-        } else { self.insert(type_name, object) };
-        self.collection_indices.push(handle.0);
-        handle
+    /// Borrowed nodes use the same fallible arena insertion as roots.
+    pub(crate) fn insert_borrowed_collection<T: Any>(&mut self, type_name: &str, object: T) -> Result<ObjRef, Error> {
+        self.try_insert_collection(type_name, object)
+    }
+    fn try_insert_collection<T: Any>(&mut self, type_name: &str, object: T) -> Result<ObjRef, Error> {
+        let allocation = || Error::host("collection allocation failed");
+        // Reserve before mutation; teardown must not allocate while unwinding a run.
+        self.collection_indices.try_reserve(1).map_err(|_| allocation())?;
+        self.free_collection_slots.try_reserve(self.collection_indices.len() + 1).map_err(|_| allocation())?;
+        if self.free_collection_slots.is_empty() {
+            self.objects.try_reserve(1).map_err(|_| allocation())?;
+            self.types.try_reserve(1).map_err(|_| allocation())?;
+        }
+        let mut name = String::new();
+        name.try_reserve_exact(type_name.len()).map_err(|_| allocation())?;
+        name.push_str(type_name);
+        // Box::try_new is unstable. Allocate once with the global allocator and
+        // check null before constructing Box; Box owns the matching deallocation.
+        let layout = std::alloc::Layout::new::<T>();
+        let boxed = if layout.size() == 0 { Box::new(object) } else {
+            // SAFETY: layout belongs to T, null is rejected, and write initializes
+            // the allocation exactly once before transferring ownership to Box.
+            unsafe {
+                let pointer = std::alloc::alloc(layout).cast::<T>();
+                if pointer.is_null() { return Err(allocation()); }
+                pointer.write(object);
+                Box::from_raw(pointer)
+            }
+        };
+        let index = if let Some(index) = self.free_collection_slots.pop() {
+            self.objects[index] = Some(boxed);
+            self.types[index] = name;
+            index
+        } else {
+            let index = self.objects.len();
+            self.objects.push(Some(boxed));
+            self.types.push(name);
+            index
+        };
+        self.collection_indices.push(index);
+        Ok(ObjRef(index))
     }
     pub(crate) fn clear_collections(&mut self) {
         for index in self.collection_indices.drain(..) { self.objects[index] = None; self.free_collection_slots.push(index); }
@@ -908,7 +934,12 @@ impl Program {
                     let mut args = vec![Value::None; argc]; for k in (0..argc).rev() { args[k] = pop(&mut stack)?; }
                     let Import::Function(canonical) = &self.imports[i] else { return err("CALL_FN names a method import") };
                     let (_, signature, real_fn, dry_slot) = reg.functions.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("host function '{}' is not bound", canonical)))?;
-                    if args.iter().any(Value::is_dry_null) { return Err(Error::host("dry null cannot be passed to a host callback")); }
+                    // SDK result conversion owns nullable/provenance validation.
+                    let result_conversion = reg.std_signatures.contains(canonical) &&
+                        (canonical.starts_with("fn lmcode_return_set(") || canonical.starts_with("fn lmcode_return_put("));
+                    if (!ctx.dry() || dry_slot.is_some()) && !(ctx.dry() && result_conversion) && args.iter().any(Value::is_dry_null) {
+                        return Err(Error::host("dry null cannot be passed to a host callback"));
+                    }
                     let result = if ctx.dry() {
                         match dry_slot {
                             None => stdlib::dry_dummy(ctx, &signature.returns)?,
@@ -926,11 +957,11 @@ impl Program {
                     let this = pop(&mut stack)?;
                     let (_, _, signature, real_fn, dry_slot) = reg.methods.get(canonical).ok_or_else(|| Error::new("RUN_ERROR", format!("method '{}.{}' is not bound", type_name, name)))?;
                     if this.is_dry_null() && (!ctx.dry() || this.dry_null_type().is_none()) { return Err(Error::host("invalid dry null provenance in method receiver")); }
-                    if args.iter().any(Value::is_dry_null) { return Err(Error::host("dry null cannot be passed to a host callback")); }
                     let result = if ctx.dry() && dry_slot.is_none() {
                         // A method with no preview is skipped without dereferencing its receiver.
                         stdlib::dry_dummy(ctx, &signature.returns)?
                     } else {
+                        if args.iter().any(Value::is_dry_null) { return Err(Error::host("dry null cannot be passed to a host callback")); }
                         let obj = match &this {
                             Value::DryNull(_) => return Err(Error::host(format!("method {}.{} requires a concrete receiver after dry null", type_name, name))),
                             Value::Obj { type_name: t, obj } if t == type_name => *obj,

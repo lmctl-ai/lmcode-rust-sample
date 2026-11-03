@@ -40,7 +40,7 @@ jobs:
           rustup default stable
       - name: Build and test
         run: |
-          lmscript --no-preflight test.lms
+          lmscript test.lms
           [[ "$(target/release/lmcode-rust-sample --version | tr -d '\r')" == "lmcode-rust-sample $SAMPLE_VERSION" ]]
           mkdir -p dist
           cp 'target/release/lmcode-rust-sample${{ matrix.ext }}' 'dist/lmcode-rust-sample-${{ matrix.label }}${{ matrix.ext }}'
